@@ -1,0 +1,194 @@
+/* =============================================================
+   Design Tokens
+   한식 레시피 공유 웹 · 2026 뉴트럴 + 테라코타 포인트
+   ============================================================= */
+
+:root {
+  /* -----------------------------------------------------------
+     1. 원시 팔레트 (raw scale) — 직접 쓰지 말고 아래 시맨틱 토큰을 쓸 것
+     ----------------------------------------------------------- */
+
+  /* Neutral (웜그레이 — 살짝 따뜻한 무채색) */
+  --neutral-0:   #ffffff;
+  --neutral-50:  #f8f7f5;
+  --neutral-100: #f1efec;
+  --neutral-200: #e6e3de;
+  --neutral-300: #d5d1ca;
+  --neutral-400: #b0aca3;
+  --neutral-500: #8a8680;
+  --neutral-600: #6b6862;
+  --neutral-700: #4e4b46;
+  --neutral-800: #322f2c;
+  --neutral-900: #1c1b1a;
+
+  /* Accent (테라코타 / 러스트) */
+  --terracotta-50:  #fbf0ea;
+  --terracotta-100: #f7dccf;
+  --terracotta-200: #f0bda6;
+  --terracotta-300: #e59171;
+  --terracotta-400: #d96a3f;
+  --terracotta-500: #c2410c; /* 메인 포인트 */
+  --terracotta-600: #a3350a;
+  --terracotta-700: #7f2908;
+  --terracotta-800: #5e1f06;
+
+  /* Semantic hues (상태 표시용) */
+  --green-500:  #1d9e75;
+  --green-50:   #e1f5ee;
+  --amber-500:  #d4900f;
+  --amber-50:   #faeeda;
+  --red-500:    #dc4a3d;
+  --red-50:     #fcece9;
+  --blue-500:   #2f7fd1;
+  --blue-50:    #e8f1fb;
+
+  /* -----------------------------------------------------------
+     2. 시맨틱 토큰 (semantic) — 컴포넌트가 참조하는 층
+     ----------------------------------------------------------- */
+
+  /* 표면(Surface) — 숫자가 클수록 위로 떠오름 */
+  --surface-page:     var(--neutral-50);  /* 페이지 배경 */
+  --surface-card:     var(--neutral-0);   /* 카드 배경 */
+  --surface-sunken:   var(--neutral-100); /* 검색바·인풋 등 들어간 면 */
+  --surface-inverse:  var(--neutral-900); /* 반전 (검정 CTA 등) */
+
+  /* 텍스트(Text) */
+  --text-primary:    var(--neutral-900);
+  --text-secondary:  var(--neutral-600);
+  --text-muted:      var(--neutral-500);
+  --text-on-accent:  #ffffff;             /* 포인트색 배경 위 글씨 */
+  --text-on-inverse: var(--neutral-50);   /* 검정 배경 위 글씨 */
+
+  /* 포인트(Accent) */
+  --accent:          var(--terracotta-500);
+  --accent-hover:    var(--terracotta-600);
+  --accent-pressed:  var(--terracotta-700);
+  --accent-subtle:   var(--terracotta-50);  /* 연한 배경 */
+  --accent-text:     var(--terracotta-700); /* 연한 배경 위 글씨 */
+
+  /* 테두리(Border) */
+  --border:          var(--neutral-200);
+  --border-strong:   var(--neutral-300);
+  --border-accent:   var(--terracotta-500);
+
+  /* 상태(State) */
+  --success:      var(--green-500);
+  --success-bg:   var(--green-50);
+  --warning:      var(--amber-500);
+  --warning-bg:   var(--amber-50);
+  --danger:       var(--red-500);
+  --danger-bg:    var(--red-50);
+  --info:         var(--blue-500);
+  --info-bg:      var(--blue-50);
+
+  /* -----------------------------------------------------------
+     3. 타이포그래피
+     ----------------------------------------------------------- */
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system,
+               BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto,
+               'Helvetica Neue', 'Apple SD Gothic Neo', sans-serif;
+
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.375rem;  /* 22px */
+  --text-2xl:  1.75rem;   /* 28px */
+  --text-3xl:  2.25rem;   /* 36px */
+
+  --weight-regular: 400;
+  --weight-medium:  500;
+  --weight-bold:    600;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.6;
+
+  /* -----------------------------------------------------------
+     4. 간격 · 반경 · 그림자 · 모션
+     ----------------------------------------------------------- */
+  --space-1: 0.25rem;   /* 4 */
+  --space-2: 0.5rem;    /* 8 */
+  --space-3: 0.75rem;   /* 12 */
+  --space-4: 1rem;      /* 16 */
+  --space-5: 1.5rem;    /* 24 */
+  --space-6: 2rem;      /* 32 */
+  --space-8: 3rem;      /* 48 */
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(28, 27, 26, 0.04),
+               0 1px 3px rgba(28, 27, 26, 0.06);
+  --shadow-md: 0 2px 8px rgba(28, 27, 26, 0.06),
+               0 4px 16px rgba(28, 27, 26, 0.05);
+  --shadow-lg: 0 8px 24px rgba(28, 27, 26, 0.10);
+
+  --dur-fast: 0.12s;
+  --dur-base: 0.2s;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 레이아웃 */
+  --container-max: 1200px;
+  --header-height: 64px;
+}
+
+/* =============================================================
+   다크 모드 — 시맨틱 토큰만 재정의. 컴포넌트 코드는 그대로.
+   data-theme="dark" 를 <html>에 붙이거나 OS 설정을 따른다.
+   ============================================================= */
+:root[data-theme='dark'] {
+  --surface-page:     var(--neutral-900);
+  --surface-card:     var(--neutral-800);
+  --surface-sunken:   #262421;
+  --surface-inverse:  var(--neutral-50);
+
+  --text-primary:    var(--neutral-50);
+  --text-secondary:  var(--neutral-300);
+  --text-muted:      var(--neutral-400);
+  --text-on-inverse: var(--neutral-900);
+
+  --accent:          var(--terracotta-400);
+  --accent-hover:    var(--terracotta-300);
+  --accent-pressed:  var(--terracotta-200);
+  --accent-subtle:   rgba(217, 106, 63, 0.14);
+  --accent-text:     var(--terracotta-200);
+
+  --border:          #3a3733;
+  --border-strong:   #4e4b46;
+
+  --success-bg: rgba(29, 158, 117, 0.16);
+  --warning-bg: rgba(212, 144, 15, 0.16);
+  --danger-bg:  rgba(220, 74, 61, 0.16);
+  --info-bg:    rgba(47, 127, 209, 0.16);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* OS가 다크이고 사용자가 명시 설정을 안 했을 때 자동 적용 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --surface-page:     var(--neutral-900);
+    --surface-card:     var(--neutral-800);
+    --surface-sunken:   #262421;
+    --surface-inverse:  var(--neutral-50);
+    --text-primary:    var(--neutral-50);
+    --text-secondary:  var(--neutral-300);
+    --text-muted:      var(--neutral-400);
+    --text-on-inverse: var(--neutral-900);
+    --accent:          var(--terracotta-400);
+    --accent-hover:    var(--terracotta-300);
+    --accent-pressed:  var(--terracotta-200);
+    --accent-subtle:   rgba(217, 106, 63, 0.14);
+    --accent-text:     var(--terracotta-200);
+    --border:          #3a3733;
+    --border-strong:   #4e4b46;
+    --success-bg: rgba(29, 158, 117, 0.16);
+    --warning-bg: rgba(212, 144, 15, 0.16);
+    --danger-bg:  rgba(220, 74, 61, 0.16);
+    --info-bg:    rgba(47, 127, 209, 0.16);
+  }
+}

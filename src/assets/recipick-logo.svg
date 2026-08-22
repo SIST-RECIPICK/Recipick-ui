@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 76" width="360" height="76">
+  <g transform="translate(0 9)">
+    <path d="M11 22 A22 22 0 0 1 55 22 Z" fill="#D9C7AC"></path>
+    <path d="M0 28 H66 A33 30 0 0 1 0 28 Z" fill="#A85436"></path>
+  </g>
+  <text x="88" y="55" font-family="Newsreader, Georgia, 'Times New Roman', serif" font-weight="700" font-size="50" letter-spacing="1.5" fill="#2E2925">recipick</text>
+</svg>
