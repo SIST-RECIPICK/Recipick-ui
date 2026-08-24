@@ -27,14 +27,29 @@ defineProps({
 </script>
 
 <style scoped>
+/* 레시피 카드는 이미지 줌 + 테두리 강조로 대체.*/
+.recipe-card.card--hoverable:hover {
+  box-shadow: none;
+  transform: none;
+  border-color: var(--border-strong);
+}
+
 .recipe-card__image {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
   background: var(--surface-sunken);
+  transition: transform 0.4s var(--ease);
+}
+.recipe-card:hover .recipe-card__image {
+  transform: scale(1.06);
 }
 .recipe-card__title {
   margin-bottom: var(--space-1);
+  transition: color var(--dur-base) var(--ease);
+}
+.recipe-card:hover .recipe-card__title {
+  color: var(--accent);
 }
 .recipe-card__meta {
   font-size: var(--text-sm);
