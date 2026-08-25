@@ -41,7 +41,7 @@ import { RouterLink } from 'vue-router'
 import { IconFridge, IconCalendar, IconMessageCircle, IconArrowRight } from '@tabler/icons-vue'
 
 import CurationSlider from '@/components/home/CurationSlider.vue'
-import RecipeCard from '@/components/RecipeCard.vue'
+import RecipeCard from '@/components/recipe/RecipeCard.vue'
 
 const curations = ref([
   {

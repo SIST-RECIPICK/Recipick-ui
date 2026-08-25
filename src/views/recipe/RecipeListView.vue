@@ -69,8 +69,8 @@ import {
 
 import CategoryCarousel from '@/components/recipe/CategoryCarousel.vue'
 import SortSelect from '@/components/recipe/SortSelect.vue'
-import Pagination from '@/components/Pagination.vue'
-import RecipeCard from '@/components/RecipeCard.vue'
+import Pagination from '@/components/common/Pagination.vue'
+import RecipeCard from '@/components/recipe/RecipeCard.vue'
 
 // --- 히어로 카운트업 (와이어프레임 "애니메이션 추가") ---
 const totalCount = ref(1200)

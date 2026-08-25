@@ -102,7 +102,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import RecipeCard from '@/components/RecipeCard.vue'
+import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import IngredientPanel from '@/components/recipe/IngredientPanel.vue'
 import RecipeReviewCard from '@/components/recipe/RecipeReviewCard.vue'
 
