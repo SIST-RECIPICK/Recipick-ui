@@ -14,6 +14,9 @@ const routes = [
     name: 'styleguide',
     component: () => import('@/views/StyleGuideView.vue'),
   },
+  { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue') },
+  { path: '/signup', name: 'signup', component: () => import('@/views/SignupView.vue') },
+  { path: '/recipes/:id', name: 'recipe-detail', component: () => import('@/views/RecipeDetailView.vue') }
 ]
 
 const router = createRouter({
