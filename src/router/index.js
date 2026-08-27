@@ -25,6 +25,16 @@ const routes = [
     name: 'signup',
     component: () => import('@/views/SignupView.vue'),
   },
+  { 
+    path: '/fridge',
+    name: 'fridge', 
+    component: () => import('@/views/fridge/FridgeView.vue') 
+  },
+  { 
+    path: '/fridge/register', 
+    name: 'fridge-register', 
+    component: () => import('@/views/fridge/FridgeRegisterView.vue') 
+  },
   {
     path: '/admin',
     component: () => import('@/components/layout/AdminLayout.vue'),
