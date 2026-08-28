@@ -25,30 +25,25 @@
     </table>
 
     <!-- 페이지네이션 -->
-    <nav class="pagination" aria-label="페이지 이동">
-      <button class="pagination__btn" :disabled="page === 1" @click="page--">‹</button>
-      <button
-        v-for="p in totalPages"
-        :key="p"
-        class="pagination__btn"
-        :class="{ 'is-active': page === p }"
-        @click="page = p"
-      >
-        {{ p }}
-      </button>
-      <button class="pagination__btn" :disabled="page === totalPages" @click="page++">›</button>
-    </nav>
+    <Pagination
+      class="list__pagination"
+      :curpage="page.curpage"
+      :startpage="page.startpage"
+      :endpage="page.endpage"
+      :totalpage="page.totalpage"
+      @change="loadCuration"
+    />
+
   </AdminPanel>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AdminPanel from '@/components/admin/AdminPanel.vue'
+import Pagination from '@/components/common/Pagination.vue'
 
 const router = useRouter()
-const page = ref(1)
-const totalPages = 3
 
 function goDetail(id) {
   router.push(`/admin/curations/${id}`)
@@ -60,6 +55,31 @@ const curations = computed(() => [
   { id: 2, title: '환절기 보양 큐레이션', yearMonth: '2025.09', registeredAt: '09.01' },
   { id: 1, title: '여름 제철 채소 모음', yearMonth: '2025.08', registeredAt: '08.03' },
 ])
+
+const page = ref({
+  curpage: 1,
+  startpage: 1,
+  endpage: 1,
+  totalpage: 1,
+})
+
+async function loadCuration(curpage = 1) {
+  // TODO: 실제 API 호출로 교체
+  // const res = await api.getMembers(curpage)
+  // members.value = res.list
+  // page.value = {
+  //   curpage: res.curpage,
+  //   startpage: res.startpage,
+  //   endpage: res.endpage,
+  //   totalpage: res.totalpage,
+  // }
+  page.value = { curpage, startpage: 1, endpage: 3, totalpage: 3 }
+}
+
+onMounted(()=>{
+  loadCuration(1)
+})
+
 </script>
 
 <style scoped>
@@ -114,35 +134,7 @@ const curations = computed(() => [
   color: var(--accent);
 }
 
-/* 페이지네이션 */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-2);
-  margin-top: var(--space-5);
-}
-.pagination__btn {
-  min-width: 36px;
-  height: 36px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface-card);
-  color: var(--text-secondary);
-  transition:
-    border-color var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease);
-}
-.pagination__btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.pagination__btn.is-active {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: var(--weight-bold);
-}
-.pagination__btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* 페이지네이션 여백 */
+.list__pagination { margin-top: var(--space-6); }
+
 </style>

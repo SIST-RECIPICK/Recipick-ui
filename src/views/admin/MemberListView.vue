@@ -18,7 +18,6 @@
           <td class="text-secondary">{{ member.username }}</td>
           <td class="text-secondary">{{ member.joinedAt }}</td>
 
-          <!-- 회원상태: 즉시 저장 셀렉트 -->
           <td>
             <select
               v-model="member.status"
@@ -33,7 +32,6 @@
             </select>
           </td>
 
-          <!-- 권한: 즉시 저장 셀렉트 -->
           <td>
             <select
               v-model="member.role"
@@ -50,12 +48,23 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- 페이지네이션 -->
+    <Pagination
+      class="list__pagination"
+      :curpage="page.curpage"
+      :startpage="page.startpage"
+      :endpage="page.endpage"
+      :totalpage="page.totalpage"
+      @change="loadMembers"
+    />
   </AdminPanel>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import AdminPanel from '@/components/admin/AdminPanel.vue'
+import Pagination from '@/components/common/Pagination.vue'
 
 const statusOptions = [
   { value: 'ACTIVE', label: '활성' },
@@ -67,7 +76,6 @@ const roleOptions = [
   { value: 'ADMIN', label: '관리자' },
 ]
 
-// 상태에 따른 텍스트 색 클래스
 function statusClass(status) {
   return {
     'cell-select--danger': status === 'SUSPENDED',
@@ -75,12 +83,10 @@ function statusClass(status) {
   }
 }
 
-// 즉시 저장 (확인창 없이) — FR 연동 지점
 async function updateStatus(member) {
   member.saving = true
   try {
     // TODO: 회원상태 변경 API 호출 (PATCH /admin/members/:id/status)
-    // await api.updateMemberStatus(member.id, member.status)
   } finally {
     member.saving = false
   }
@@ -90,19 +96,45 @@ async function updateRole(member) {
   member.saving = true
   try {
     // TODO: 권한 변경 API 호출 (PATCH /admin/members/:id/role)
-    // await api.updateMemberRole(member.id, member.role)
   } finally {
     member.saving = false
   }
 }
 
-// 목업 데이터 (FR 연동 시 교체)
-const members = ref([
-  { id: 1, name: '김레시', username: 'recipe_kim', joinedAt: '2025.03.12', status: 'ACTIVE', role: 'USER', saving: false },
-  { id: 2, name: '박요리', username: 'cook_park', joinedAt: '2025.05.28', status: 'ACTIVE', role: 'ADMIN', saving: false },
-  { id: 3, name: '이식단', username: 'meal_lee', joinedAt: '2025.07.03', status: 'SUSPENDED', role: 'USER', saving: false },
-  { id: 4, name: '최반찬', username: 'banchan_choi', joinedAt: '2025.08.19', status: 'WITHDRAWN', role: 'USER', saving: false },
-])
+// 회원 목록
+const members = ref([])
+
+const page = ref({
+  curpage: 1,
+  startpage: 1,
+  endpage: 1,
+  totalpage: 1,
+})
+
+async function loadMembers(curpage = 1) {
+  // TODO: 실제 API 호출로 교체
+  // const res = await api.getMembers(curpage)
+  // members.value = res.list
+  // page.value = {
+  //   curpage: res.curpage,
+  //   startpage: res.startpage,
+  //   endpage: res.endpage,
+  //   totalpage: res.totalpage,
+  // }
+
+  members.value = [
+    { id: 1, name: '김레시', username: 'recipe_kim', joinedAt: '2025.03.12', status: 'ACTIVE', role: 'USER', saving: false },
+    { id: 2, name: '박요리', username: 'cook_park', joinedAt: '2025.05.28', status: 'ACTIVE', role: 'ADMIN', saving: false },
+    { id: 3, name: '이식단', username: 'meal_lee', joinedAt: '2025.07.03', status: 'SUSPENDED', role: 'USER', saving: false },
+    { id: 4, name: '최반찬', username: 'banchan_choi', joinedAt: '2025.08.19', status: 'WITHDRAWN', role: 'USER', saving: false },
+  ]
+  page.value = { curpage, startpage: 1, endpage: 3, totalpage: 3 }
+}
+
+// 화면 처음 뜰 때 1페이지 조회
+onMounted(() => {
+  loadMembers(1)
+})
 </script>
 
 <style scoped>
@@ -111,7 +143,6 @@ const members = ref([
   margin-bottom: var(--space-4);
 }
 
-/* 테이블 */
 .mlist__table {
   width: 100%;
   border-collapse: collapse;
@@ -135,7 +166,6 @@ const members = ref([
 .mlist__col-date { width: 130px; }
 .mlist__col-select { width: 120px; }
 
-/* 셀 내부 셀렉트 (공용 .input보다 작게) */
 .cell-select {
   width: 100%;
   height: 34px;
@@ -158,10 +188,12 @@ const members = ref([
   cursor: wait;
 }
 
-/* 값에 따른 색 힌트 (텍스트만) */
 .cell-select--accent { color: var(--accent-text); font-weight: var(--weight-medium); }
 .cell-select--danger { color: var(--danger); }
 .cell-select--muted { color: var(--text-muted); }
+
+/* 페이지네이션 여백 */
+.list__pagination { margin-top: var(--space-6); }
 
 @media (max-width: 768px) {
   .mlist__table { display: block; overflow-x: auto; white-space: nowrap; }
