@@ -1,20 +1,19 @@
 import { defineStore } from 'pinia'
-import axios from "axios";
+import axios from 'axios'
 
-
-export const recipeDetailStore = defineStore('detail',{
-    state:()=>({
-		recipeData:{}
-	}),
-	actions:{
-		async recipeDetailData(no){
-
-			const res = await axios.get('/recipe/detail',{
-				params:{
-					no:no
-				}
-			})
-            this.recipeData = res.data.recipeData
-		},
-    }
+export const recipeDetailStore = defineStore('detail', {
+  state: () => ({
+    recipeData: {},
+  }),
+  actions: {
+    async recipeDetailData(no) {
+      const res = await axios.get('http://localhost:8080/recipe/detail', {
+        params: {
+          rcp_seq: no,
+        },
+      })
+      console.log(res.data)
+      this.recipeData = res.data.recipeData
+    },
+  },
 })

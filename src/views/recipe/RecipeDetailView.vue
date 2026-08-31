@@ -6,13 +6,13 @@
         <!-- 대표 이미지 -->
         <img
           class="detail__hero"
-          :src="recipe.image"
-          :alt="`${recipe.title} 완성 대표 이미지`"
+          :src="recipeData.att_file_no_main"
+          :alt="`${recipeData.rcp_nm} 완성 대표 이미지`"
         />
 
         <!-- 음식명 + 작성자 -->
         <div class="detail__head">
-          <h1 class="detail__title">{{ recipe.title }}</h1>
+          <h1 class="detail__title">{{recipeData.rcp_nm}}</h1>
           <div class="detail__author">
             <span class="chip chip--accent">{{ recipe.badge }}</span>
             <span class="detail__chef">{{ recipe.chef }}</span>
@@ -101,10 +101,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import IngredientPanel from '@/components/recipe/IngredientPanel.vue'
 import RecipeReviewCard from '@/components/recipe/RecipeReviewCard.vue'
+import { storeToRefs } from 'pinia'
+import { recipeDetailStore } from '@/stores/recipeDetailStore'
+
+const store = recipeDetailStore()
+
+const { recipeData } = storeToRefs(store)
+
+onMounted(() => {
+  store.recipeDetailData(336)
+})
+
 
 // 탭 정의 (앵커 id 한 곳에서 관리)
 const tabs = [
@@ -141,7 +152,7 @@ onMounted(() => {
 onUnmounted(() => observer?.disconnect())
 
 // --- 아래는 목업 데이터 (API 연동 시 교체, FR-2xx) ---
-const recipe = {
+const recipe = computed(()=>({
   title: '음식명(레시피명)',
   chef: '쉐프명',
   badge: '오늘의 레시피',
@@ -159,15 +170,15 @@ const recipe = {
     { name: '재료명', amount: 200 },
     { name: '재료명', amount: 200 },
   ],
-  cooking: { type: '요리 종류', method: '조리 방법' },
+  cooking: { type: recipeData.value.rcp_pat2, method: recipeData.value.rcp_way2 },
   nutrition: [
-    { value: '205', label: '열량' },
+    { value: recipeData.value.info_car, label: '열량' },
     { value: '35g', label: '탄수화물' },
-    { value: '3g', label: '단백질' },
-    { value: '6g', label: '지방' },
-    { value: '68mg', label: '나트륨' },
+    { value: recipeData.value.info_pro, label: '단백질' },
+    { value: recipeData.value.info_fat, label: '지방' },
+    { value: recipeData.value.info_na, label: '나트륨' },
   ],
-}
+}))
 
 const relatedRecipes = [
   { id: 1, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
@@ -181,6 +192,7 @@ const reviews = [
   { id: 3, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
   { id: 4, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
 ]
+
 </script>
 
 <style scoped>
