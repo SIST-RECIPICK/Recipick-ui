@@ -4,6 +4,7 @@ import axios from 'axios'
 export const recipeDetailStore = defineStore('detail', {
   state: () => ({
     recipeData: {},
+	manualList: [],
   }),
   actions: {
     async recipeDetailData(no) {
@@ -14,6 +15,7 @@ export const recipeDetailStore = defineStore('detail', {
       })
       console.log(res.data)
       this.recipeData = res.data.recipeData
+	  this.manualList = res.data.manualList
     },
   },
 })
