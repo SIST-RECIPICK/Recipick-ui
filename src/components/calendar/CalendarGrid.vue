@@ -1,10 +1,13 @@
 <script setup>
+import { onMounted, onUnmounted } from 'vue'
+import { useDragDrop } from '@/composables/useDragDrop.js'
+
 defineProps({
   calendarCells: { type: Array, required: true },
   weekdays: { type: Array, required: true },
 })
 
-const emit = defineEmits(['slot-click'])
+const emit = defineEmits(['slot-click', 'recipe-drop'])
 
 // 표시용 축약 라벨 (매칭 키로 쓰는 원래 값(아침/점심/저녁)은 안 건드림)
 const MEAL_LABEL = { '아침': '아', '점심': '점', '저녁': '저' }
@@ -12,6 +15,15 @@ const MEAL_LABEL = { '아침': '아', '점심': '점', '저녁': '저' }
 function onSlotClick(cell, meal) {
   emit('slot-click', { cell, meal })
 }
+
+const { registerDropHandler } = useDragDrop()
+
+onMounted(() => {
+  registerDropHandler(({ dateStr, mealType, recipe }) => {
+    emit('recipe-drop', { dateStr, mealType, recipe })
+  })
+})
+onUnmounted(() => registerDropHandler(null))
 </script>
 
 <template>
@@ -34,6 +46,9 @@ function onSlotClick(cell, meal) {
               v-for="meal in cell.meals"
               :key="meal.type"
               class="meal-slot"
+              data-meal-slot
+              :data-date-str="cell.dateStr"
+              :data-meal-type="meal.type"
               @click="onSlotClick(cell, meal)"
             >
               <span class="chip meal-slot__type">{{ MEAL_LABEL[meal.type] }}</span>
@@ -101,9 +116,10 @@ function onSlotClick(cell, meal) {
   min-height: 18px;
   color: var(--text-primary);
   cursor: pointer;
+  border-radius: 4px;
 }
+body.is-dragging-recipe .meal-slot:hover { background: var(--accent-subtle); outline: 1px dashed var(--accent); }
 
-/* 이미지+메뉴명만 담는 별도 박스 (라벨과 분리) */
 .meal-slot__box {
   display: flex;
   align-items: center;
@@ -124,7 +140,6 @@ function onSlotClick(cell, meal) {
   flex-shrink: 0;
 }
 
-/* 아침/점심/저녁 -> 아/점/저 한 글자만, chip 기본 패딩도 줄여서 더 작게 */
 .meal-slot__type {
   padding: 0 4px;
   font-size: 10px;
@@ -132,7 +147,6 @@ function onSlotClick(cell, meal) {
   flex-shrink: 0;
 }
 
-/* 가이드에 xs 토큰이 없어서 임시 고정값 사용 - 디자인 담당자한테 --text-xs 있는지 확인 필요 */
 .meal-slot__recipe {
   overflow: hidden;
   text-overflow: ellipsis;

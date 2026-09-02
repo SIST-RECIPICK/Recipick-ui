@@ -1,7 +1,7 @@
-// 식단 캘린더 데이터 fetch + 월 이동 + 날짜별 매핑 로직
+// 식단 캘린더 데이터 fetch + 월 이동 + 날짜별 매핑 + 배치(upsert) 로직
 import { ref, computed } from "vue";
 
-const API_BASE = "http://localhost:8080"; // CORS로 프론트↔백엔드 직접 통신
+const API_BASE = "http://localhost:8080";
 
 const MEAL_TYPES = ["아침", "점심", "저녁"];
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -69,6 +69,29 @@ export function useCalendarItems(userId) {
     }
   }
 
+  // 드래그 배치 -> 슬롯에 레시피 저장 (upsert)
+  async function placeRecipe(dateStr, mealType, recipe) {
+    try {
+      const res = await fetch(`${API_BASE}/calendar/item`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId.value ?? userId,
+          meal_date: dateStr,
+          meal_type: mealType,
+          rcp_seq: recipe.rcp_seq,
+        }),
+      });
+      if (!res.ok) throw new Error(`배치 실패: ${res.status}`);
+
+      // 서버 반영 확인됐으니 최신 목록 다시 받아와서 화면 갱신
+      await loadCalendar();
+    } catch (e) {
+      errorMsg.value = "레시피 배치에 실패했습니다.";
+      console.error(e);
+    }
+  }
+
   function prevMonth() {
     if (month.value === 1) { month.value = 12; year.value -= 1; }
     else month.value -= 1;
@@ -81,5 +104,8 @@ export function useCalendarItems(userId) {
     loadCalendar();
   }
 
-  return { year, month, items, loading, errorMsg, calendarCells, loadCalendar, prevMonth, nextMonth, WEEKDAYS };
+  return {
+    year, month, items, loading, errorMsg,
+    calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,
+  };
 }
