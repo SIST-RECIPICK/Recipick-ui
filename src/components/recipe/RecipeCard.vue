@@ -1,22 +1,24 @@
 <template>
-  <article class="card card--hoverable recipe-card">
-    <img
-      class="recipe-card__image"
-      :src="recipe.image"
-      :alt="`${recipe.title} 대표 이미지`"
-      loading="lazy"
-    />
-    <div class="card__body">
-      <h3 class="recipe-card__title">{{ recipe.title }}</h3>
-      <p class="recipe-card__meta text-secondary">
-        {{ recipe.chef }} · 조회 {{ recipe.views }}
-      </p>
-      <div class="recipe-card__tags">
-        <span class="chip">{{ recipe.cookTime }}</span>
-        <span class="chip chip--accent">{{ recipe.category }}</span>
+  <RouterLink :to="`/recipes/${recipe.id}`" class="recipe-card-link">
+    <article class="card card--hoverable recipe-card">
+      <img
+        class="recipe-card__image"
+        :src="recipe.image"
+        :alt="`${recipe.title} 대표 이미지`"
+        loading="lazy"
+      />
+      <div class="card__body">
+        <h3 class="recipe-card__title">{{ recipe.title }}</h3>
+        <p class="recipe-card__meta text-secondary">
+          {{ recipe.chef }} · 조회 {{ recipe.views }}
+        </p>
+        <div class="recipe-card__tags">
+          <span class="chip">{{ recipe.cookTime }}</span>
+          <span class="chip chip--accent">{{ recipe.category }}</span>
+        </div>
       </div>
-    </div>
-  </article>
+    </article>
+  </RouterLink>
 </template>
 
 <script setup>
@@ -27,6 +29,12 @@ defineProps({
 </script>
 
 <style scoped>
+/* 카드 전체를 링크로. a 기본 스타일 제거 */
+.recipe-card-link {
+  display: block;
+  color: inherit;
+}
+
 /* 레시피 카드는 이미지 줌 + 테두리 강조로 대체.*/
 .recipe-card.card--hoverable:hover {
   box-shadow: none;

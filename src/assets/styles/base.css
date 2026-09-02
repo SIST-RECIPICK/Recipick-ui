@@ -113,12 +113,10 @@ small { font-size: var(--text-sm); color: var(--text-secondary); }
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  transition: box-shadow var(--dur-base) var(--ease),
-              transform var(--dur-base) var(--ease);
+  transition: border-color var(--dur-base) var(--ease);
 }
 .card--hoverable:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: var(--accent);
 }
 .card__body { padding: var(--space-4); }
 
@@ -184,4 +182,36 @@ small { font-size: var(--text-sm); color: var(--text-secondary); }
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* 페이지네이션 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+.pagination__btn {
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-secondary);
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.pagination__btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.pagination__btn.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: var(--weight-bold);
+}
+.pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
