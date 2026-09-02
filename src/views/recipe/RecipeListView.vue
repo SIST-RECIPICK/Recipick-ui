@@ -49,18 +49,20 @@
     </section>
 
     <!-- 페이지네이션 -->
-    <div class="home__pagination">
-      <Pagination
-        v-model="page"
-        :total-pages="totalPages"
-        @update:model-value="loadRecipes"
-      />
-    </div>
+    <Pagination
+      class="list__pagination"
+      :curpage="page.curpage"
+      :startpage="page.startpage"
+      :endpage="page.endpage"
+      :totalpage="page.totalpage"
+      @change="loadRecipes"
+    />
+
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCountUp } from '@/composables/useCountUp'
 import {
   IconSearch, IconCategory, IconBowl, IconSoup, IconCake,
@@ -69,8 +71,8 @@ import {
 
 import CategoryCarousel from '@/components/recipe/CategoryCarousel.vue'
 import SortSelect from '@/components/recipe/SortSelect.vue'
-import Pagination from '@/components/Pagination.vue'
-import RecipeCard from '@/components/RecipeCard.vue'
+import Pagination from '@/components/common/Pagination.vue'
+import RecipeCard from '@/components/recipe/RecipeCard.vue'
 
 // --- 히어로 카운트업 (와이어프레임 "애니메이션 추가") ---
 const totalCount = ref(1200)
@@ -91,8 +93,12 @@ const activeCategory = ref('all')
 // --- 검색 · 정렬 · 페이지 ---
 const keyword = ref('')
 const sort = ref('latest')
-const page = ref(1)
-const totalPages = ref(10)
+const page = ref({
+  curpage: 1,
+  startpage: 1,
+  endpage: 1,
+  totalpage: 1,
+})
 
 // --- 더미 레시피 (실제로는 API 응답) ---
 const recipes = ref(
@@ -110,9 +116,25 @@ const recipes = ref(
 const heroText = computed(() => `${countDisplay.value.toLocaleString()}`)
 
 // TODO: 카테고리/검색/정렬/페이지 변경 시 서버에서 목록 재조회
-function loadRecipes() {
-  // 예: GET /api/recipes?category=&keyword=&sort=&page=
+function loadRecipes(curpage = 1) {
+  // TODO: 실제 API 호출로 교체
+  // const res = await api.getMembers(curpage)
+  // members.value = res.list
+  // page.value = {
+  //   curpage: res.curpage,
+  //   startpage: res.startpage,
+  //   endpage: res.endpage,
+  //   totalpage: res.totalpage,
+  // }
+
+  page.value = { curpage, startpage: 1, endpage: 3, totalpage: 3 }
 }
+
+// 화면 처음 뜰 때 1페이지 조회
+onMounted(() => {
+  loadRecipes(1)
+})
+
 </script>
 
 
@@ -177,9 +199,11 @@ function loadRecipes() {
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-4);
 }
+
+/* 페이지네이션 여백 */
+.list__pagination { margin-top: var(--space-6); }
+
 @media (max-width: 992px) { .home__grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) { .home__grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .home__grid { grid-template-columns: 1fr; } }
-
-.home__pagination { margin-top: var(--space-6); }
 </style>

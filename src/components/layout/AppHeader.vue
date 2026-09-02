@@ -8,14 +8,27 @@
 
       <!-- 주 메뉴 (데스크톱) -->
       <nav class="app-header__nav" aria-label="주 메뉴">
-        <RouterLink
-          v-for="item in navItems"
-          :key="item.to"
-          :to="item.to"
-          class="app-header__link"
-        >
-          {{ item.label }}
-        </RouterLink>
+        <template v-for="item in navItems" :key="item.to">
+          <!-- 하위메뉴 있는 항목: 드롭다운 -->
+          <div v-if="item.children" class="dropdown">
+            <RouterLink :to="item.to" class="app-header__link dropdown__trigger">
+              {{ item.label }}
+              <IconChevronDown :size="14" />
+            </RouterLink>
+            <ul class="dropdown__menu">
+              <li v-for="child in item.children" :key="child.to">
+                <RouterLink :to="child.to" class="dropdown__item">
+                  {{ child.label }}
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 일반 항목 -->
+          <RouterLink v-else :to="item.to" class="app-header__link">
+            {{ item.label }}
+          </RouterLink>
+        </template>
       </nav>
 
       <!-- 우측 액션 -->
@@ -49,7 +62,8 @@
                 <IconUser :size="18" /> 마이페이지
               </RouterLink>
             </li>
-            <li v-if="auth.isAdmin" role="none">
+            <!-- TODO: 권한 기능 구현 후 v-if="auth.isAdmin" 로 복구할 것 (개발 중 임시 노출) -->
+            <li role="none">
               <RouterLink to="/admin" class="profile__item" role="menuitem">
                 <IconSettings :size="18" /> 관리자페이지
               </RouterLink>
@@ -75,15 +89,25 @@
 
     <!-- 모바일 메뉴 패널 -->
     <nav v-if="mobileOpen" class="app-header__mobile" aria-label="모바일 메뉴">
-      <RouterLink
-        v-for="item in navItems"
-        :key="item.to"
-        :to="item.to"
-        class="app-header__mobile-link"
-        @click="mobileOpen = false"
-      >
-        {{ item.label }}
-      </RouterLink>
+      <template v-for="item in navItems" :key="item.to">
+        <RouterLink
+          :to="item.to"
+          class="app-header__mobile-link"
+          @click="mobileOpen = false"
+        >
+          {{ item.label }}
+        </RouterLink>
+        <!-- 하위메뉴는 들여써서 나열 -->
+        <RouterLink
+          v-for="child in item.children"
+          :key="child.to"
+          :to="child.to"
+          class="app-header__mobile-link app-header__mobile-link--sub"
+          @click="mobileOpen = false"
+        >
+          {{ child.label }}
+        </RouterLink>
+      </template>
     </nav>
   </header>
 </template>
@@ -108,8 +132,15 @@ const navItems = [
   { label: '레시피', to: '/recipes' },
   { label: '냉장고 파먹기', to: '/fridge' },
   { label: '식단관리', to: '/meal-plan' },
-  { label: '커뮤니티', to: '/community' },
-  { label: '스타일가이드', to: '/styleguide' }
+  {
+    label: '커뮤니티',
+    to: '/community',
+    children: [
+      { label: '후기게시판', to: '/community/reviews' },
+      { label: '큐레이션', to: '/community/curations' },
+    ],
+  },
+  { label: '스타일가이드', to: '/styleguide' },
 ]
 
 const menuOpen = ref(false)   // 프로필 드롭다운
@@ -139,8 +170,6 @@ function handleLogout() {
   display: flex;
   align-items: center;
 }
-/* 로고 이미지: 높이만 고정, 너비는 비율 유지.
-   헤더 높이(64px) 안에 들어가도록 32px로 제한. */
 .app-header__logo-img {
   height: 32px;
   width: auto;
@@ -166,6 +195,49 @@ function handleLogout() {
 .app-header__link.router-link-active {
   background: var(--surface-inverse);
   color: var(--text-on-inverse);
+}
+
+/* 드롭다운 (하위메뉴) */
+.dropdown { position: relative; }
+.dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.dropdown__menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + var(--space-1));
+  min-width: 160px;
+  background: var(--surface-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-1);
+  /* 평소 숨김: hover/focus 시에만 노출 */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.dropdown:hover .dropdown__menu,
+.dropdown:focus-within .dropdown__menu {
+  opacity: 1;
+  visibility: visible;
+}
+.dropdown__item {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.dropdown__item:hover {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+.dropdown__item.router-link-active {
+  color: var(--accent-text);
 }
 
 /* 우측 액션 */
@@ -250,5 +322,10 @@ function handleLogout() {
     font-size: var(--text-base);
   }
   .app-header__mobile-link.router-link-active { color: var(--accent); }
+  .app-header__mobile-link--sub {
+    padding-left: var(--space-6);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
 }
 </style>

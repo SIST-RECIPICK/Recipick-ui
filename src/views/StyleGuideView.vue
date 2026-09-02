@@ -5,7 +5,7 @@
  */
 import SgSection from '@/components/styleguide/SgSection.vue'
 import CodeBlock from '@/components/styleguide/CodeBlock.vue'
-import RecipeCard from '@/components/RecipeCard.vue'
+import RecipeCard from '@/components/recipe/RecipeCard.vue'
 
 // 컬러 토큰 목록 (미리보기용)
 const colors = [
