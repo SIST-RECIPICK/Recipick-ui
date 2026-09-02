@@ -23,7 +23,7 @@
               v-model="member.status"
               class="cell-select"
               :class="statusClass(member.status)"
-              :disabled="member.saving"
+              :disabled="member.saving || member.status === 'DELETE'"
               @change="updateStatus(member)"
             >
               <option v-for="opt in statusOptions" :key="opt.value" :value="opt.value">
@@ -38,7 +38,7 @@
               v-model="member.role"
               class="cell-select"
               :class="{ 'cell-select--accent': member.role === 'ADMIN' }"
-              :disabled="member.saving"
+              :disabled="member.saving || member.status === 'DELETE' || member.status == 'WITHDRAWN'"
               @change="updateRole(member)"
             >
               <option v-for="opt in roleOptions" :key="opt.value" :value="opt.value">
@@ -99,11 +99,15 @@ async function loadMembers(pageInfo) {
 onMounted(() => {
   loadMembers(1)
 })
-
+/* 
+  • ACTIVE: 활동중 (정상)
+  • WITHDRAWN: 탈퇴처리중 (소프트 탈퇴)
+  • DELETE: 탈퇴완료 (하드 탈퇴)
+*/
 const statusOptions = [
   { value: 'ACTIVE', label: '활성' },
-  { value: 'SUSPENDED', label: '정지' },
-  { value: 'WITHDRAWN', label: '탈퇴' },
+  { value: 'WITHDRAWN', label: '정지' },
+  { value: 'DELETE', label: '탈퇴' },
 ]
 const roleOptions = [
   { value: 'USER', label: '일반' },
@@ -113,14 +117,21 @@ const roleOptions = [
 function statusClass(status) {
   return {
     'cell-select--danger': status === 'SUSPENDED',
-    'cell-select--muted': status === 'WITHDRAWN',
+    'cell-select--muted': status === 'WITHDRAWN' || status === 'DELETE',
   }
 }
 
 async function updateStatus(member) {
   member.saving = true
   try {
-    // TODO: 회원상태 변경 API 호출 (PATCH /admin/members/:id/status)
+    await axios.put('http://localhost:8080/admin/user/status',
+      {
+        id:member.id,
+        status:member.status
+      }
+    )
+    const label = statusOptions.find(opt => opt.value === member.status)?.label
+    alert(label+" 처리 되었습니다.")
   } finally {
     member.saving = false
   }
@@ -194,7 +205,7 @@ async function updateRole(member) {
 }
 .cell-select:disabled {
   opacity: 0.5;
-  cursor: wait;
+  cursor: not-allowed;
 }
 
 .cell-select--accent { color: var(--accent-text); font-weight: var(--weight-medium); }
