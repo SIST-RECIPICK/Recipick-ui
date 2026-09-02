@@ -173,6 +173,15 @@ small { font-size: var(--text-sm); color: var(--text-secondary); }
 .text-muted     { color: var(--text-muted); }
 .text-accent    { color: var(--accent); }
 
+/* ---------- 레시피 카드 커스텀 드래그 (pointer 기반, 네이티브 HTML5 DnD 안 씀) ---------- */
+body.is-dragging-recipe {
+  cursor: grabbing !important;
+  user-select: none;
+}
+body.is-dragging-recipe * {
+  cursor: grabbing !important;
+}
+
 /* ---------- 스크린리더 전용 ---------- */
 .sr-only {
   position: absolute;
