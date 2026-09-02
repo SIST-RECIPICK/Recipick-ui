@@ -16,14 +16,14 @@ function onSlotClick(cell, meal) {
   emit('slot-click', { cell, meal })
 }
 
-const { registerDropHandler } = useDragDrop()
+const { registerDropHandler } = useDragDrop() // 함수 가져오기
 
-onMounted(() => {
-  registerDropHandler(({ dateStr, mealType, recipe }) => {
-    emit('recipe-drop', { dateStr, mealType, recipe })
+onMounted(() => { // 드래그 드롭 이벤트 등록
+  registerDropHandler(({ dateStr, mealType, recipe }) => { //비어있는 onDrop에 3개의 데이터 전장
+    emit('recipe-drop', { dateStr, mealType, recipe }) //드롭시 정보를 emit로 상위 컴포넌트(MealPlanView.vue)로 전달
   })
 })
-onUnmounted(() => registerDropHandler(null))
+onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이벤트 해제
 </script>
 
 <template>
@@ -45,12 +45,12 @@ onUnmounted(() => registerDropHandler(null))
             <div
               v-for="meal in cell.meals"
               :key="meal.type"
-              class="meal-slot"
+              class="meal-slot" 
               data-meal-slot
               :data-date-str="cell.dateStr"
               :data-meal-type="meal.type"
               @click="onSlotClick(cell, meal)"
-            >
+            ><!--useDragDrop.js에 handlePointerUp에서 쓰이는 값들 이벤트 리스너 대신 클릭 (표시용)-->
               <span class="chip meal-slot__type">{{ MEAL_LABEL[meal.type] }}</span>
 
               <div v-if="meal.data" class="meal-slot__box">
@@ -60,7 +60,9 @@ onUnmounted(() => registerDropHandler(null))
                   class="meal-slot__thumb"
                   alt=""
                 />
-                <span class="meal-slot__recipe">{{ meal.data.rcp_nm }}</span>
+                <span class="meal-slot__recipe">
+                  {{ meal.data.rcp_nm.length > 7 ? meal.data.rcp_nm.slice(0, 7) + '...' : meal.data.rcp_nm }}
+                </span>
               </div>
               <span v-else class="meal-slot__empty">+</span>
             </div>

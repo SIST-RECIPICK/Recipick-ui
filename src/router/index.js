@@ -117,7 +117,7 @@ const routes = [
     // 식단표
     path: '/meal-plan',
     name: "MealPlan",
-    component: () => import('@/views/MealPlanView.vue')
+    component: () => import('@/views/calendar/MealPlanView.vue')
   }
 ]
 

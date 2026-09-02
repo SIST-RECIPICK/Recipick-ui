@@ -1,13 +1,13 @@
 <script setup>
 import { useRecipeSearch } from '@/composables/useRecipeSearch.js'
-import { useDragDrop } from '@/composables/useDragDrop.js'
+import { useDragDrop } from '@/composables/useDragDrop.js' // 드롭파일 임포트
 
 const props = defineProps({
   userId: { type: [Number, Object], required: true },
 })
 
 const { keyword, results, loading, errorMsg, search } = useRecipeSearch(props.userId)
-const { dragging, startDrag } = useDragDrop()
+const { dragging, startDrag } = useDragDrop() // 드래그 파일에서 두개의 함수 가져오기
 
 function clearQuery() {
   keyword.value = ''
@@ -15,8 +15,8 @@ function clearQuery() {
 }
 
 function onPointerDown(event, recipe) {
-  if (event.target.closest('button')) return // 미리보기/조리법 버튼 클릭은 드래그 아님
-  startDrag(recipe, event)
+  if (event.target.closest('button')) return // 버튼 클릭시 드래그 방지
+  startDrag(recipe, event) // 버튼이 아니면 함수 실행(useDragDrop)
 }
 </script>
 
@@ -57,7 +57,7 @@ function onPointerDown(event, recipe) {
     <p v-if="loading" class="recipe-panel__status">검색 중...</p>
     <p v-else-if="errorMsg" class="recipe-panel__status recipe-panel__status--error">{{ errorMsg }}</p>
 
-    <!-- 결과 리스트 -->
+    <!-- 결과 리스트 , 드래그 중인게 자신이면 투명도 추가하여 드래그 중인걸 표시, 카드 누르는 순간 함수 실행 이벤트,레시피 넘김-->
     <div class="recipe-panel__list">
       <div
         v-for="r in results"
