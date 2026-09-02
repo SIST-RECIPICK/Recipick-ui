@@ -35,7 +35,7 @@
       v-if="dragging"
       class="meal-plan__drag-ghost"
       :style="{ left: pointerPos.x + 'px', top: pointerPos.y + 'px' }"
-    ><!-- 드래그일때 마우스 좌표따라서 css도 따라다니게 실시-->
+    ><!-- 드래그일때 마우스 좌표따라서 css도 따라다니게 실시 -->
       {{ dragging.rcp_nm }}
     </div>
   </div>
@@ -46,9 +46,9 @@ import { computed, onMounted } from 'vue'
 import { useCalendarItems } from '@/composables/useCalendarItems.js'
 import { useDragDrop } from '@/composables/useDragDrop.js'
 import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
-import RecipeSearchPanel from '@/components/recipe/Recipesearchpanel.vue'
+import RecipeSearchPanel from '@/components/recipe/RecipeSearchPanel.vue'
 
-const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기
+const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기  
 
 // TODO: 실제 로그인 스토어 연결되면 여기서 userId 가져오기
 const userId = computed(() => 2) // 임시 하드코딩
