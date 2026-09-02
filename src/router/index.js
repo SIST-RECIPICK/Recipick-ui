@@ -103,6 +103,11 @@ const routes = [
     component: () => import('@/views/community/ReviewBoardView.vue'),
   },
   {
+    path: '/community/reviews/detail',
+    name: 'community-reviews-detail',
+    component: () => import('@/views/community/ReviewBoardDetailView.vue'),
+  },
+  {
     path: '/community/curations',
     name: 'community-curations',
     component: () => import('@/views/community/CurationBoardView.vue'),
