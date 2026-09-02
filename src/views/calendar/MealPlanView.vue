@@ -46,7 +46,7 @@ import { computed, onMounted } from 'vue'
 import { useCalendarItems } from '@/composables/useCalendarItems.js'
 import { useDragDrop } from '@/composables/useDragDrop.js'
 import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
-import RecipeSearchPanel from '@/components/recipe/RecipeSearchPanel.vue'
+import RecipeSearchPanel from '@/components/calendar/RecipeSearchPanel.vue'
 
 const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기  
 
