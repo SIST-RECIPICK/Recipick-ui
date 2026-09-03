@@ -107,6 +107,11 @@ import IngredientPanel from '@/components/recipe/IngredientPanel.vue'
 import RecipeReviewCard from '@/components/recipe/RecipeReviewCard.vue'
 import { storeToRefs } from 'pinia'
 import { recipeDetailStore } from '@/stores/recipeDetailStore'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const id = route.params.id
 
 const store = recipeDetailStore()
 
@@ -115,7 +120,7 @@ const { manualList } = storeToRefs(store)
 const { ingredientUnitList } = storeToRefs(store)
 
 onMounted(() => {
-  store.recipeDetailData(74)
+  store.recipeDetailData(id)
 })
 
 
