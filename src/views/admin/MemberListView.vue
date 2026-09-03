@@ -79,8 +79,7 @@ const page = ref({
 })
 
 async function loadMembers(pageInfo) {
-  console.log(pageInfo)
-  const res = await axios.get('http://localhost:8080/admin/user/list',{
+  const res = await axios.get('http://localhost:8080/admin/user',{
     params:{
       page:pageInfo
     }
@@ -122,6 +121,7 @@ function statusClass(status) {
 }
 
 async function updateStatus(member) {
+  /* updateStatus 함수가 불리기 전 member.saving은 undefined으로 나와서 처음엔 false 값이 됨 */
   member.saving = true
   try {
     await axios.put('http://localhost:8080/admin/user/status',
