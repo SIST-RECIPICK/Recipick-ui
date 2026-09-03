@@ -112,9 +112,10 @@ const store = recipeDetailStore()
 
 const { recipeData } = storeToRefs(store)
 const { manualList } = storeToRefs(store)
+const { ingredientUnitList } = storeToRefs(store)
 
 onMounted(() => {
-  store.recipeDetailData(331)
+  store.recipeDetailData(74)
 })
 
 
@@ -161,14 +162,7 @@ const recipe = computed(()=>({
   image: '',
   tags: recipeData.value.hash_tag?.split(",") ?? [],
   steps: manualList.value,
-  ingredients: [
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-  ],
+  ingredients: ingredientUnitList.value,
   cooking: { type: recipeData.value.rcp_pat2, method: recipeData.value.rcp_way2 },
   nutrition: [
     { value: `${recipeData.value?.info_eng ?? ''}`, label: '열량' },
