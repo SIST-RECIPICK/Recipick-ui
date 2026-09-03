@@ -6,18 +6,18 @@
         <!-- 대표 이미지 -->
         <img
           class="detail__hero"
-          :src="recipe.image"
+          :src="recipeData?.att_file_no_main"
           :alt="`${recipe.title} 완성 대표 이미지`"
         />
 
         <!-- 음식명 + 작성자 -->
         <div class="detail__head">
-          <h1 class="detail__title">{{ recipe.title }}</h1>
+          <h1 class="detail__title">{{recipe.title}}</h1>
           <div class="detail__author">
             <span class="chip chip--accent">{{ recipe.badge }}</span>
             <span class="detail__chef">{{ recipe.chef }}</span>
             <button class="btn btn--outline detail__follow">
-              레시피 매료 문의하기
+              레시피 재료 문의하기
             </button>
           </div>
           <div class="detail__tags">
@@ -44,9 +44,9 @@
           <ol class="steps">
             <li v-for="(step, i) in recipe.steps" :key="i" class="steps__item">
               <img
-                v-if="step.image"
+                v-if="step.manual_img"
                 class="steps__image"
-                :src="step.image"
+                :src="step.manual_img"
                 :alt="`순서 ${i + 1} 이미지`"
                 loading="lazy"
               />
@@ -54,8 +54,8 @@
                 순서 이미지
               </div>
               <p class="steps__text">
-                <span class="steps__num">{{ i + 1 }}.</span>
-                {{ step.text }}
+                <!--<span class="steps__num">{{ i + 1 }}.</span>-->
+                {{ step.manual_desc }}
               </p>
             </li>
           </ol>
@@ -101,10 +101,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import IngredientPanel from '@/components/recipe/IngredientPanel.vue'
 import RecipeReviewCard from '@/components/recipe/RecipeReviewCard.vue'
+import { storeToRefs } from 'pinia'
+import { recipeDetailStore } from '@/stores/recipeDetailStore'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const id = route.params.id
+
+const store = recipeDetailStore()
+
+const { recipeData } = storeToRefs(store)
+const { manualList } = storeToRefs(store)
+const { ingredientUnitList } = storeToRefs(store)
+
+onMounted(() => {
+  store.recipeDetailData(id) 
+})
+
 
 // 탭 정의 (앵커 id 한 곳에서 관리)
 const tabs = [
@@ -141,33 +159,24 @@ onMounted(() => {
 onUnmounted(() => observer?.disconnect())
 
 // --- 아래는 목업 데이터 (API 연동 시 교체, FR-2xx) ---
-const recipe = {
-  title: '음식명(레시피명)',
-  chef: '쉐프명',
+const recipe = computed(()=>({
+
+  title: recipeData.value?.rcp_nm,
+  chef: recipeData.value?.user_id ?? '알 수 없는 사용자',
   badge: '오늘의 레시피',
   image: '',
-  tags: ['태그', '태그', '태그'],
-  steps: [
-    { image: '', text: '고구마는 깨끗이 씻어서 껍질을 벗기고 4cm 정도로 잘라준다.' },
-    { image: '', text: '찜기에 고구마를 넣고 20~30분 정도 삶아 주고, 블렌더나 체를 이용하여 잘 으깨어 곱게 만든다.' },
-  ],
-  ingredients: [
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-    { name: '재료명', amount: 200 },
-  ],
-  cooking: { type: '요리 종류', method: '조리 방법' },
+  tags: recipeData.value?.hash_tag?.split(",") ?? [],
+  steps: manualList.value,
+  ingredients: ingredientUnitList.value,
+  cooking: { type: recipeData.value?.rcp_pat2, method: recipeData.value?.rcp_way2 },
   nutrition: [
-    { value: '205', label: '열량' },
-    { value: '35g', label: '탄수화물' },
-    { value: '3g', label: '단백질' },
-    { value: '6g', label: '지방' },
-    { value: '68mg', label: '나트륨' },
+    { value: `${recipeData.value?.info_eng ?? ''}`, label: '열량' },
+    { value: `${recipeData.value?.info_car ?? ''}g`, label: '탄수화물' },
+    { value: `${recipeData.value?.info_pro ?? ''}g`, label: '단백질' },
+    { value: `${recipeData.value?.info_fat ?? ''}g`, label: '지방' },
+    { value: `${recipeData.value?.info_na  ?? ''}mg`, label: '나트륨' },
   ],
-}
+}))
 
 const relatedRecipes = [
   { id: 1, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
@@ -181,6 +190,7 @@ const reviews = [
   { id: 3, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
   { id: 4, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
 ]
+
 </script>
 
 <style scoped>
