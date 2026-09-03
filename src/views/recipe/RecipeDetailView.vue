@@ -6,7 +6,7 @@
         <!-- 대표 이미지 -->
         <img
           class="detail__hero"
-          :src="recipeData.att_file_no_main"
+          :src="recipeData?.att_file_no_main"
           :alt="`${recipe.title} 완성 대표 이미지`"
         />
 
@@ -120,7 +120,7 @@ const { manualList } = storeToRefs(store)
 const { ingredientUnitList } = storeToRefs(store)
 
 onMounted(() => {
-  store.recipeDetailData(id)
+  store.recipeDetailData(id) 
 })
 
 
@@ -161,14 +161,14 @@ onUnmounted(() => observer?.disconnect())
 // --- 아래는 목업 데이터 (API 연동 시 교체, FR-2xx) ---
 const recipe = computed(()=>({
 
-  title: recipeData.value.rcp_nm,
+  title: recipeData.value?.rcp_nm,
   chef: recipeData.value?.user_id ?? '알 수 없는 사용자',
   badge: '오늘의 레시피',
   image: '',
-  tags: recipeData.value.hash_tag?.split(",") ?? [],
+  tags: recipeData.value?.hash_tag?.split(",") ?? [],
   steps: manualList.value,
   ingredients: ingredientUnitList.value,
-  cooking: { type: recipeData.value.rcp_pat2, method: recipeData.value.rcp_way2 },
+  cooking: { type: recipeData.value?.rcp_pat2, method: recipeData.value?.rcp_way2 },
   nutrition: [
     { value: `${recipeData.value?.info_eng ?? ''}`, label: '열량' },
     { value: `${recipeData.value?.info_car ?? ''}g`, label: '탄수화물' },
