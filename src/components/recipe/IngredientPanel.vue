@@ -119,7 +119,7 @@ const scaledIngredients = computed(() =>
     let display
     if (unit.value === 'spoon') display = `${(grams / 15).toFixed(1)}스푼`
     else if (unit.value === 'cup') display = `${(grams / 240).toFixed(1)}컵`
-    else display = `${Math.round(grams)}g`
+    else display = `${grams ? Math.round(grams) + item.unit: ''}`
     return { name: item.name, display }
   })
 )
