@@ -15,7 +15,7 @@ export const recipeDetailStore = defineStore('detail', {
       })
       console.log(res.data)
       this.recipeData = res.data.recipeData
-	  this.manualList = res.data.manualList
+	    this.manualList = res.data.manualList
     },
   },
 })

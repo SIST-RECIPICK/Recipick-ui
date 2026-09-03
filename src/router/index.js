@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
+
 // 관리자 가드 복구 시 아래 import도 함께 해제할 것
 // import { useAuthStore } from '@/stores/auth'
+
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
@@ -111,6 +113,12 @@ const routes = [
     name: 'styleguide',
     component: () => import('@/views/StyleGuideView.vue'),
   },
+  {
+    // 식단표
+    path: '/meal-plan',
+    name: "MealPlan",
+    component: () => import('@/views/calendar/MealPlanView.vue')
+  }
 ]
 
 const router = createRouter({
