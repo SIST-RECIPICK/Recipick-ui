@@ -9,17 +9,17 @@
       <thead>
         <tr>
           <th class="clist__col-no">번호</th>
-          <th>제목</th>
-          <th class="clist__col-ym">년/월</th>
-          <th class="clist__col-date">등록일</th>
+          <th class="clist__col-title">제목</th>
+          <th class="clist__col-ym">재료</th>
+          <th class="clist__col-date">년/월</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="item in curations" :key="item.id" class="clist__row" @click="goDetail(item.id)">
-          <td>{{ item.id }}</td>
+          <td>{{ item.rn }}</td>
           <td class="clist__title">{{ item.title }}</td>
-          <td>{{ item.yearMonth }}</td>
-          <td>{{ item.registeredAt }}</td>
+          <td>{{ item.incredient_list }}</td>
+          <td>{{ item.targetday }}</td>
         </tr>
       </tbody>
     </table>
@@ -38,8 +38,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 import AdminPanel from '@/components/admin/AdminPanel.vue'
 import Pagination from '@/components/common/Pagination.vue'
 
@@ -49,12 +50,7 @@ function goDetail(id) {
   router.push(`/admin/curations/${id}`)
 }
 
-// 목업 데이터 (FR-211 API 연동 시 교체)
-const curations = computed(() => [
-  { id: 3, title: '가을 뿌리채소 밥상', yearMonth: '2025.10', registeredAt: '10.02' },
-  { id: 2, title: '환절기 보양 큐레이션', yearMonth: '2025.09', registeredAt: '09.01' },
-  { id: 1, title: '여름 제철 채소 모음', yearMonth: '2025.08', registeredAt: '08.03' },
-])
+const curations = ref([])
 
 const page = ref({
   curpage: 1,
@@ -63,17 +59,23 @@ const page = ref({
   totalpage: 1,
 })
 
-async function loadCuration(curpage = 1) {
-  // TODO: 실제 API 호출로 교체
-  // const res = await api.getMembers(curpage)
-  // members.value = res.list
-  // page.value = {
-  //   curpage: res.curpage,
-  //   startpage: res.startpage,
-  //   endpage: res.endpage,
-  //   totalpage: res.totalpage,
-  // }
-  page.value = { curpage, startpage: 1, endpage: 3, totalpage: 3 }
+async function loadCuration(pageInfo) {
+  try {
+    const res = await axios.get('http://localhost:8080/admin/curation', {
+      params:{
+        page:pageInfo
+      }
+    })
+    curations.value=res.data.list
+    page.value={
+      curpage:res.data.curpage,
+      startpage:res.data.startpage,
+      endpage:res.data.endpage,
+      totalpage:res.data.totalpage,
+    }
+  } catch (error) {
+    console.log(error)
+  }
 }
 
 onMounted(()=>{
@@ -101,7 +103,7 @@ onMounted(()=>{
 }
 .clist__table th {
   padding: var(--space-3) var(--space-4);
-  text-align: left;
+  text-align: center;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--text-secondary);
@@ -115,8 +117,11 @@ onMounted(()=>{
 .clist__col-no {
   width: 80px;
 }
+.clist__col-title {
+  width: 200px;
+}
 .clist__col-ym {
-  width: 120px;
+  width: 150px;
 }
 .clist__col-date {
   width: 100px;
@@ -124,6 +129,7 @@ onMounted(()=>{
 
 .clist__row {
   cursor: pointer;
+  text-align: center;
   transition: background var(--dur-fast) var(--ease);
 }
 .clist__row:hover {
@@ -131,6 +137,7 @@ onMounted(()=>{
 }
 .clist__title {
   font-weight: var(--weight-bold);
+  text-align: left;
   color: var(--accent);
 }
 
