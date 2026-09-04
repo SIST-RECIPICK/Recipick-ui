@@ -1,3 +1,60 @@
+<script setup>
+import { computed, onMounted } from 'vue'
+import { useCalendarItems } from '@/composables/useCalendarItems.js'
+import { useDragDrop } from '@/composables/useDragDrop.js'
+import { useCalendarInfo } from '@/composables/useCalendarInfo.js'
+import { useRouter } from 'vue-router' // 라우터 가져오기
+import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
+import RecipeSearchPanel from '@/components/calendar/RecipeSearchPanel.vue'
+
+const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기  
+
+const router = useRouter() // 라우터 가져오기
+// TODO: 실제 로그인 스토어 연결되면 여기서 userId 가져오기
+const userId = computed(() => 2) // 임시 하드코딩
+
+const {
+  year, month, items, loading, errorMsg,
+  calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,
+} = useCalendarItems(userId)
+
+// useCalendarInfo에 year,month를 그대로 가져옴
+const {
+  info, loading: summaryLoading, errorMsg: summaryError, loadSummary,
+} = useCalendarInfo(userId, year, month)
+
+const filledCount = computed(() => items.value.length)
+
+function handleSlotClick({ cell, meal }) {
+  if (meal.data) {
+    // TODO: 조리법 화면으로 라우팅
+    goToRecipeDetail(meal.data.rcp_seq)
+  } else {
+    console.log('빈 슬롯:', cell.dateStr, meal.type)
+  }
+}
+
+async function handleRecipeDrop({ dateStr, mealType, recipe }) { // 드롭이벤트 받아서 값을 넘김
+  await placeRecipe(dateStr, mealType, recipe)
+  loadSummary() // 드롭후 요약정보 갱신
+}
+// 월 따라 정보 출력
+function goPrevMonth(){
+  prevMonth()
+  loadSummary()
+}
+function goNextMonth(){
+  nextMonth()
+  loadSummary()
+}
+function goToRecipeDetail(rcpSeq) {
+  router.push({ name: 'recipe-detail', params: { id: rcpSeq } }) // 라우터 경로 문자열
+}
+onMounted(() => {
+  loadCalendar()
+  loadSummary() // 페이지 로딩시 요약정보 같이 가져옴
+})
+</script>
 <template>
   <div class="meal-plan container">
     <section class="meal-plan__hero">
@@ -6,13 +63,57 @@
         <span class="meal-plan__count">{{ filledCount }}개</span>의 슬롯을 채웠어요.
       </p>
     </section>
-
+   
     <section class="meal-plan__header">
-      <button class="btn btn--ghost" aria-label="이전 달" @click="prevMonth">‹</button>
-      <h2 class="meal-plan__month">{{ year }}년 {{ month }}월</h2>
-      <button class="btn btn--ghost" aria-label="다음 달" @click="nextMonth">›</button>
-    </section>
-
+        <button class="btn btn--ghost" aria-label="이전 달" @click="goPrevMonth">‹</button>
+        <h2 class="meal-plan__month">{{ year }}년 {{ month }}월</h2>
+        <button class="btn btn--ghost" aria-label="다음 달" @click="goNextMonth">›</button>
+      </section>
+      <section v-if="info" class="meal-plan__summary">
+    <div class="meal-plan__summary-card">
+      <span class="meal-plan__summary-label">일평균</span>
+      <span class="meal-plan__summary-value">{{ info.avg_cal }} <small>kcal</small></span>
+      <span class="meal-plan__summary-sub">총 {{ info.total_cal.toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}kcal</span>
+    </div>
+    <div class="meal-plan__summary-card">
+      <span class="meal-plan__summary-label">채움률</span>
+      <span class="meal-plan__summary-value">{{ info.fill_rate }}<small>%</small></span>
+      <div class="meal-plan__gauge">
+        <div
+          class="meal-plan__gauge-fill"
+          :style="{ width: info.fill_rate + '%' }"
+        ></div>
+      </div>
+      <span class="meal-plan__summary-sub">
+        {{ info.filled_count }}/{{ info.total_slots }}끼
+      </span>
+    </div>
+    <div class="meal-plan__summary-card meal-plan__summary-card--macros">
+      <span class="meal-plan__summary-label">탄 · 단 · 지</span>
+      <span class="meal-plan__summary-sub">일 평균</span>
+      <span class="meal-plan__summary-value meal-plan__summary-value--sm">
+        {{ info.total_car }}g · {{ info.total_pro }}g · {{ info.total_fat }}g
+      </span>
+    </div>
+    <div class="meal-plan__summary-card meal-plan__summary-card--top1">
+      <span class="meal-plan__summary-label">이번 달 TOP1</span>
+      <span class="meal-plan__summary-value meal-plan__summary-value--sm">
+        {{ info.top1_nm ?? '기록 없음' }}
+      </span>
+      <span v-if="info.top1_nm" class="meal-plan__summary-sub">
+        {{ info.top1_count }}번 만들었어요
+      </span>
+      <button
+        v-if="info.top1_rcp_seq"
+        class="btn btn--ghost meal-plan__summary-btn"
+        @click="goToRecipeDetail(info.top1_rcp_seq)"
+      >
+        레시피 보기
+      </button>
+    </div>
+  </section>
+    <p v-else-if="summaryLoading" class="meal-plan__status">요약 정보 불러오는 중...</p>
+    <p v-else-if="summaryError" class="meal-plan__status meal-plan__status--error">{{ summaryError }}</p>
     <p v-if="loading" class="meal-plan__status">불러오는 중...</p>
     <p v-else-if="errorMsg" class="meal-plan__status meal-plan__status--error">{{ errorMsg }}</p>
 
@@ -41,40 +142,7 @@
   </div>
 </template>
 
-<script setup>
-import { computed, onMounted } from 'vue'
-import { useCalendarItems } from '@/composables/useCalendarItems.js'
-import { useDragDrop } from '@/composables/useDragDrop.js'
-import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
-import RecipeSearchPanel from '@/components/calendar/RecipeSearchPanel.vue'
 
-const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기  
-
-// TODO: 실제 로그인 스토어 연결되면 여기서 userId 가져오기
-const userId = computed(() => 2) // 임시 하드코딩
-
-const {
-  year, month, items, loading, errorMsg,
-  calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,
-} = useCalendarItems(userId)
-
-const filledCount = computed(() => items.value.length)
-
-function handleSlotClick({ cell, meal }) {
-  if (meal.data) {
-    // TODO: 조리법 화면으로 라우팅
-    console.log('조리법 이동:', meal.data.rcp_seq)
-  } else {
-    console.log('빈 슬롯:', cell.dateStr, meal.type)
-  }
-}
-
-function handleRecipeDrop({ dateStr, mealType, recipe }) { // 드롭이벤트 받아서 값을 넘김
-  placeRecipe(dateStr, mealType, recipe)
-}
-
-onMounted(loadCalendar)
-</script>
 
 <style scoped>
 .meal-plan { padding-block: var(--space-6); }
@@ -125,7 +193,83 @@ onMounted(loadCalendar)
   flex: 1;
   min-width: 0;
 }
+.meal-plan__summary {
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+  /* 스크롤바 눌림 방지용 여백 */
+}
+.meal-plan__summary-btn {
+  align-self: flex-start;
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+}
+.meal-plan__summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  flex: 0 0 auto;
+  /* 카드가 줄어들지 않고 내용 크기만큼 폭 유지 */
+  min-width: 140px;
+}
 
+.meal-plan__summary-label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+.meal-plan__summary-value {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+}
+.meal-plan__summary-sub {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-weight: var(--weight-normal);
+}
+.meal-plan__summary-value small {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.meal-plan__summary-value--sm {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meal-plan__summary-card--top1 .meal-plan__summary-value--sm {
+  color: var(--accent);
+}
+
+.meal-plan__gauge {
+  width: 100%;
+  height: 6px;
+  background: #e5e5e5; 
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-block: var(--space-1);
+}
+
+.meal-plan__gauge-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
 @media (max-width: 900px) {
   .meal-plan__body { flex-direction: column; }
   .meal-plan__search { width: 100%; }
