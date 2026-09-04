@@ -81,7 +81,6 @@ function onPointerDown(event, recipe) {
           </div>
           <div class="recipe-card__actions">
             <button class="recipe-card__btn recipe-card__btn--preview">미리보기</button>
-            <button class="recipe-card__btn recipe-card__btn--open">조리법 →</button>
           </div>
         </div>
       </div>
@@ -260,7 +259,7 @@ function onPointerDown(event, recipe) {
 }
 .recipe-card__dot { opacity: .5; }
 
-.recipe-card__actions { display: flex; gap: 6px; margin-top: 1px; }
+.recipe-card__actions { display: flex;justify-content: flex-end; gap: 6px; margin-top: 1px; }
 .recipe-card__btn {
   border: 1px solid var(--border);
   background: var(--surface-sunken);

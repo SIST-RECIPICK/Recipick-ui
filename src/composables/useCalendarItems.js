@@ -100,6 +100,27 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
       console.error(e);
     }
   }
+  // 슬롯의 레시피 삭제
+  async function deleteItem(dateStr, mealType){
+    try {
+      const params = new URLSearchParams({ // 필요한 params들
+        user_id: userId.value ?? userId,
+        meal_date: dateStr,
+        meal_type: mealType,
+      });
+
+      const res = await fetch(`${API_BASE}/calendar/item?${params.toString()}`,{ // 서버에 요청 보내고 await로 기다림
+        method : "DELETE", // 메소드는 삭제 메소드
+      });
+      if(!res.ok) throw new Error(`삭제 실패 : ${res.status}`); // 만약 실패시 에러
+
+      // 서버 반영 되었으니 다시 최신목록 가져와 갱신
+      await loadCalendar();
+    }catch (e){
+      errorMsg.value="레시피 삭제 실패";
+      console.error(e);
+    }
+  }
 
   // 이전달 이동 로직
   function prevMonth() {
@@ -116,6 +137,6 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
 
   return {
     year, month, items, loading, errorMsg,
-    calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,
+    calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS, deleteItem
   };
 }
