@@ -2,19 +2,19 @@
   <div class="cgroup">
     <h3 class="cgroup__title"># {{ ingredient }}</h3>
     <div class="cgroup__grid">
-      <article v-for="recipe in recipes" :key="recipe.id" class="crecipe">
+      <article v-for="recipe in recipes" :key="recipe.rcp_seq" class="crecipe" @click="goRecipe(recipe.rcp_seq)">
         <div class="crecipe__thumb">
           <img
-            v-if="recipe.image"
-            :src="recipe.image"
-            :alt="`${recipe.title} 이미지`"
+            v-if="recipe.att_file_no_main"
+            :src="recipe.att_file_no_main"
+            :alt="`${recipe.rcp_nm} 이미지`"
             loading="lazy"
           />
           <span v-else class="crecipe__placeholder" aria-hidden="true">이미지</span>
         </div>
         <div class="crecipe__body">
-          <h4 class="crecipe__name">{{ recipe.title }}</h4>
-          <p class="crecipe__views text-secondary">조회 {{ formatViews(recipe.views) }}</p>
+          <h4 class="crecipe__name">{{ recipe.rcp_nm }}</h4>
+          <p class="crecipe__views text-secondary">조회 {{ formatViews(recipe.hit) }}</p>
         </div>
       </article>
     </div>
@@ -22,14 +22,20 @@
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
 defineProps({
   ingredient: { type: String, required: true },
   recipes: { type: Array, required: true },
-  // [{ id, title, views, image }]
 })
 
 function formatViews(n) {
   return typeof n === 'number' ? n.toLocaleString('ko-KR') : n
+}
+
+function goRecipe(id){
+  router.push(`/recipes/${id}`)
 }
 </script>
 

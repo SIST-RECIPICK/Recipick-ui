@@ -5,30 +5,30 @@
       <div>
         <h1 class="cdetail__title">{{ curation.title }}</h1>
         <p class="cdetail__meta text-secondary">
-          {{ curation.yearMonthLabel }} · 등록일 {{ curation.registeredAt }}
+          {{ curation.targetday }} · 등록일 {{ curation.created_at }}
         </p>
       </div>
       <div class="cdetail__actions">
         <RouterLink :to="`/admin/curations/${curation.id}/edit`" class="btn btn--outline">
           수정
         </RouterLink>
-        <button class="btn btn--outline" @click="handleDelete">삭제</button>
+        <button class="btn btn--outline" @click="handleDelete(curation.id)">삭제</button>
       </div>
     </div>
 
     <!-- 재료 칩 -->
     <div class="cdetail__chips">
-      <span v-for="ing in curation.ingredients" :key="ing.name" class="chip chip--accent">
-        {{ ing.name }}
+      <span v-for="ing in curation.group" :key="ing.ingredient_id" class="chip chip--accent">
+        {{ ing.ingredient_name }}
       </span>
     </div>
 
     <!-- 재료별 그룹 -->
     <div class="cdetail__groups">
       <CurationGroup
-        v-for="ing in curation.ingredients"
-        :key="ing.name"
-        :ingredient="ing.name"
+        v-for="ing in curation.group"
+        :key="ing.ingredient_id"
+        :ingredient="ing.ingredient_name"
         :recipes="ing.recipes"
       />
     </div>
@@ -36,47 +36,48 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router'
+import axios from 'axios';
 import AdminPanel from '@/components/admin/AdminPanel.vue'
 import CurationGroup from '@/components/admin/CurationGroup.vue'
 
-// TODO: route.params.id로 조회 (FR-222)
-function handleDelete() {
-  // TODO: 삭제 확인 모달 + 삭제 API
+const route = useRoute()   // 현재 URL 정보 읽을 때 사용
+const router = useRouter() // 화면 이동시킬 때 사용
+
+const curation = ref({
+  title: '',
+  targetday: '',
+  created_at: '',
+  id: 0,
+  group: [],        // v-for 도는 배열은 빈 배열로 초기화
+})
+async function loadDetailCuration(id){
+  // url에 값을 그냥 붙여서 보낼 때는 백틱(`) 을 붙여야하고 "" 로 감싸면 그냥 문자열이라 안된다
+  const res = await axios.get(`http://localhost:8080/admin/curation/${id}`)
+  curation.value = res.data
 }
 
-// 목업 데이터
-const curation = {
-  id: 3,
-  title: '가을 뿌리채소 밥상',
-  yearMonthLabel: '2025년 10월',
-  registeredAt: '2025.10.02',
-  ingredients: [
-    {
-      name: '무',
-      recipes: [
-        { id: 1, title: '무나물', views: 1204, image: '' },
-        { id: 2, title: '뭇국', views: 980, image: '' },
-        { id: 3, title: '무조림', views: 742, image: '' },
-      ],
-    },
-    {
-      name: '배추',
-      recipes: [
-        { id: 4, title: '배추전', views: 1510, image: '' },
-        { id: 5, title: '배춧국', views: 833, image: '' },
-        { id: 6, title: '겉절이', views: 645, image: '' },
-      ],
-    },
-    {
-      name: '대파',
-      recipes: [
-        { id: 7, title: '파전', views: 2041, image: '' },
-        { id: 8, title: '파김치', views: 712, image: '' },
-        { id: 9, title: '대파볶음', views: 508, image: '' },
-      ],
-    },
-  ],
+onMounted(()=>{
+  const id = route.params.id // url에서 id 꺼낼 때 사용
+  loadDetailCuration(id)
+})
+
+// await는 async 안에서만 쓸 수 있기 때문에 async 선언해줘야함
+async function handleDelete(id) {
+
+  if (!confirm('정말 삭제하시겠습니까?')) {
+    return 
+  }
+  // axios는 결과가 즉시 오지 않는 비동기 작업이라, await 없이는 데이터가 도착하기 전에 다음 줄이 실행되어버림!
+  try {
+    await axios.delete(`http://localhost:8080/admin/curation/${id}`)
+    router.push(`/admin/curations`)
+  } catch (error) {
+    console.log(error)
+  } 
 }
+
 </script>
 
 <style scoped>

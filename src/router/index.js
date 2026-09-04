@@ -41,7 +41,7 @@ const routes = [
     path: '/admin',
     component: () => import('@/components/layout/AdminLayout.vue'),
     meta: { requiresAdmin: true }, // 해당 페이지에 들고가는 정보가 필요할 때 to.meta.requiresAdmin 처럼 쓸 수 있음
-    redirect: '/admin/curations',
+    redirect: '/admin/members',
     children: [
       {
         path: 'members',
