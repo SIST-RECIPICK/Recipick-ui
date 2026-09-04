@@ -3,6 +3,8 @@
     <h1 class="community-page__title">후기게시판</h1>
     <p class="text-secondary"> Detail Test Page </p>
   </div>
+
+  0
 </template>
 
 <script setup></script>

@@ -5,26 +5,34 @@
   </div>
   <div class="container">
     <div class="review_list_grid">
-      <iframe src="about:blank" width="250" height="250">push test</iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
+      <div v-if="reviewList.length > 0">
+        <img :src="reviewList[0].image_url" style="width: 100%; height: 150px; object-fit: cover;" />
+        <h3>{{ reviewList[0].subject }}</h3>
+        <p>작성자 ID: {{ reviewList[0].users_id }}</p>
+        <p>조회수: {{ reviewList[0].hit }}</p>
+      </div>
 
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
-      <iframe src="about:blank" width="250" height="250"></iframe>
+      <div v-else>
+        <p>데이터가 없습니다.</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
+const reviewList = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await axios.get('http://localhost:8080/review/list?page=1')
+    reviewList.value = res.data.list
+  } catch (err) {
+    console.error('오류:', err)
+  }
+})
 </script>
 
 <style scoped>
