@@ -7,20 +7,23 @@ defineProps({
   weekdays: { type: Array, required: true },
 })
 
-const emit = defineEmits(['slot-click', 'recipe-drop'])
+const emit = defineEmits(['slot-click', 'recipe-drop','recipe-delete'])
 
 // 표시용 축약 라벨 (매칭 키로 쓰는 원래 값(아침/점심/저녁)은 안 건드림)
 const MEAL_LABEL = { '아침': '아', '점심': '점', '저녁': '저' }
 
-function onSlotClick(cell, meal) {
-  emit('slot-click', { cell, meal })
+function onSlotClick(cell, meal) { // 어느 날짜 칸인지 , 어느 끼니인지
+  emit('slot-click', { cell, meal }) // 
 }
-
+function onDeleteClick(cell,meal){
+  emit('recipe-delete',{dateStr : cell.dateStr,mealType:meal.type}) 
+  //recipe-delete를 실시해 부모(MealPlan)가 실행되게 함 , 어느 날짜의 어느 끼니인지 정보
+}
 const { registerDropHandler } = useDragDrop() // 함수 가져오기
 
 onMounted(() => { // 드래그 드롭 이벤트 등록
   registerDropHandler(({ dateStr, mealType, recipe }) => { //비어있는 onDrop에 3개의 데이터 전장
-    emit('recipe-drop', { dateStr, mealType, recipe }) //드롭시 정보를 emit로 상위 컴포넌트(MealPlanView.vue)로 전달
+    emit('recipe-drop', { dateStr, mealType, recipe }) //recipe-drop시 정보를 emit로 부모(MealPlanView.vue)로 전달
   })
 })
 onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이벤트 해제
@@ -61,8 +64,16 @@ onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이
                   alt=""
                 />
                 <span class="meal-slot__recipe">
-                  {{ meal.data.rcp_nm.length > 7 ? meal.data.rcp_nm.slice(0, 7) + '...' : meal.data.rcp_nm }}
+                  {{ meal.data.rcp_nm.length > 7 ? meal.data.rcp_nm.slice(0, 7) + '...' : meal.data.rcp_nm }}                   
                 </span>
+                <!--레시피명이 7글자 이상일 시 말 줄임표 처리 -->
+                <!-- 삭제 버튼 클릭시 버블링(위에 부모까지 클릭 이벤트 실행) 방지-->
+                <button
+                  class="meal-slot__delete"
+                  @click.stop="onDeleteClick(cell,meal)"
+                >
+                X
+                </button>
               </div>
               <span v-else class="meal-slot__empty">+</span>
             </div>
@@ -160,5 +171,19 @@ body.is-dragging-recipe .meal-slot:hover { background: var(--accent-subtle); out
   font-size: 11px;
   flex: 1;
   text-align: center;
+}
+.meal-slot__delete {
+  margin-left: auto;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.meal-slot__delete:hover {
+  color: var(--danger);
 }
 </style>
