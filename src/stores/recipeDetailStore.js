@@ -12,7 +12,7 @@ export const recipeDetailStore = defineStore('detail', {
       const res = await axios.get('http://localhost:8080/recipe/detail', {
         params: {
           rcp_seq: no,
-        },
+        },withCredentials: true
       })
       console.log(res.data)
       this.recipeData = res.data.recipeData
