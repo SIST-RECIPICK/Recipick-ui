@@ -49,6 +49,7 @@ const router = useRouter()
 function goDetail(id) {
   // 서버에 요청을 보내는 것이 아니라 router/index.js로 가서 찾음
   // router에는 /admin/curations/:id 로 되어있음
+  console.log(id)
   router.push(`/admin/curations/${id}`)
 }
 

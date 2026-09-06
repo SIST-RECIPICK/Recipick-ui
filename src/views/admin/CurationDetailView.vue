@@ -12,7 +12,7 @@
         <RouterLink :to="`/admin/curations/${curation.id}/edit`" class="btn btn--outline">
           수정
         </RouterLink>
-        <button class="btn btn--outline" @click="handleDelete">삭제</button>
+        <button class="btn btn--outline" @click="handleDelete(curation.id)">삭제</button>
       </div>
     </div>
 
@@ -37,12 +37,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRoute } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios';
 import AdminPanel from '@/components/admin/AdminPanel.vue'
 import CurationGroup from '@/components/admin/CurationGroup.vue'
 
-const route = useRoute()
+const route = useRoute()   // 현재 URL 정보 읽을 때 사용
+const router = useRouter() // 화면 이동시킬 때 사용
+
 const curation = ref({
   title: '',
   targetday: '',
@@ -61,8 +63,19 @@ onMounted(()=>{
   loadDetailCuration(id)
 })
 
-function handleDelete() {
-  // TODO: 삭제 확인 모달 + 삭제 API
+// await는 async 안에서만 쓸 수 있기 때문에 async 선언해줘야함
+async function handleDelete(id) {
+
+  if (!confirm('정말 삭제하시겠습니까?')) {
+    return 
+  }
+  // axios는 결과가 즉시 오지 않는 비동기 작업이라, await 없이는 데이터가 도착하기 전에 다음 줄이 실행되어버림!
+  try {
+    await axios.delete(`http://localhost:8080/admin/curation/${id}`)
+    router.push(`/admin/curations`)
+  } catch (error) {
+    console.log(error)
+  } 
 }
 
 </script>

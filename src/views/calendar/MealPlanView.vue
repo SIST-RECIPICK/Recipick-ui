@@ -15,7 +15,7 @@ const userId = computed(() => 2) // 임시 하드코딩
 
 const {
   year, month, items, loading, errorMsg,
-  calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,
+  calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,deleteItem,
 } = useCalendarItems(userId)
 
 // useCalendarInfo에 year,month를 그대로 가져옴
@@ -37,6 +37,10 @@ function handleSlotClick({ cell, meal }) {
 async function handleRecipeDrop({ dateStr, mealType, recipe }) { // 드롭이벤트 받아서 값을 넘김
   await placeRecipe(dateStr, mealType, recipe)
   loadSummary() // 드롭후 요약정보 갱신
+}
+async function handleSlotDelete({dateStr , mealType }) {
+  //console.log('삭제 요청:', dateStr, mealType)
+  await deleteItem(dateStr,mealType)
 }
 // 월 따라 정보 출력
 function goPrevMonth(){
@@ -128,6 +132,7 @@ onMounted(() => {
           :weekdays="WEEKDAYS"
           @slot-click="handleSlotClick"
           @recipe-drop="handleRecipeDrop"
+          @recipe-delete="handleSlotDelete"          
         /><!-- CalendarGrid에 있던 emit 호출을 여기서 받아서 handleRecipeDrop 여기서 실행-->
       </div>
     </section>
