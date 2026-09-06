@@ -115,6 +115,7 @@ const props = defineProps({
 const liked = ref(props.likeExist === 1)
 const marked = ref(props.markExist === 1)
 
+//레시피 좋아요
 watch(
   () => props.likeExist,
   (newValue) => {
@@ -123,13 +124,14 @@ watch(
   { immediate: true }
 )
 
+//레시피 북마크
 watch(
   () => props.markExist,
   (newValue) => {
     marked.value = newValue === 1
   },
   { immediate: true }
-)
+) 
 
 const likeClick = async () => {
   await store.recipeLikeClick(props.recipeNo,"like")
