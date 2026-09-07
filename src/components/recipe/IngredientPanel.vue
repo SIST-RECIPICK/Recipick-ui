@@ -6,18 +6,18 @@
         class="ing-panel__action"
         :class="{ 'is-active': liked }"
         :aria-pressed="liked"
-        @click="liked = !liked"
+        @click="likeClick()"
       >
         <component :is="liked ? IconHeartFilled : IconHeart" :size="18" />
         좋아요
       </button>
       <button
         class="ing-panel__action"
-        :class="{ 'is-active': bookmarked }"
-        :aria-pressed="bookmarked"
-        @click="bookmarked = !bookmarked"
+        :class="{ 'is-active': marked }"
+        :aria-pressed="marked"
+        @click="markClick()"
       >
-        <component :is="bookmarked ? IconBookmarkFilled : IconBookmark" :size="18" />
+        <component :is="marked ? IconBookmarkFilled : IconBookmark" :size="18" />
         북마크
       </button>
     </div>
@@ -50,12 +50,16 @@
           {{ u.label }}
         </button>
       </div>
-
       <!-- 재료 리스트 (많아지면 이 영역만 스크롤) -->
       <ul class="ing-list">
         <li v-for="(item, i) in scaledIngredients" :key="i" class="ing-list__row">
           <span class="ing-list__name">{{ item.name }}</span>
-          <span class="ing-list__amount text-secondary">{{ item.display }}</span>
+          <span class="ing-list__amount text-secondary">
+            {{ item.display }}
+            <a :href="item.shop[1].link" target="_blank" class="shop_icon">
+              <component :is="IconShoppingCartFilled " :size="18" />
+            </a>
+          </span>
         </li>
       </ul>
     </section>
@@ -83,12 +87,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   IconHeart, IconHeartFilled,
   IconBookmark, IconBookmarkFilled,
-  IconMinus, IconPlus,
+  IconMinus, IconPlus,IconShoppingCartFilled  
 } from '@tabler/icons-vue'
+import { recipeDetailStore } from '@/stores/recipeDetailStore'
+
+
+const store = recipeDetailStore()
+
+
+
 
 const props = defineProps({
   // [{ name, amount(number, 1인분 기준 g), }]
@@ -96,10 +107,44 @@ const props = defineProps({
   cooking: { type: Object, required: true },     // { type, method }
   nutrition: { type: Array, required: true },     // [{ value, label }]
   baseServings: { type: Number, default: 1 },
+  recipeNo:{ type: String,  required: true},
+  likeExist: { type: Number, default: 0 },
+  markExist: { type: Number, default: 0 }
 })
 
-const liked = ref(false)
-const bookmarked = ref(false)
+const liked = ref(props.likeExist === 1)
+const marked = ref(props.markExist === 1)
+
+//레시피 좋아요
+watch(
+  () => props.likeExist,
+  (newValue) => {
+    liked.value = newValue === 1
+  },
+  { immediate: true }
+)
+
+//레시피 북마크
+watch(
+  () => props.markExist,
+  (newValue) => {
+    marked.value = newValue === 1
+  },
+  { immediate: true }
+) 
+
+const likeClick = async () => {
+  await store.recipeLikeClick(props.recipeNo,"like")
+  liked.value = !liked.value
+}
+
+const markClick = async () => {
+  await store.recipeLikeClick(props.recipeNo,"mark")
+  marked.value = !marked.value
+}
+
+//const liked = ref(props.likeExist === 1 ? true : false)
+//const bookmarked = ref(false)
 const servings = ref(props.baseServings)
 const unit = ref('g')
 
@@ -113,14 +158,26 @@ function inc() { servings.value += 1 }
 function dec() { if (servings.value > 1) servings.value -= 1 }
 
 // 인분·단위 반영해 표시값 계산
+// 재료가 조미료인것만 변환 가능 ex) 닭고기 1컵,1스푼 이라는건 x
+// 재료가 1스푼 1컵을 초과하지 않으면 변환 x ex) 소금 0.2g을 0.0003 스푼,0.01컵 x
 const scaledIngredients = computed(() =>
   props.ingredients.map((item) => {
     const grams = item.amount * (servings.value / props.baseServings)
+    console.log(item.category_name);
     let display
-    if (unit.value === 'spoon') display = `${(grams / 15).toFixed(1)}스푼`
-    else if (unit.value === 'cup') display = `${(grams / 240).toFixed(1)}컵`
-    else display = `${grams ? Math.round(grams) + item.unit: ''}`
-    return { name: item.name, display }
+    if (unit.value === 'spoon') 
+      display = ((grams / 15) >= 1 && item.category_name === '조미료') ? `${(grams / 15).toFixed(1)}스푼` : 
+                       grams >= 1 ? Math.round(grams) + item.unit : 
+                       grams ? grams.toFixed(2) + item.unit : item.unit
+    else if (unit.value === 'cup') 
+      display = ((grams / 240) >= 1 && item.category_name === '조미료')?`${(grams / 240).toFixed(1)}컵` :
+                       grams >= 1 ? Math.round(grams) + item.unit : 
+                       grams ? grams.toFixed(2) + item.unit : item.unit
+    // 약간 , 조금 등등은 문자만 표시
+    else 
+      display = `${grams >= 1 ? Math.round(grams) + item.unit : 
+                       grams? grams.toFixed(2) + item.unit : item.unit}`
+    return { name: item.name, display,shop: item.shopVO }
   })
 )
 </script>
@@ -237,8 +294,12 @@ const scaledIngredients = computed(() =>
   font-size: var(--text-sm);
 }
 .ing-list__row:last-child { border-bottom: none; }
-.ing-list__amount { flex-shrink: 0; }
-
+.ing-list__amount { flex-shrink: 0;display: flex; }
+.shop_icon {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
 /* 요리 정보 칩 */
 .ing-panel__chips {
   display: flex;

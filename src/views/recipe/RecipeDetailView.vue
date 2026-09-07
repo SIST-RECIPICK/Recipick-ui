@@ -93,7 +93,10 @@
           :ingredients="recipe.ingredients"
           :cooking="recipe.cooking"
           :nutrition="recipe.nutrition"
+          :recipeNo="id"
           :base-servings="1"
+          :likeExist="likeExist"
+          :markExist="markExist"
         />
       </aside>
     </div>
@@ -118,6 +121,8 @@ const store = recipeDetailStore()
 const { recipeData } = storeToRefs(store)
 const { manualList } = storeToRefs(store)
 const { ingredientUnitList } = storeToRefs(store)
+const { likeExist } = storeToRefs(store)
+const { markExist } = storeToRefs(store)
 
 onMounted(() => {
   store.recipeDetailData(id) 
