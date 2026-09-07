@@ -101,10 +101,13 @@ onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: var(--space-1);
+  min-width: 0;
 }
 
 .calendar-grid__day {
   min-height: 96px;
+  min-width: 0;
+  overflow: hidden;
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -127,6 +130,7 @@ onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이
   gap: 6px;
   padding: 2px 0;
   min-height: 18px;
+  min-width: 0;
   color: var(--text-primary);
   cursor: pointer;
   border-radius: 4px;
@@ -164,6 +168,7 @@ body.is-dragging-recipe .meal-slot:hover { background: var(--accent-subtle); out
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
   font-size: 11px;
 }
 .meal-slot__empty {

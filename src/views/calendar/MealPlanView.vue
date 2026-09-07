@@ -6,6 +6,8 @@ import { useCalendarInfo } from '@/composables/useCalendarInfo.js'
 import { useRouter } from 'vue-router' // 라우터 가져오기
 import CalendarGrid from '@/components/calendar/CalendarGrid.vue'
 import RecipeSearchPanel from '@/components/calendar/RecipeSearchPanel.vue'
+import FillRateGauge  from '@/components/calendar/FillRateGauge.vue'
+import MacroGauge from '@/components/calendar/MacroGauge.vue'
 
 const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기  
 
@@ -35,7 +37,12 @@ function handleSlotClick({ cell, meal }) {
 }
 
 async function handleRecipeDrop({ dateStr, mealType, recipe }) { // 드롭이벤트 받아서 값을 넘김
-  await placeRecipe(dateStr, mealType, recipe)
+  await placeRecipe(dateStr, mealType, recipe) // 기다린 후 값 배치
+  loadSummary() // 드롭후 요약정보 갱신
+}
+async function handleSlotDelete({dateStr , mealType }) {
+  //console.log('삭제 요청:', dateStr, mealType)
+  await deleteItem(dateStr,mealType)
   loadSummary() // 드롭후 요약정보 갱신
 }
 async function handleSlotDelete({dateStr , mealType }) {
@@ -80,24 +87,37 @@ onMounted(() => {
       <span class="meal-plan__summary-sub">총 {{ info.total_cal.toLocaleString('ko-KR', { maximumFractionDigits: 0 }) }}kcal</span>
     </div>
     <div class="meal-plan__summary-card">
-      <span class="meal-plan__summary-label">채움률</span>
-      <span class="meal-plan__summary-value">{{ info.fill_rate }}<small>%</small></span>
-      <div class="meal-plan__gauge">
-        <div
-          class="meal-plan__gauge-fill"
-          :style="{ width: info.fill_rate + '%' }"
-        ></div>
-      </div>
-      <span class="meal-plan__summary-sub">
-        {{ info.filled_count }}/{{ info.total_slots }}끼
-      </span>
+      <span class="meal-plan__summary-label">이번달 몇 끼니?</span>
+      <FillRateGauge
+        v-if="info"
+        :filled-count="info.filled_count"
+        :total-slots="info.total_slots"
+      />
     </div>
     <div class="meal-plan__summary-card meal-plan__summary-card--macros">
-      <span class="meal-plan__summary-label">탄 · 단 · 지</span>
-      <span class="meal-plan__summary-sub">일 평균</span>
-      <span class="meal-plan__summary-value meal-plan__summary-value--sm">
-        {{ info.total_car }}g · {{ info.total_pro }}g · {{ info.total_fat }}g
-      </span>
+       <span class="meal-plan__summary-label">탄·단·지 (일평균)</span>
+       <div class="meal-plan__macro-row">
+        <MacroGauge
+          v-if="info"
+          :carbs="info.total_car"
+          :protein="info.total_pro"
+          :fat="info.total_fat"
+        /> 
+        <div class="meal-plan__macro-legend">
+          <span class="meal-plan__macro-item">
+            <span class="meal-plan__macro-dot" style="background:#f97316"></span>
+            탄수화물 {{ info.total_car }}g
+          </span>
+          <span class="meal-plan__macro-item">
+            <span class="meal-plan__macro-dot" style="background:#22c55e"></span>
+            단백질 {{ info.total_pro }}g
+          </span>
+          <span class="meal-plan__macro-item">
+            <span class="meal-plan__macro-dot" style="background:#3b82f6"></span>
+            지방 {{ info.total_fat }}g
+          </span>
+        </div>
+        </div>       
     </div>
     <div class="meal-plan__summary-card meal-plan__summary-card--top1">
       <span class="meal-plan__summary-label">이번 달 TOP1</span>
@@ -151,7 +171,9 @@ onMounted(() => {
 
 <style scoped>
 .meal-plan { padding-block: var(--space-6); }
-
+.meal-plan.container {
+  max-width: 1400px; 
+}
 .meal-plan__hero { text-align: center; margin-bottom: var(--space-5); }
 .meal-plan__hero-text {
   font-size: var(--text-xl);
@@ -190,7 +212,7 @@ onMounted(() => {
 }
 
 .meal-plan__search {
-  width: 320px;
+  width: 300px;
   flex-shrink: 0;
 }
 
@@ -201,6 +223,7 @@ onMounted(() => {
 .meal-plan__summary {
   display: flex;
   flex-direction: row;
+  justify-content: center;  
   gap: var(--space-3);
   margin-bottom: var(--space-5);
   overflow-x: auto;
@@ -223,9 +246,20 @@ onMounted(() => {
   border-radius: var(--radius-md);
   flex: 0 0 auto;
   /* 카드가 줄어들지 않고 내용 크기만큼 폭 유지 */
-  min-width: 140px;
+  min-width: 200px;
+}
+.meal-plan__summary-card--top1 {
+  position: relative;
+  padding-bottom: calc(var(--space-3) + 24px);
+  /* 버튼이 들어갈 자리만큼 아래쪽 여백 확보 */
 }
 
+.meal-plan__summary-card--top1 .meal-plan__summary-btn {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-2);
+  margin-top: 0;
+}
 .meal-plan__summary-label {
   font-size: var(--text-xs);
   color: var(--text-secondary);
@@ -259,7 +293,32 @@ onMounted(() => {
 .meal-plan__summary-card--top1 .meal-plan__summary-value--sm {
   color: var(--accent);
 }
+.meal-plan__macro-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
 
+.meal-plan__macro-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meal-plan__macro-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.meal-plan__macro-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 .meal-plan__gauge {
   width: 100%;
   height: 6px;
