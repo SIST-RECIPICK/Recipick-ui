@@ -45,10 +45,6 @@ async function handleSlotDelete({dateStr , mealType }) {
   await deleteItem(dateStr,mealType)
   loadSummary() // 드롭후 요약정보 갱신
 }
-async function handleSlotDelete({dateStr , mealType }) {
-  //console.log('삭제 요청:', dateStr, mealType)
-  await deleteItem(dateStr,mealType)
-}
 // 월 따라 정보 출력
 function goPrevMonth(){
   prevMonth()
