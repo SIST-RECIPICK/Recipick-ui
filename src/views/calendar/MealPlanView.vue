@@ -235,7 +235,7 @@ onMounted(() => {
 .meal-plan__summary-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   background: var(--surface-secondary);
   border: 1px solid var(--border);
@@ -243,6 +243,8 @@ onMounted(() => {
   flex: 0 0 auto;
   /* 카드가 줄어들지 않고 내용 크기만큼 폭 유지 */
   min-width: 200px;
+  width: 230px;      /* min-width 대신 고정 width */
+  flex-shrink: 0;
 }
 .meal-plan__summary-card--top1 {
   position: relative;
@@ -263,7 +265,7 @@ onMounted(() => {
 }
 
 .meal-plan__summary-value {
-  font-size: var(--text-lg);
+  font-size: var(--text-3xl);
   font-weight: var(--weight-bold);
   color: var(--text-primary);
 }
@@ -279,8 +281,8 @@ onMounted(() => {
 }
 
 .meal-plan__summary-value--sm {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

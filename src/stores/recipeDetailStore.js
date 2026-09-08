@@ -29,7 +29,7 @@ export const recipeDetailStore = defineStore('detail', {
     async recipeLikeClick(no, type) {
       await axios.get('http://localhost:8080/recipe/interaction', {
         params: {
-          user_id: 1,
+          user_id: 2,
           rcp_seq: no,
           type: type,
         },

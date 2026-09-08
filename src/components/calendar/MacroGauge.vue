@@ -11,7 +11,7 @@ ChartJS.register(ArcElement, Tooltip)
 
 const props = defineProps({
   carbs: { type: Number, required: true },
-  // carbs: 탄수화물 양. 숫자 타입이며 반드시 부모가 넘겨줘야 함(필수)
+  // carbs: 탄수화물 양. 숫자 타입, 부모가 넘겨줘야 함(필수)
   protein: { type: Number, required: true },
   // protein: 단밸질 양. 숫자 타입이며 필수
   fat: { type: Number, required: true },
