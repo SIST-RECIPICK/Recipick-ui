@@ -22,26 +22,27 @@
       <div class="chip-select">
         <button
           v-for="ing in suggested"
-          :key="ing"
+          :key="ing.id"
           class="chip-select__item"
-          :class="{ 'is-selected': selected.includes(ing) }"
-          :disabled="!selected.includes(ing) && selected.length >= 3"
-          @click="toggle(ing)"
+          :class="{ 'is-selected': selected.includes(ing.id) }"
+          :disabled="!selected.includes(ing.id) && selected.length >= 3"
+          @click="toggle(ing.id)"
         >
-          {{ ing }}
-          <IconX v-if="selected.includes(ing)" :size="14" />
+          {{ ing.ingredient_name }}
+          <IconX v-if="selected.includes(ing.id)" :size="14" />
         </button>
       </div>
       <p class="step__count text-muted">
-        {{ selected.length }} / 3 선택됨 · 선택 완료 시 자동으로 레시피 조회
+        {{ selected.length }} / 3 선택됨
       </p>
     </div>
 
     <!-- 3. 재료별 조회수 상위 3개 자동 조회 (미리보기) -->
     <div v-if="preview.length" class="step">
       <div class="step__label">
-        <span class="step__num">3</span> 재료별 조회수 상위 3개 자동 조회 (미리보기)
+        <span class="step__num">3</span> 재료별 조회수 상위 3개 조회
       </div>
+
       <div class="step__groups">
         <CurationGroup
           v-for="group in preview"
@@ -54,12 +55,13 @@
 
     <!-- 4. 제목 입력 + 저장 -->
     <div v-if="preview.length" class="step">
-      <div class="step__label"><span class="step__num">4</span> 제목 입력 후 저장</div>
+      <div class="step__label"><span class="step__num">4</span> 제목</div>
       <input
         v-model.trim="form.title"
         class="input"
         type="text"
-        placeholder="큐레이션 제목을 입력하세요"
+        :placeholder="loading ? '제목이 추천되는 중입니다..':'큐레이션 제목을 입력하세요'"
+        :disabled="loading"
       />
     </div>
 
@@ -74,11 +76,13 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+// toRaw 반응형 프록시 객체를 자바스크립트 배열로 변환할 때 사용 하는 것
+import { reactive, ref, computed, watch, toRaw} from 'vue'
 import { useRouter } from 'vue-router'
 import AdminPanel from '@/components/admin/AdminPanel.vue'
 import CurationGroup from '@/components/admin/CurationGroup.vue'
 import { IconX } from '@tabler/icons-vue'
+import axios from 'axios'
 
 const router = useRouter()
 
@@ -96,17 +100,26 @@ const saving = ref(false)
 const suggested = ref([])
 const selected = ref([])
 const preview = ref([])
+const loading = ref(false)
 
 const canSave = computed(() => selected.value.length === 3 && form.title && preview.value.length)
 
-// 1. AI 재료 추천 (FR-221 연동 지점)
+// 1. AI 재료 추천
 async function handleGenerate() {
   generating.value = true
   selected.value = []
   preview.value = []
   try {
-    // TODO: AI 제철 재료 추천 API 호출
-    suggested.value = ['무', '배추', '대파', '당근', '시금치', '굴', '고구마']
+    await axios.get('http://localhost:8080/admin/curation/recommend',{
+      params:{
+        year:form.year,
+        month:form.month
+      }
+    }).then((response)=>{
+      suggested.value = response.data
+    }).catch((error)=>{
+      console.error('재료 추천 실패', error)
+    })
   } finally {
     generating.value = false
   }
@@ -119,16 +132,50 @@ function toggle(ing) {
   else if (selected.value.length < 3) selected.value.push(ing)
 }
 
-// 3. 3개 선택 완료 시 자동으로 레시피 조회 (미리보기)
+// 3. 3개 선택 완료 시 자동으로 레시피 조회
 watch(
   selected,
   async (val) => {
     if (val.length === 3) {
-      // TODO: 재료별 조회수 상위 3개 레시피 조회 API
-      preview.value = val.map((name) => ({
-        name,
-        recipes: mockRecipes(name),
-      }))
+      
+      const names = val.map((id)=>{
+        const found = suggested.value.find((ing) => ing.id === id)
+        return found.ingredient_name
+      })
+      
+      const rawArray = toRaw(val);
+      
+      try {
+        const response = await axios.get('http://localhost:8080/admin/curation/recipeTop3',{
+          params:{
+            ids: rawArray.join(',')
+          }
+        })
+        const data = response.data
+        preview.value = Object.keys(data).map((name) => ({
+          name,
+          recipes: data[name],
+        }))
+
+        loading.value = true
+        try {
+          const title = await axios.get('http://localhost:8080/admin/curation/title/recommend',{
+            params:{
+              month:form.month,
+              ids: names.join(',')
+            }
+          })
+          form.title = title.data
+        } catch (error) {
+          console.error('제목 조회 실패', error)
+        } finally {
+          loading.value = false
+        }
+
+      } catch (error) {
+        console.error('레시피 조회 실패', error)
+      } 
+      
     } else {
       preview.value = []
     }
@@ -136,30 +183,43 @@ watch(
   { deep: true },
 )
 
-function mockRecipes(name) {
-  const table = {
-    무: [
-      { id: 1, title: '무나물', views: 1204 },
-      { id: 2, title: '뭇국', views: 980 },
-      { id: 3, title: '무조림', views: 742 },
-    ],
-  }
-  return (
-    table[name] || [
-      { id: 0, title: `${name} 레시피 1`, views: 900 },
-      { id: 0, title: `${name} 레시피 2`, views: 600 },
-      { id: 0, title: `${name} 레시피 3`, views: 300 },
-    ]
-  ).map((r) => ({ ...r, image: '' }))
-}
+function buildPayload(){
+  const details = []
+  let order = 1
 
-// 4. 저장 (FR-221)
+  preview.value.forEach((group)=>{
+    const matched = suggested.value.find((ing) => ing.ingredient_name === group.name )
+    const ingredientId = matched ? matched.id : null
+
+    group.recipes.forEach((r)=>{
+      details.push({
+        ingredient_id:ingredientId,
+        rcp_seq: r.rcp_seq,
+        sort_order: order++
+      })
+    })
+  })
+
+  return {
+    year:form.year,
+    month:form.month,
+    title:form.title,
+    details
+  }
+}
+// 4. 저장
 async function handleSave() {
   saving.value = true
+
   try {
-    // TODO: 큐레이션 저장 API (스냅샷 방식으로 레시피 함께 저장)
+    const payload = buildPayload()
+    await axios.post('http://localhost:8080/admin/curation', payload)
     router.push('/admin/curations')
-  } finally {
+    
+  } catch (error){
+    console.error('저장에 실패하였습니다. 잠시 후 다시 시도해주세요', error)
+  } 
+  finally {
     saving.value = false
   }
 }
