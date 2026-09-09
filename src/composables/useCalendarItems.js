@@ -93,8 +93,25 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
       });
       if (!res.ok) throw new Error(`배치 실패: ${res.status}`);
 
-      // 서버 반영 확인됐으니 최신 목록 다시 받아와서 화면 갱신
-      await loadCalendar();
+      // 기존에 같은 슬롯에 있던 항목 찾기 (upsert였으니 있을 수도, 없을 수도)
+      const idx = items.value.findIndex( // 같으면 첫 원소의 인덱스 값 반환
+        (it) => String(it.meal_date).slice(0, 10) === dateStr // 날짜가 같은지
+        && it.meal_type === mealType // 타입이 같은지
+      );
+      const newItem = { // 새 값을 생성
+        meal_date: dateStr,
+        meal_type: mealType,
+        rcp_seq: recipe.rcp_seq,
+        rcp_nm: recipe.rcp_nm,
+        att_file_no_main: recipe.att_file_no_main,
+        user_id: userId.value ?? userId,
+      };
+
+      if (idx >= 0) {
+        items.value[idx] = newItem;  // 이미 있던 슬롯이면 교체
+      } else {
+        items.value.push(newItem);   // 없던 슬롯이면 새로 추가
+      }
     } catch (e) {
       errorMsg.value = "레시피 배치에 실패했습니다.";
       console.error(e);
@@ -114,8 +131,11 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
       });
       if(!res.ok) throw new Error(`삭제 실패 : ${res.status}`); // 만약 실패시 에러
 
-      // 서버 반영 되었으니 다시 최신목록 가져와 갱신
-      await loadCalendar();
+      // 전체 재조회 대신, 로컬 배열에서 해당 슬롯만 제거
+      items.value = items.value.filter( // 조건히 true인것만 모아 새 배열 생성
+        (it) => !(String(it.meal_date).slice(0, 10) === dateStr // 문자열 자르고 삭제하는 날짜 dateStr과 같은지
+        && it.meal_type === mealType) // 그리고 끼니도 내가 삭제하려는 타입과 같은지
+      );// !로 이 반대의 것들만 그니까 지우려는 슬롯이 나닌것들만 남겨서 새 배열 생성
     }catch (e){
       errorMsg.value="레시피 삭제 실패";
       console.error(e);
