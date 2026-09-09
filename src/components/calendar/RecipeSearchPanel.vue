@@ -1,10 +1,11 @@
 <script setup>
 import { useRecipeSearch } from '@/composables/useRecipeSearch.js'
 import { useDragDrop } from '@/composables/useDragDrop.js' // 드롭파일 임포트
-
+import { useRecipePreviewStore } from '@/stores/recipePreview'
 const props = defineProps({
   userId: { type: [Number, Object], required: true },
 })
+const previewStore = useRecipePreviewStore()
 
 const { keyword, results, loading, errorMsg, search } = useRecipeSearch(props.userId)
 const { dragging, startDrag } = useDragDrop() // 드래그 파일에서 두개의 함수 가져오기
@@ -18,6 +19,10 @@ function onPointerDown(event, recipe) {
   if (event.target.closest('button')) return // 버튼 클릭시 드래그 방지
   startDrag(recipe, event) // 버튼이 아니면 함수 실행(useDragDrop)
 }
+function onPreviewClick(rcpSeq){
+  previewStore.loadPreview(rcpSeq)
+}
+
 </script>
 
 <template>
@@ -84,7 +89,7 @@ function onPointerDown(event, recipe) {
             
           </div>
           <div class="recipe-card__actions">
-            <button class="recipe-card__btn recipe-card__btn--preview">미리보기</button>
+            <button class="recipe-card__btn recipe-card__btn--preview" @click.stop="onPreviewClick(r.rcp_seq)">미리보기</button>
           </div>
         </div>
       </div>
