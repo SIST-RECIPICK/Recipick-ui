@@ -39,7 +39,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { IconSearch, IconFridge, IconArrowRight, IconChefHat } from '@tabler/icons-vue'
-import recipeBanner from '@/assets/recipeBanner.jpg'
+import recipeBanner from '@/assets/recipeBanner.png'
 
 const router = useRouter()
 const keyword = ref('')
