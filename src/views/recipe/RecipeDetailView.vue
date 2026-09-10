@@ -86,7 +86,6 @@
           </div>
         </section>
       </div>
-
       <!-- ===== 우: sticky 사이드바 (①번 결정) ===== -->
       <aside class="detail__aside">
         <IngredientPanel
@@ -99,6 +98,17 @@
           :markExist="markExist"
         />
       </aside>
+    </div>
+    <div class="cookieBox">
+        <h2 class="detail__cookie_title">방문 레시피</h2>
+        <div class="related">
+          <RecipeCard
+            v-for="r in relatedRecipes"
+            :key="r.id"
+            :recipe="r"
+            class="cookie__item"
+          />
+        </div>
     </div>
   </div>
 </template>
@@ -117,12 +127,12 @@ const route = useRoute()
 const id = route.params.id
 
 const store = recipeDetailStore()
-
 const { recipeData } = storeToRefs(store)
 const { manualList } = storeToRefs(store)
 const { ingredientUnitList } = storeToRefs(store)
 const { likeExist } = storeToRefs(store)
 const { markExist } = storeToRefs(store)
+const { cookieList } = storeToRefs(store)
 
 onMounted(() => {
   store.recipeDetailData(id) 
@@ -183,7 +193,9 @@ const recipe = computed(()=>({
   ],
 }))
 
+
 const relatedRecipes = [
+  
   { id: 1, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
   { id: 2, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
   { id: 3, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
@@ -328,6 +340,21 @@ const reviews = [
 .related__item {
   flex: 0 0 260px;
   scroll-snap-align: start;
+}
+
+/* 방문 레시피 */
+.cookie__item {
+  flex: 0 0 162px;
+  scroll-snap-align: start;
+}
+.detail__cookie_title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-4);
+}
+.cookieBox{
+  margin-top: 80px;
+  width: 1240px;
 }
 
 /* 후기 — 2열 리스트 */

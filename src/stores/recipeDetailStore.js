@@ -6,14 +6,15 @@ export const recipeDetailStore = defineStore('detail', {
     recipeData: {},
     manualList: [],
     ingredientUnitList: [],
+    cookieList: [],
     likeExist: 0,
-    markExist: 0,
+    markExist: 0
   }),
   actions: {
     async recipeDetailData(no) {
       const res = await axios.get('http://localhost:8080/recipe/detail', {
         params: {
-          user_id: 1,
+          user_id: 2,
           rcp_seq: no,
         },
         withCredentials: true,
@@ -21,6 +22,7 @@ export const recipeDetailStore = defineStore('detail', {
       console.log(res.data)
       this.recipeData = res.data.recipeData
       this.manualList = res.data.manualList
+      this.cookieList = res.data.cookieList
       this.ingredientUnitList = res.data.ingredientUnitList
       this.likeExist = res.data.likeExist
       this.markExist = res.data.markExist
@@ -36,5 +38,6 @@ export const recipeDetailStore = defineStore('detail', {
         withCredentials: true,
       })
     },
+
   },
 })
