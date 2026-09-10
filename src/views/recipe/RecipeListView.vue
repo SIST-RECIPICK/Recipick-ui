@@ -40,10 +40,11 @@
     </div>
 
     <!-- 그리드 -->
+     <!-- :key="recipe.rcp_seq => 각 카드가 서로 다른 레시피로 제대로 구분-->
     <section class="home__grid">
       <RecipeCard
         v-for="recipe in recipes"
-        :key="recipe.id"
+        :key="recipe.rcp_seq" 
         :recipe="recipe"
       />
     </section>
@@ -138,15 +139,6 @@ async function loadRecipes(pageinfo = 1) {
   recipes.value = res.data.list
 
   // 페이지네이션 정보 저장 (백엔드가 배열 형태로 [현재페이지, 전체페이지, 시작페이지, 끝페이지] 순으로 줌)
-  page.value = {
-    curpage: res.data.pages[0],
-    totalpage: res.data.pages[1],
-    startpage: res.data.pages[2],
-    endpage: res.data.pages[3],
-  }
-}
-
-  recipes.value = res.data.list
   page.value = {
     curpage: res.data.pages[0],
     totalpage: res.data.pages[1],

@@ -13,7 +13,7 @@
           type="button"
           class="recipe-card__like"
           :class="{ 'recipe-card__like--active': liked }"
-          @click.stop="toggleLike"
+          @click.stop.prevent="toggleLike"
         >
           {{ liked ? '❤️' : '🤍' }} {{ likeCount }}
         </button>
@@ -85,12 +85,18 @@ async function toggleLike() {
 .recipe-card-link {
   display: block;
   color: inherit;
+  height: 100%;   /* 추가: 그리드가 늘려준 높이를 그대로 받음 */
 }
 
 .recipe-card.card--hoverable:hover {
   box-shadow: none;
   transform: none;
   border-color: var(--border-strong);
+}
+.recipe-card.card--hoverable {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .recipe-card__image-wrap {
@@ -130,6 +136,13 @@ async function toggleLike() {
   color: var(--accent, #e5484d);
 }
 
+.card__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* 키테고리 배지는 길이 늘어나지 않게 방지 */
+}
+
 .recipe-card__category {
   display: inline-block;
   margin-bottom: var(--space-2);
@@ -138,6 +151,12 @@ async function toggleLike() {
 .recipe-card__title {
   margin-bottom: var(--space-1);
   transition: color var(--dur-base) var(--ease);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+  min-height: calc(1.4em * 2);
 }
 .recipe-card:hover .recipe-card__title {
   color: var(--accent);
