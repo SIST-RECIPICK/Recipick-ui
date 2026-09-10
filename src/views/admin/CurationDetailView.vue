@@ -43,7 +43,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios';
 import AdminPanel from '@/components/admin/AdminPanel.vue'
-import CurationGroup from '@/components/admin/CurationGroup.vue'
+import CurationGroup from '@/components/common/CurationGroup.vue'
 
 const route = useRoute()   // 현재 URL 정보 읽을 때 사용
 const router = useRouter() // 화면 이동시킬 때 사용
@@ -102,7 +102,7 @@ async function handleDelete(id) {
   margin-bottom: var(--space-4);
 }
 .cdetail__title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-lg);
   margin-bottom: var(--space-1);
 }
 .cdetail__meta {

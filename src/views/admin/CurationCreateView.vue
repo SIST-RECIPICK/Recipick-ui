@@ -84,7 +84,7 @@ import { reactive, ref, computed, watch, toRaw, onMounted, nextTick } from 'vue'
 // 화면을 이동할 때 쓰는 것
 import { useRouter, useRoute } from 'vue-router'
 import AdminPanel from '@/components/admin/AdminPanel.vue'
-import CurationGroup from '@/components/admin/CurationGroup.vue'
+import CurationGroup from '@/components/common/CurationGroup.vue'
 import { IconX } from '@tabler/icons-vue'
 import axios from 'axios'
 
