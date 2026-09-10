@@ -12,7 +12,7 @@
           </RouterLink>
         </div>
         <div class="landing__grid">
-          <PopularRecipeCard v-for="recipe in popularRecipes" :key="recipe.id" :recipe="recipe" />
+          <RecipeCard v-for="recipe in popularRecipes" :key="recipe.rcp_seq" :recipe="recipe" />
         </div>
       </section>
 
@@ -35,6 +35,8 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import { RouterLink } from 'vue-router'
 import {
   IconArrowRight,
@@ -48,50 +50,13 @@ import {
 } from '@tabler/icons-vue'
 
 import HeroSearch from '@/components/home/HeroSearch.vue'
-import PopularRecipeCard from '@/components/home/PopularRecipeCard.vue'
+import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import FridgeMatch from '@/components/home/FridgeMatch.vue'
 import SeasonalIngredients from '@/components/home/SeasonalIngredients.vue'
 import WeeklyDietPreview from '@/components/home/WeeklyDietPreview.vue'
 
-// 오늘의 인기 레시피 (mock)
-const popularRecipes = [
-  {
-    id: 1,
-    title: '돼지고기 김치찜',
-    image: '',
-    rating: 4.8,
-    reviews: 204,
-    cookTime: '25분',
-    category: '찌개',
-  },
-  {
-    id: 2,
-    title: '알알한 소불고기',
-    image: '',
-    rating: 4.6,
-    reviews: 131,
-    cookTime: '30분',
-    category: '메인',
-  },
-  {
-    id: 3,
-    title: '바삭한 야채튀김',
-    image: '',
-    rating: 4.5,
-    reviews: 89,
-    cookTime: '20분',
-    category: '간식',
-  },
-  {
-    id: 4,
-    title: '불향가득 제육볶음',
-    image: '',
-    rating: 4.7,
-    reviews: 160,
-    cookTime: '25분',
-    category: '메인',
-  },
-]
+// 오늘의 인기 레시피 (조회수 상위 4개, 실 API)
+const popularRecipes = ref([])
 
 // 내 냉장고 속 맞춤 레시피 (mock)
 const fridgeIngredients = ['밥', '당근', '계란', '김치', '대파']
@@ -119,6 +84,17 @@ const weeklyDiet = [
   { label: '토', breakfast: '시리얼', lunch: '잔치국수', dinner: '치킨' },
   { label: '일', breakfast: '과일', lunch: '외식', dinner: '집밥' },
 ]
+
+onMounted(async () => {
+  // 조회수(hit) 기준 정렬된 레시피 목록에서 상위 4개만 노출
+  const res = await axios.get('http://localhost:8080/recipe/list', {
+    params: {
+      page: 1,
+      sort: 'hit',
+    },
+  })
+  popularRecipes.value = res.data.list.slice(0, 4)
+})
 </script>
 
 <style scoped>
