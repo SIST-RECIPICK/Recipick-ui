@@ -35,14 +35,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { IconSearch, IconFridge, IconArrowRight, IconChefHat } from '@tabler/icons-vue'
 import recipeBanner from '@/assets/recipeBanner.png'
 
 const router = useRouter()
-const keyword = ref('')
+
+// 부모(HomeView)로부터 검색어 값을 받기 위한 props
+const props = defineProps({
+  modelValue: { type: String, default: '' }
+})
+// 검색어가 바뀌면 부모에게 알리기 위한 emit
+const emit = defineEmits(['update:modelValue'])
+
+// keyword를 v-model처럼 쓰되, 실제 값은 부모(HomeView)의 heroKeyword가 소유
+// get: 부모 값을 읽어서 보여줌 / set: 입력하면 부모에게 변경사항을 emit
+const keyword = computed({
+  get: () => props.modelValue,
+  set: (val) => emit('update:modelValue', val)
+})
 const heroImage = `url(${recipeBanner})`
 
 function submitSearch() {

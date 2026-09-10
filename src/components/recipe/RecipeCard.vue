@@ -1,5 +1,5 @@
 <template>
-  <RouterLink :to="`/recipes/${recipe.id}`" class="recipe-card-link">
+  <RouterLink :to="`/recipes/${recipe.rcp_seq}`" class="recipe-card-link">
     <article class="card card--hoverable recipe-card">
       <div class="recipe-card__image-wrap">
         <img
@@ -24,14 +24,16 @@
         <p class="recipe-card__meta text-secondary">
           {{ recipe.nickname }} · 조회 {{ recipe.hit }} · {{ recipe.info_eng }}kcal
         </p>
-        <div class="recipe-card__tags">
-          <span
+                <div class="recipe-card__tags">
+          <button
             v-for="tag in hashTags"
             :key="tag"
-            class="chip"
+            type="button"
+            class="chip recipe-card__tag"
+            @click.stop.prevent="$emit('tag-click', tag)"
           >
             #{{ tag }}
-          </span>
+          </button>
         </div>
       </div>
     </article>
@@ -46,6 +48,8 @@ const props = defineProps({
   recipe: { type: Object, required: true },
   // { rcp_seq, rcp_nm, rcp_pat2, info_eng, user_id, att_file_no_main, hit, hash_tag, nickname, like_count }
 })
+// 해시태그 클릭 시 부모(RecipeListView)로 클릭된 태그 텍스트를 전달
+defineEmits(['tag-click'])
 
 // hash_tag는 콤마 구분 문자열 → 배열로 split, 빈 문자열/공백 제거
 const hashTags = computed(() => {
@@ -169,5 +173,23 @@ async function toggleLike() {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+.recipe-card__tag {
+  /* button 기본 스타일 초기화 */
+  border: none;
+  cursor: pointer;
+  font: inherit;
+
+  /* 카테고리 배지(chip--accent)와 톤을 맞춘 은은한 버전 */
+  padding: 2px 10px;
+  border-radius: var(--radius-full, 999px);
+  background: var(--accent-subtle, #fdece3);
+  color: var(--accent-text, #c2531f);
+  font-size: var(--text-sm);
+  transition: background var(--dur-fast) var(--ease);
+}
+.recipe-card__tag:hover {
+  background: var(--accent, #e5601f);
+  color: #fff;
 }
 </style>
