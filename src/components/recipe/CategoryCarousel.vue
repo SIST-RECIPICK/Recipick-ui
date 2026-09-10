@@ -79,10 +79,10 @@ const emit = defineEmits(['update:modelValue'])
   color: var(--text-secondary);
   white-space: nowrap;
 }
-/* 선택 상태 */
+/* 선택 상태 - 버튼색상 블랙에서 주황으로 변경*/
 .cat-carousel__item[aria-pressed='true'] .cat-carousel__icon {
-  background: var(--surface-inverse);
-  color: var(--text-on-inverse);
+  background: var(--accent);
+  color: white;
 }
 .cat-carousel__item[aria-pressed='true'] .cat-carousel__label {
   color: var(--text-primary);

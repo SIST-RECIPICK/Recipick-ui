@@ -6,18 +6,18 @@
         class="ing-panel__action"
         :class="{ 'is-active': liked }"
         :aria-pressed="liked"
-        @click="liked = !liked"
+        @click="likeClick()"
       >
         <component :is="liked ? IconHeartFilled : IconHeart" :size="18" />
         좋아요
       </button>
       <button
         class="ing-panel__action"
-        :class="{ 'is-active': bookmarked }"
-        :aria-pressed="bookmarked"
-        @click="bookmarked = !bookmarked"
+        :class="{ 'is-active': marked }"
+        :aria-pressed="marked"
+        @click="markClick()"
       >
-        <component :is="bookmarked ? IconBookmarkFilled : IconBookmark" :size="18" />
+        <component :is="marked ? IconBookmarkFilled : IconBookmark" :size="18" />
         북마크
       </button>
     </div>
@@ -87,12 +87,19 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import {
   IconHeart, IconHeartFilled,
   IconBookmark, IconBookmarkFilled,
   IconMinus, IconPlus,IconShoppingCartFilled  
 } from '@tabler/icons-vue'
+import { recipeDetailStore } from '@/stores/recipeDetailStore'
+
+
+const store = recipeDetailStore()
+
+
+
 
 const props = defineProps({
   // [{ name, amount(number, 1인분 기준 g), }]
@@ -100,10 +107,44 @@ const props = defineProps({
   cooking: { type: Object, required: true },     // { type, method }
   nutrition: { type: Array, required: true },     // [{ value, label }]
   baseServings: { type: Number, default: 1 },
+  recipeNo:{ type: String,  required: true},
+  likeExist: { type: Number, default: 0 },
+  markExist: { type: Number, default: 0 }
 })
 
-const liked = ref(false)
-const bookmarked = ref(false)
+const liked = ref(props.likeExist === 1)
+const marked = ref(props.markExist === 1)
+
+//레시피 좋아요
+watch(
+  () => props.likeExist,
+  (newValue) => {
+    liked.value = newValue === 1
+  },
+  { immediate: true }
+)
+
+//레시피 북마크
+watch(
+  () => props.markExist,
+  (newValue) => {
+    marked.value = newValue === 1
+  },
+  { immediate: true }
+) 
+
+const likeClick = async () => {
+  await store.recipeLikeClick(props.recipeNo,"like")
+  liked.value = !liked.value
+}
+
+const markClick = async () => {
+  await store.recipeLikeClick(props.recipeNo,"mark")
+  marked.value = !marked.value
+}
+
+//const liked = ref(props.likeExist === 1 ? true : false)
+//const bookmarked = ref(false)
 const servings = ref(props.baseServings)
 const unit = ref('g')
 

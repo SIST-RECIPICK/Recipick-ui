@@ -36,7 +36,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref,  computed, onMounted } from 'vue'
+import axios from 'axios'
 import { RouterLink } from 'vue-router'
 import { IconFridge, IconCalendar, IconMessageCircle, IconArrowRight } from '@tabler/icons-vue'
 
@@ -70,17 +71,8 @@ const curations = ref([
   },
 ])
 
-// 추천 레시피
+// 인기순(hit) 추천 레시피 4개 
 const recommended = ref(
-  Array.from({ length: 4 }, (_, i) => ({
-    id: i + 1,
-    title: '레시피 제목',
-    chef: '쉐프명',
-    image: '',
-    views: '2.3만',
-    cookTime: '20분',
-    category: '반찬',
-  }))
 )
 
 // 기능 바로가기
@@ -89,6 +81,20 @@ const shortcuts = [
   { icon: IconCalendar, title: '식단관리', desc: '일주일 식단 짜기', to: '/meal-plan' },
   { icon: IconMessageCircle, title: '커뮤니티', desc: '요리 후기 나누기', to: '/community' },
 ]
+
+onMounted(async() => {
+  /* res => list(인기순 정렬 12개 레시피), pages(페이지)에 대한 정보가 들어있음 */
+const res = await axios.get('http://localhost:8080/recipe/list',{
+    /*  params : 요청사항 목록 => ?key=value */    
+    params: {
+          page: 1, /* 1페이지 부터 시작 */
+          sort: 'hit'
+        }
+  })
+  /*  onMounted가 실행되면 더미 데이터 고치지 않아도
+      이 부분이 실제 데이터로 덮어진다 */
+     recommended.value = res.data.list.slice(0,4)
+})
 </script>
 
 <style scoped>

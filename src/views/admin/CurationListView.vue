@@ -49,7 +49,6 @@ const router = useRouter()
 function goDetail(id) {
   // 서버에 요청을 보내는 것이 아니라 router/index.js로 가서 찾음
   // router에는 /admin/curations/:id 로 되어있음
-  console.log(id)
   router.push(`/admin/curations/${id}`)
 }
 
@@ -77,7 +76,7 @@ async function loadCuration(pageInfo) {
       totalpage:res.data.totalpage,
     }
   } catch (error) {
-    console.log(error)
+    console.error(error)
   }
 }
 
@@ -118,16 +117,16 @@ onMounted(()=>{
   border-bottom: 1px solid var(--border);
 }
 .clist__col-no {
-  width: 80px;
+  width: 50px;
 }
 .clist__col-title {
-  width: 200px;
+  width: 300px;
 }
 .clist__col-ym {
-  width: 150px;
+  width: 130px;
 }
 .clist__col-date {
-  width: 100px;
+  width: 80px;
 }
 
 .clist__row {
