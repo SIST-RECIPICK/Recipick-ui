@@ -127,7 +127,6 @@ const route = useRoute()
 
 const id = computed(() => route.params.id)
 
-console.log(id)
 const store = recipeDetailStore()
 const { recipeData } = storeToRefs(store) // 레시피 상세 정보
 const { manualList } = storeToRefs(store) // 조리과정 리스트
@@ -223,9 +222,9 @@ const cookieRecipes = computed(() =>
 const relationRecipes = computed(() =>
   relationList.value.map(item => ({
     nickname:item.nickname,
-    like_count:item.like_count,
+    like_count:item.count,
     //hash_tag:item.hash_tag,
-    user_id:item.user_id,
+    user_id:2,
     rcp_seq: item.rcp_seq,
     info_eng: item.info_eng,
     rcp_nm: item.rcp_nm,
