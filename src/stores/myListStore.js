@@ -3,20 +3,20 @@ import axios from 'axios'
 
 export const myListStore = defineStore('myList', {
   state: () => ({
-    myLikeList:[],
-    myMarkList:[],
-    curpage:0,
-    totalpage:0,
-    startPage:0,
-    endPage:0
+    myLikeList: [],
+    myMarkList: [],
+    curpage: 1,
+    totalpage: 0,
+    startPage: 0,
+    endPage: 0,
   }),
   actions: {
-    async myListData(page,type) {
+    async myListData(page, type) {
       const res = await axios.get('http://localhost:8080/recipe/my-list', {
         params: {
-          user_id: 1,
+          user_id: 2,
           page: page,
-          type:type //'like' , 'mark'
+          type: type, //'like' , 'mark'
         },
         withCredentials: true,
       })
@@ -27,7 +27,6 @@ export const myListStore = defineStore('myList', {
       this.totalpage = res.data.totalpage
       this.startPage = res.data.startPage
       this.endPage = res.data.endPage
-      
     },
   },
 })
