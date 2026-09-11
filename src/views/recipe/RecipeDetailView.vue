@@ -135,7 +135,8 @@ const { ingredientUnitList } = storeToRefs(store) // 재료 리스트
 const { likeExist } = storeToRefs(store) // 좋아요 여부
 const { markExist } = storeToRefs(store) // 북마크 여부
 const { cookieList } = storeToRefs(store) //방문 레시피
-const { relationList } = storeToRefs(store) //연관 레시피 리스트
+const { relationList } = storeToRefs(store) // 연관 레시피 리스트
+const { reviewList } = storeToRefs(store) // 리뷰 리스트
 
 onMounted(() => {
   store.recipeDetailData(id.value) 
@@ -223,7 +224,7 @@ const relationRecipes = computed(() =>
   relationList.value.map(item => ({
     nickname:item.nickname,
     like_count:item.like_count,
-    hash_tag:item.hash_tag,
+    //hash_tag:item.hash_tag,
     user_id:item.user_id,
     rcp_seq: item.rcp_seq,
     info_eng: item.info_eng,
@@ -234,12 +235,15 @@ const relationRecipes = computed(() =>
   }))
 )
 
-const reviews = [
-  { id: 1, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-  { id: 2, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-  { id: 3, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-  { id: 4, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-]
+// 리뷰리스트
+const reviews = computed(() =>
+  reviewList.value.map(item => ({
+    id:item.id,
+    title:item.subject,
+    content:item.content,
+    image:item.image_url
+  }))
+)
 
 </script>
 
