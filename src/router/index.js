@@ -113,6 +113,11 @@ const routes = [
     component: () => import('@/views/community/CurationBoardView.vue'),
   },
   {
+    path: '/community/curations/:id',
+    name: 'community-curations-detail',
+    component: () => import('@/views/community/CurationDetailView.vue'),
+  },
+  {
     // 개발 참조용 스타일가이드
     path: '/styleguide', 
     name: 'styleguide',
