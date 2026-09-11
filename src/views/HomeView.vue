@@ -1,6 +1,6 @@
 <template>
   <div class="landing">
-    <HeroSearch />
+    <HeroSearch v-model="heroKeyword" />
 
     <div class="container landing__sections">
       <!-- 오늘의 인기 레시피 -->
@@ -14,7 +14,7 @@
         <div class="landing__grid">
           <div v-for="(recipe, i) in popularRecipes" :key="recipe.rcp_seq" class="landing__rank-card">
             <span class="landing__rank" :class="{ 'landing__rank--top': i === 0 }">{{ i + 1 }}위</span>
-            <RecipeCard :recipe="recipe" />
+            <RecipeCard :recipe="recipe" @tag-click="fillHeroKeyword" />
           </div>
         </div>
       </section>
@@ -45,6 +45,14 @@ import WeeklyDietPreview from '@/components/home/WeeklyDietPreview.vue'
 
 // 오늘의 인기 레시피 (조회수 상위 4개, 실 API)
 const popularRecipes = ref([])
+
+// 히어로 검색창의 검색어 상태 (HeroSearch와 v-model로 연결)
+const heroKeyword = ref('')
+
+// 인기 레시피 카드의 해시태그 클릭 시: 히어로 검색창에 값만 채움 (검색 실행은 안 함)
+function fillHeroKeyword(tag) {
+  heroKeyword.value = tag
+}
 
 // 내 냉장고 속 맞춤 레시피 (mock)
 const fridgeIngredients = ['밥', '당근', '계란', '김치', '대파']
