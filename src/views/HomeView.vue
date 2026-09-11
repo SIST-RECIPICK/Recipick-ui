@@ -1,34 +1,27 @@
 <template>
   <div class="landing">
-      <HeroSearch v-model="heroKeyword" />
+    <HeroSearch v-model="heroKeyword" :top-recipe="popularRecipes[0]" />
 
     <div class="container landing__sections">
       <!-- 오늘의 인기 레시피 -->
       <section class="landing__block">
-        <div class="landing__section-head">
-          <h2 class="landing__section-title">오늘의 인기 레시피</h2>
-          <RouterLink to="/recipes" class="landing__more">
+        <div class="section-head">
+          <h2 class="section-title">지금 가장 많이 만드는 레시피</h2>
+          <RouterLink to="/recipes" class="section-link">
             전체보기 <IconArrowRight :size="16" />
           </RouterLink>
         </div>
         <div class="landing__grid">
-           <RecipeCard
-              v-for="recipe in popularRecipes"
-              :key="recipe.rcp_seq"
-              :recipe="recipe"
-              @tag-click="fillHeroKeyword"
-            />
+          <div v-for="(recipe, i) in popularRecipes" :key="recipe.rcp_seq" class="landing__rank-card">
+            <span class="landing__rank" :class="{ 'landing__rank--top': i === 0 }">{{ i + 1 }}위</span>
+            <RecipeCard :recipe="recipe" @tag-click="fillHeroKeyword" />
+          </div>
         </div>
       </section>
 
       <!-- 내 냉장고 속 맞춤 레시피 -->
       <section class="landing__block">
         <FridgeMatch :ingredients="fridgeIngredients" :matches="fridgeMatches" />
-      </section>
-
-      <!-- 제철 재료 -->
-      <section class="landing__block">
-        <SeasonalIngredients :month="8" :items="seasonalItems" />
       </section>
 
       <!-- 이번 주 식단표 -->
@@ -43,23 +36,12 @@
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { RouterLink } from 'vue-router'
-import {
-  IconArrowRight,
-  IconBowlChopsticks,
-  IconSoup,
-  IconSalad,
-  IconGrape,
-  IconFish,
-  IconMushroom,
-  IconPepper,
-} from '@tabler/icons-vue'
+import { IconArrowRight, IconBowlChopsticks, IconSoup, IconSalad } from '@tabler/icons-vue'
 
 import HeroSearch from '@/components/home/HeroSearch.vue'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import FridgeMatch from '@/components/home/FridgeMatch.vue'
-import SeasonalIngredients from '@/components/home/SeasonalIngredients.vue'
 import WeeklyDietPreview from '@/components/home/WeeklyDietPreview.vue'
-
 
 // 오늘의 인기 레시피 (조회수 상위 4개, 실 API)
 const popularRecipes = ref([])
@@ -78,14 +60,6 @@ const fridgeMatches = [
   { id: 11, title: '계란볶음밥', icon: IconBowlChopsticks, matchLabel: '재료 4/5 보유' },
   { id: 12, title: '감자조림', icon: IconSoup, matchLabel: '재료 3/5 보유' },
   { id: 13, title: '김치무침', icon: IconSalad, matchLabel: '재료 5/5 보유' },
-]
-
-// 8월 제철 재료 (mock)
-const seasonalItems = [
-  { id: 1, name: '포도', icon: IconGrape, color: 'var(--accent-text)', tint: 'var(--accent-subtle)', trend: 'down' },
-  { id: 2, name: '고등어', icon: IconFish, color: 'var(--info)', tint: 'var(--info-bg)', trend: 'up' },
-  { id: 3, name: '버섯', icon: IconMushroom, color: 'var(--warning)', tint: 'var(--warning-bg)', trend: 'down' },
-  { id: 4, name: '고추', icon: IconPepper, color: 'var(--danger)', tint: 'var(--danger-bg)', trend: 'up' },
 ]
 
 // 이번 주 식단표 (mock)
@@ -117,24 +91,6 @@ onMounted(async () => {
 .landing__block { margin-bottom: var(--space-8); }
 .landing__block:last-child { margin-bottom: 0; }
 
-.landing__section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-4);
-}
-.landing__section-title {
-  font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-}
-.landing__more {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-size: var(--text-sm);
-  color: var(--accent);
-}
-
 .landing__grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -142,4 +98,24 @@ onMounted(async () => {
 }
 @media (max-width: 992px) { .landing__grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 768px) { .landing__grid { grid-template-columns: repeat(2, 1fr); } }
+
+.landing__rank-card { position: relative; height: 100%; }
+.landing__rank {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 26px;
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface-inverse);
+  color: var(--text-on-inverse);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+}
+.landing__rank--top { background: var(--accent); }
 </style>
