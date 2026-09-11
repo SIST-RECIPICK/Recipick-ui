@@ -1,14 +1,16 @@
 <template>
   <section class="fridge-match">
+    <IconFridge :size="200" class="fridge-match__watermark" aria-hidden="true" />
+
     <div class="fridge-match__info">
-      <h2 class="fridge-match__title">내 냉장고 속 맞춤 레시피</h2>
+      <h2 class="section-title fridge-match__title">내 냉장고 속 맞춤 레시피</h2>
       <p class="fridge-match__desc">
         지금 냉장고에 있는 재료를 등록하면, 바로 만들 수 있는 레시피를 찾아드려요.
       </p>
       <ul class="fridge-match__ingredients">
-        <li v-for="item in ingredients" :key="item" class="chip">{{ item }}</li>
+        <li v-for="item in ingredients" :key="item" class="chip chip--fresh">{{ item }}</li>
       </ul>
-      <RouterLink to="/fridge" class="btn btn--outline fridge-match__cta">
+      <RouterLink to="/fridge" class="btn btn--primary fridge-match__cta">
         <IconFridge :size="18" /> 재료 관리하기
       </RouterLink>
     </div>
@@ -39,6 +41,8 @@ defineProps({
 
 <style scoped>
 .fridge-match {
+  position: relative;
+  overflow: hidden;
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: var(--space-6);
@@ -52,11 +56,17 @@ defineProps({
   .fridge-match { grid-template-columns: 1fr; padding: var(--space-5); }
 }
 
-.fridge-match__title {
-  font-size: var(--text-xl);
-  font-weight: var(--weight-bold);
-  margin-bottom: var(--space-2);
+.fridge-match__watermark {
+  position: absolute;
+  right: -28px;
+  bottom: -28px;
+  color: var(--accent);
+  opacity: 0.06;
+  pointer-events: none;
 }
+
+.fridge-match__info { position: relative; }
+.fridge-match__title { margin-bottom: var(--space-2); }
 .fridge-match__desc {
   font-size: var(--text-sm);
   color: var(--text-secondary);
@@ -69,11 +79,10 @@ defineProps({
   gap: var(--space-2);
   margin-bottom: var(--space-5);
 }
-.fridge-match__ingredients .chip { background: var(--surface-card); }
-
-.fridge-match__cta { background: var(--surface-card); }
+.chip--fresh { background: var(--success-bg); color: var(--success); }
 
 .fridge-match__matches {
+  position: relative;
   display: grid;
   gap: var(--space-3);
 }

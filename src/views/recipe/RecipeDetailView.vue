@@ -66,7 +66,7 @@
           <h2 class="detail__section-title">연관 레시피</h2>
           <div class="related">
             <RecipeCard
-              v-for="r in relatedRecipes"
+              v-for="r in relationRecipes"
               :key="r.id"
               :recipe="r"
               class="related__item"
@@ -86,7 +86,6 @@
           </div>
         </section>
       </div>
-
       <!-- ===== 우: sticky 사이드바 (①번 결정) ===== -->
       <aside class="detail__aside">
         <IngredientPanel
@@ -100,34 +99,57 @@
         />
       </aside>
     </div>
+    <div class="cookieBox">
+        <h2 class="detail__cookie_title">방문 레시피</h2>
+        <div class="related">
+          <RecipeCookie
+            v-for="r in cookieRecipes"
+            :key="r.id"
+            :recipe="r"
+            class="cookie__item"
+          />
+        </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import IngredientPanel from '@/components/recipe/IngredientPanel.vue'
 import RecipeReviewCard from '@/components/recipe/RecipeReviewCard.vue'
 import { storeToRefs } from 'pinia'
 import { recipeDetailStore } from '@/stores/recipeDetailStore'
 import { useRoute } from 'vue-router'
+import RecipeCookie from '@/components/recipe/RecipeCookie.vue'
 
 const route = useRoute()
 
-const id = route.params.id
+const id = computed(() => route.params.id)
 
+console.log(id)
 const store = recipeDetailStore()
-
-const { recipeData } = storeToRefs(store)
-const { manualList } = storeToRefs(store)
-const { ingredientUnitList } = storeToRefs(store)
-const { likeExist } = storeToRefs(store)
-const { markExist } = storeToRefs(store)
+const { recipeData } = storeToRefs(store) // 레시피 상세 정보
+const { manualList } = storeToRefs(store) // 조리과정 리스트
+const { ingredientUnitList } = storeToRefs(store) // 재료 리스트
+const { likeExist } = storeToRefs(store) // 좋아요 여부
+const { markExist } = storeToRefs(store) // 북마크 여부
+const { cookieList } = storeToRefs(store) //방문 레시피
+const { relationList } = storeToRefs(store) // 연관 레시피 리스트
+const { reviewList } = storeToRefs(store) // 리뷰 리스트
 
 onMounted(() => {
-  store.recipeDetailData(id) 
+  store.recipeDetailData(id.value) 
 })
 
+watch(
+  () => route.params.id,
+  (newId, oldId) => {
+    if (newId !== oldId) {
+      store.recipeDetailData(newId)
+    }
+  }
+)
 
 // 탭 정의 (앵커 id 한 곳에서 관리)
 const tabs = [
@@ -167,7 +189,7 @@ onUnmounted(() => observer?.disconnect())
 const recipe = computed(()=>({
 
   title: recipeData.value?.rcp_nm,
-  chef: recipeData.value?.user_id ?? '알 수 없는 사용자',
+  chef: recipeData.value?.nickname ?? '알 수 없는 사용자',
   badge: '오늘의 레시피',
   image: '',
   tags: recipeData.value?.hash_tag?.split(",") ?? [],
@@ -183,18 +205,45 @@ const recipe = computed(()=>({
   ],
 }))
 
-const relatedRecipes = [
-  { id: 1, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
-  { id: 2, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
-  { id: 3, title: '레시피 제목', chef: '쉐프명', image: '', views: '1.2천', cookTime: '30분', category: '반찬' },
-]
+//레시피 북마크
 
-const reviews = [
-  { id: 1, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-  { id: 2, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-  { id: 3, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-  { id: 4, title: '후기 제목', content: '후기 내용 간략하게 (…로 말줄임 가능)', image: '' },
-]
+//{ rcp_seq, rcp_nm, rcp_pat2, info_eng, user_id, att_file_no_main, hit, hash_tag, nickname, like_count }
+
+const cookieRecipes = computed(() =>
+  cookieList.value.map(item => ({
+    rcp_seq: item.rcp_seq,
+    rcp_nm: item.rcp_nm,
+    att_file_no_main: item.att_file_no_main,
+    hit: item.hit,
+    rcp_pat2: item.rcp_pat2,
+  }))
+)
+
+// 재료가 많이 일치하는 레시피 3개
+const relationRecipes = computed(() =>
+  relationList.value.map(item => ({
+    nickname:item.nickname,
+    like_count:item.like_count,
+    //hash_tag:item.hash_tag,
+    user_id:item.user_id,
+    rcp_seq: item.rcp_seq,
+    info_eng: item.info_eng,
+    rcp_nm: item.rcp_nm,
+    att_file_no_main: item.att_file_no_main,
+    hit: item.hit,
+    rcp_pat2: item.rcp_pat2,
+  }))
+)
+
+// 리뷰리스트
+const reviews = computed(() =>
+  reviewList.value.map(item => ({
+    id:item.id,
+    title:item.subject,
+    content:item.content,
+    image:item.image_url
+  }))
+)
 
 </script>
 
@@ -328,6 +377,21 @@ const reviews = [
 .related__item {
   flex: 0 0 260px;
   scroll-snap-align: start;
+}
+
+/* 방문 레시피 */
+.cookie__item {
+  flex: 0 0 162px;
+  scroll-snap-align: start;
+}
+.detail__cookie_title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-4);
+}
+.cookieBox{
+  margin-top: 80px;
+  width: 1240px;
 }
 
 /* 후기 — 2열 리스트 */

@@ -28,7 +28,7 @@ const {
   info, loading: summaryLoading, errorMsg: summaryError, loadSummary,
 } = useCalendarInfo(userId, year, month)
 
-const filledCount = computed(() => items.value.length)
+
 
 const previewStore = useRecipePreviewStore()
 function handleSlotClick({ cell, meal }) {
@@ -68,14 +68,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <div class="meal-plan container">
-    <section class="meal-plan__hero">
-      <p class="meal-plan__hero-text">
-        이번 달 식단은?<br>
-        <span class="meal-plan__count">{{ filledCount }}개</span>의 슬롯을 채웠어요.
-      </p>
-    </section>
-   
+  <div class="meal-plan container">       
     <section class="meal-plan__header">
         <button class="btn btn--ghost" aria-label="이전 달" @click="goPrevMonth">‹</button>
         <h2 class="meal-plan__month">{{ year }}년 {{ month }}월</h2>
