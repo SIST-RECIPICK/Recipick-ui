@@ -38,8 +38,8 @@
 
       <div class="hero__visual">
         <div class="hero__blob" aria-hidden="true"></div>
-        <img class="hero__photo" :src="recipeBanner" alt="갓 완성된 집밥 한 상" />
-        <p class="hero__photo-tag"><IconFlame :size="14" /> 지금 많이 만드는 메뉴</p>
+        <img class="hero__photo" :src="topRecipeImage" :alt="topRecipeName" />
+        <p class="hero__photo-tag"><IconFlame :size="14" /> 지금 많이 만드는 메뉴 · {{ topRecipeName }}</p>
       </div>
     </div>
   </section>
@@ -55,9 +55,10 @@ import recipeBanner from '@/assets/recipeBanner.png'
 const router = useRouter()
 const searchFocused = ref(false)
 
-// 부모(HomeView)로부터 검색어 값을 받기 위한 props
+// 부모(HomeView)로부터 검색어 값과 1위 인기 레시피를 받기 위한 props
 const props = defineProps({
-  modelValue: { type: String, default: '' }
+  modelValue: { type: String, default: '' },
+  topRecipe: { type: Object, default: null }, // { rcp_nm, att_file_no_main, ... } 1위 인기 레시피
 })
 // 검색어가 바뀌면 부모에게 알리기 위한 emit
 const emit = defineEmits(['update:modelValue'])
@@ -68,6 +69,10 @@ const keyword = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
 })
+
+// 인기 레시피 로딩 전에는 배너 이미지를 임시로 보여줌
+const topRecipeImage = computed(() => props.topRecipe?.att_file_no_main || recipeBanner)
+const topRecipeName = computed(() => props.topRecipe?.rcp_nm || '새콤한 연어샐러드')
 
 function submitSearch() {
   router.push({ path: '/recipes', query: keyword.value ? { keyword: keyword.value } : {} })

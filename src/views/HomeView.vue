@@ -1,6 +1,6 @@
 <template>
   <div class="landing">
-    <HeroSearch v-model="heroKeyword" />
+    <HeroSearch v-model="heroKeyword" :top-recipe="popularRecipes[0]" />
 
     <div class="container landing__sections">
       <!-- 오늘의 인기 레시피 -->
