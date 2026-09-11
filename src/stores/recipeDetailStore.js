@@ -6,6 +6,7 @@ export const recipeDetailStore = defineStore('detail', {
     recipeData: {},
     manualList: [],
     ingredientUnitList: [],
+    relationList: [],
     cookieList: [],
     likeExist: 0,
     markExist: 0
@@ -26,6 +27,7 @@ export const recipeDetailStore = defineStore('detail', {
       this.ingredientUnitList = res.data.ingredientUnitList
       this.likeExist = res.data.likeExist
       this.markExist = res.data.markExist
+      this.relationList = res.data.relationList
     },
 
     async recipeLikeClick(no, type) {
