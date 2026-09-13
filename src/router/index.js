@@ -169,6 +169,11 @@ const routes = [
       name: 'mypage-account-setting',
       component: () => import('@/views/mypage/MyPageAccountSetting.vue'),
     },
+    {
+      path: '/recipes/:id/edit',
+      name: 'recipe-edit',
+      component: () => import('@/views/mypage/MyPageNewRecipe.vue'),  // 등록 컴포넌트 재사용
+  },
   ],
 }
 ]
