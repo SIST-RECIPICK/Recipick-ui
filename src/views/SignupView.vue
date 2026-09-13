@@ -99,30 +99,27 @@
         <!-- 닉네임 -->
         <div class="field">
           <label class="field__label" for="nickname">닉네임</label>
-          <div class="field__row">
-            <input
-              id="nickname"
-              v-model.trim="form.nickname"
-              class="input"
-              type="text"
-              placeholder="중복되지 않는 닉네임을 입력해 주세요. (00자)"
-              :aria-invalid="!!errors.nickname"
-              @input="onNicknameChange"
-            />
-            <button
-              type="button"
-              class="btn btn--outline field__action"
-              :disabled="!form.nickname || nicknameChecked"
-              @click="handleCheckNickname"
-            >
-              {{ nicknameChecked ? '확인완료' : '중복확인' }}
-            </button>
-          </div>
+          <input
+            id="nickname"
+            v-model.trim="form.nickname"
+            class="input"
+            type="text"
+            placeholder="중복되지 않는 닉네임을 입력해 주세요. (00자)"
+            :aria-invalid="!!errors.nickname"
+            @input="onNicknameChange"
+          />
           <p v-if="errors.nickname" class="field__msg field__msg--error">
             {{ errors.nickname }}
           </p>
-          <p v-else-if="nicknameChecked" class="field__msg field__msg--success">
-            사용 가능한 닉네임입니다.
+          <p
+            v-else-if="nicknameCheck.message"
+            class="field__msg"
+            :class="{
+              'field__msg--error': ['duplicate', 'invalid', 'error'].includes(nicknameCheck.status),
+              'field__msg--success': nicknameCheck.status === 'available',
+            }"
+          >
+            {{ nicknameCheck.message }}
           </p>
         </div>
 
@@ -165,10 +162,10 @@ const errors = reactive({
 const emailSending = ref(false)
 const codeSent = ref(false)
 const emailVerified = ref(false)
-const nicknameChecked = ref(false)
 const submitting = ref(false)
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const nicknamePattern = /^[가-힣a-zA-Z0-9]{2,10}$/
 
 // --- 이메일 중복확인 ---
 const emailCheck = reactive({
@@ -194,7 +191,7 @@ async function checkEmailDuplicate() {
 
   const seq = ++emailCheckSeq
   emailCheck.status = 'checking'
-  emailCheck.message = '확인 중...'
+  emailCheck.message = ''
 
   try {
     const res = await axios.get('http://localhost:8080/auth/email/check', {
@@ -246,6 +243,7 @@ function onEmailChange() {
 
 onUnmounted(() => {
   if (emailCheckTimer) clearTimeout(emailCheckTimer)
+  if (nicknameCheckTimer) clearTimeout(nicknameCheckTimer)
 })
 
 async function handleSendCode() {
@@ -282,18 +280,66 @@ function validatePassword() {
 }
 
 // --- 닉네임 중복확인 ---
-function onNicknameChange() {
-  nicknameChecked.value = false
-  errors.nickname = ''
+const nicknameCheck = reactive({
+  status: 'idle', // idle | checking | available | duplicate | invalid | error
+  message: '',
+})
+let nicknameCheckTimer = null
+let nicknameCheckSeq = 0
+
+async function checkNicknameDuplicate(nickname) {
+  if (!nicknamePattern.test(nickname)) {
+    nicknameCheck.status = 'invalid'
+    nicknameCheck.message = '닉네임은 2~10자의 한글, 영문, 숫자만 사용 가능합니다.'
+    return
+  }
+
+  const seq = ++nicknameCheckSeq
+  nicknameCheck.status = 'checking'
+  nicknameCheck.message = ''
+
+  try {
+    const res = await axios.get('http://localhost:8080/auth/nickname/check', {
+      params: { nickname },
+      withCredentials: true,
+    })
+    if (seq !== nicknameCheckSeq) return
+
+    if (res.data.available) {
+      nicknameCheck.status = 'available'
+      nicknameCheck.message = '사용 가능한 닉네임입니다.'
+    } else {
+      nicknameCheck.status = 'duplicate'
+      nicknameCheck.message = '이미 사용중인 닉네임입니다.'
+    }
+  } catch (err) {
+    if (seq !== nicknameCheckSeq) return
+
+    if (err.response?.status === 400) {
+      nicknameCheck.status = 'invalid'
+      nicknameCheck.message =
+        err.response.data?.message || '닉네임은 2~10자의 한글, 영문, 숫자만 사용 가능합니다.'
+    } else {
+      nicknameCheck.status = 'error'
+      nicknameCheck.message = '닉네임 확인 중 오류가 발생했습니다.'
+    }
+  }
 }
 
-async function handleCheckNickname() {
-  try {
-    // TODO: 닉네임 중복확인 API 호출
-    nicknameChecked.value = true
-  } catch {
-    errors.nickname = '중복된 닉네임입니다.'
-  }
+function onNicknameChange(e) {
+  errors.nickname = ''
+
+  nicknameCheck.status = 'idle'
+  nicknameCheck.message = ''
+
+  if (nicknameCheckTimer) clearTimeout(nicknameCheckTimer)
+
+  const value = e.target.value.trim()
+  if (!value) return
+
+  nicknameCheckTimer = setTimeout(() => {
+    checkNicknameDuplicate(value)
+  }, 1000)
 }
 
 // --- 제출 ---
@@ -305,7 +351,7 @@ async function handleSubmit() {
     return
   }
   if (errors.password || errors.passwordConfirm) return
-  if (!nicknameChecked.value) {
+  if (nicknameCheck.status !== 'available') {
     errors.nickname = '닉네임 중복확인을 해주세요.'
     return
   }
