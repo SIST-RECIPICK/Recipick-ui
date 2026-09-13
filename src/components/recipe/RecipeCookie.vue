@@ -4,7 +4,7 @@
       <div class="recipe-card__image-wrap">
         <img
           class="recipe-card__image"
-          :src="recipe.att_file_no_main"
+          :src="getImageUrl(recipe.att_file_no_main)"
           :alt="`${recipe.rcp_nm} 대표 이미지`"
           loading="lazy"
         />
@@ -18,6 +18,7 @@
 </template>
 
 <script setup>
+import { getImageUrl } from '@/utils/image'
 
 defineProps({
   recipe: { type: Object, required: true },

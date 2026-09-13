@@ -6,7 +6,7 @@
         <!-- 대표 이미지 -->
         <img
           class="detail__hero"
-          :src="recipeData?.att_file_no_main"
+          :src="getImageUrl(recipeData?.att_file_no_main)"
           :alt="`${recipe.title} 완성 대표 이미지`"
         />
 
@@ -46,7 +46,7 @@
               <img
                 v-if="step.manual_img"
                 class="steps__image"
-                :src="step.manual_img"
+                :src="getImageUrl(step.manual_img)"
                 :alt="`순서 ${i + 1} 이미지`"
                 loading="lazy"
               />
@@ -122,6 +122,7 @@ import { storeToRefs } from 'pinia'
 import { recipeDetailStore } from '@/stores/recipeDetailStore'
 import { useRoute } from 'vue-router'
 import RecipeCookie from '@/components/recipe/RecipeCookie.vue'
+import { getImageUrl } from '@/utils/image'
 
 const route = useRoute()
 
