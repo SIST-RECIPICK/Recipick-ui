@@ -34,6 +34,16 @@
           <p v-else-if="emailVerified" class="field__msg field__msg--success">
             이메일 인증이 완료되었습니다.
           </p>
+          <p
+            v-else-if="emailCheck.message"
+            class="field__msg"
+            :class="{
+              'field__msg--error': ['duplicate', 'social_only', 'invalid', 'error'].includes(emailCheck.status),
+              'field__msg--success': emailCheck.status === 'available',
+            }"
+          >
+            {{ emailCheck.message }}
+          </p>
 
           <!-- 인증번호 입력 (전송 후 노출) -->
           <div v-if="codeSent && !emailVerified" class="field__row field__row--code">
@@ -131,8 +141,9 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const router = useRouter()
 
@@ -158,14 +169,84 @@ const nicknameChecked = ref(false)
 const submitting = ref(false)
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const canSendCode = computed(() => emailPattern.test(form.email) && !emailVerified.value)
 
-// --- 이메일 인증 (FR-101 연동 지점) ---
+// --- 이메일 중복확인 ---
+const emailCheck = reactive({
+  status: 'idle', // idle | checking | available | duplicate | social_only | invalid | error
+  message: '',
+})
+let emailCheckTimer = null
+let emailCheckSeq = 0
+
+const canSendCode = computed(
+  () =>
+    emailPattern.test(form.email) &&
+    !emailVerified.value &&
+    emailCheck.status === 'available',
+)
+
+async function checkEmailDuplicate() {
+  if (!emailPattern.test(form.email)) {
+    emailCheck.status = 'invalid'
+    emailCheck.message = '올바른 이메일 형식을 입력해주세요.'
+    return
+  }
+
+  const seq = ++emailCheckSeq
+  emailCheck.status = 'checking'
+  emailCheck.message = '확인 중...'
+
+  try {
+    const res = await axios.get('http://localhost:8080/auth/email/check', {
+      params: { email: form.email },
+      withCredentials: true,
+    })
+    if (seq !== emailCheckSeq) return
+
+    const { available, reason } = res.data
+    if (available) {
+      emailCheck.status = 'available'
+      emailCheck.message = '사용 가능한 이메일입니다.'
+    } else if (reason === 'SOCIAL_ONLY') {
+      emailCheck.status = 'social_only'
+      emailCheck.message = '구글 로그인을 이용해주세요.'
+    } else {
+      emailCheck.status = 'duplicate'
+      emailCheck.message = '이미 사용중인 이메일입니다.'
+    }
+  } catch (err) {
+    if (seq !== emailCheckSeq) return
+
+    if (err.response?.status === 400) {
+      emailCheck.status = 'invalid'
+      emailCheck.message = err.response.data?.message || '올바른 이메일 형식을 입력해주세요.'
+    } else {
+      emailCheck.status = 'error'
+      emailCheck.message = '이메일 확인 중 오류가 발생했습니다.'
+    }
+  }
+}
+
+// --- 이메일 인증 ---
 function onEmailChange() {
   emailVerified.value = false
   codeSent.value = false
   errors.email = ''
+
+  emailCheck.status = 'idle'
+  emailCheck.message = ''
+
+  if (emailCheckTimer) clearTimeout(emailCheckTimer)
+  if (!form.email) return
+
+  emailCheckTimer = setTimeout(() => {
+    checkEmailDuplicate()
+  }, 1000)
 }
+
+onUnmounted(() => {
+  if (emailCheckTimer) clearTimeout(emailCheckTimer)
+})
 
 async function handleSendCode() {
   if (!emailPattern.test(form.email)) {
@@ -200,7 +281,7 @@ function validatePassword() {
     form.passwordConfirm && form.password !== form.passwordConfirm ? '불일치' : ''
 }
 
-// --- 닉네임 중복확인 (FR-102 연동 지점) ---
+// --- 닉네임 중복확인 ---
 function onNicknameChange() {
   nicknameChecked.value = false
   errors.nickname = ''
@@ -231,7 +312,7 @@ async function handleSubmit() {
 
   submitting.value = true
   try {
-    // TODO: 회원가입 API 호출 (FR-103)
+    // TODO: 회원가입 API 호출
     router.push('/login')
   } finally {
     submitting.value = false

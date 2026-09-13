@@ -97,7 +97,11 @@ small { font-size: var(--text-sm); color: var(--text-secondary); }
   border-color: var(--border-strong);
   color: var(--text-primary);
 }
-.btn--outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn--outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn--outline:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .btn--ghost {
   background: transparent;
