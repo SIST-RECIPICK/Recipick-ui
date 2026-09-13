@@ -163,7 +163,6 @@ function dec() { if (servings.value > 1) servings.value -= 1 }
 const scaledIngredients = computed(() =>
   props.ingredients.map((item) => {
     const grams = item.amount * (servings.value / props.baseServings)
-    console.log(item.category_name);
     let display
     if (unit.value === 'spoon') 
       display = ((grams / 15) >= 1 && item.category_name === '조미료') ? `${(grams / 15).toFixed(1)}스푼` : 
