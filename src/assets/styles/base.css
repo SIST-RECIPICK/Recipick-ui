@@ -91,6 +91,10 @@ small { font-size: var(--text-sm); color: var(--text-secondary); }
   background: var(--surface-inverse);
   color: var(--text-on-inverse);
 }
+.btn--inverse:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 .btn--outline {
   background: transparent;

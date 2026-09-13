@@ -8,34 +8,18 @@
         <!-- 이메일 -->
         <div class="field">
           <label class="field__label" for="email">이메일</label>
-          <div class="field__row">
-            <input
-              id="email"
-              v-model.trim="form.email"
-              class="input"
-              type="email"
-              placeholder="이메일을 입력해 주세요. (0~00자)"
-              autocomplete="email"
-              :aria-invalid="!!errors.email"
-              @input="onEmailChange"
-            />
-            <button
-              type="button"
-              class="btn btn--outline field__action"
-              :disabled="!canSendCode || emailSending"
-              @click="handleSendCode"
-            >
-              {{ emailVerified ? '인증완료' : '이메일 인증' }}
-            </button>
-          </div>
-          <p v-if="errors.email" class="field__msg field__msg--error">
-            {{ errors.email }}
-          </p>
-          <p v-else-if="emailVerified" class="field__msg field__msg--success">
-            이메일 인증이 완료되었습니다.
-          </p>
+          <input
+            id="email"
+            v-model.trim="form.email"
+            class="input"
+            type="email"
+            placeholder="이메일을 입력해 주세요. (0~00자)"
+            autocomplete="email"
+            :aria-invalid="['duplicate', 'social_only', 'invalid', 'error'].includes(emailCheck.status)"
+            @input="onEmailChange"
+          />
           <p
-            v-else-if="emailCheck.message"
+            v-if="emailCheck.message"
             class="field__msg"
             :class="{
               'field__msg--error': ['duplicate', 'social_only', 'invalid', 'error'].includes(emailCheck.status),
@@ -44,25 +28,6 @@
           >
             {{ emailCheck.message }}
           </p>
-
-          <!-- 인증번호 입력 (전송 후 노출) -->
-          <div v-if="codeSent && !emailVerified" class="field__row field__row--code">
-            <input
-              v-model.trim="form.code"
-              class="input"
-              type="text"
-              inputmode="numeric"
-              placeholder="인증번호 6자리"
-              maxlength="6"
-            />
-            <button
-              type="button"
-              class="btn btn--primary field__action"
-              @click="handleVerifyCode"
-            >
-              확인
-            </button>
-          </div>
         </div>
 
         <!-- 비밀번호 -->
@@ -124,7 +89,11 @@
         </div>
 
         <!-- 제출 -->
-        <button type="submit" class="btn btn--inverse btn--block auth__submit" :disabled="submitting">
+        <button
+          type="submit"
+          class="btn btn--inverse btn--block auth__submit"
+          :disabled="!canSubmit || submitting"
+        >
           회원가입
         </button>
       </form>
@@ -146,26 +115,22 @@ const router = useRouter()
 
 const form = reactive({
   email: '',
-  code: '',
   password: '',
   passwordConfirm: '',
   nickname: '',
 })
 
 const errors = reactive({
-  email: '',
   password: '',
   passwordConfirm: '',
   nickname: '',
 })
 
-const emailSending = ref(false)
-const codeSent = ref(false)
-const emailVerified = ref(false)
 const submitting = ref(false)
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const nicknamePattern = /^[가-힣a-zA-Z0-9]{2,10}$/
+const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,20}$/
 
 // --- 이메일 중복확인 ---
 const emailCheck = reactive({
@@ -174,13 +139,6 @@ const emailCheck = reactive({
 })
 let emailCheckTimer = null
 let emailCheckSeq = 0
-
-const canSendCode = computed(
-  () =>
-    emailPattern.test(form.email) &&
-    !emailVerified.value &&
-    emailCheck.status === 'available',
-)
 
 async function checkEmailDuplicate() {
   if (!emailPattern.test(form.email)) {
@@ -224,12 +182,7 @@ async function checkEmailDuplicate() {
   }
 }
 
-// --- 이메일 인증 ---
 function onEmailChange() {
-  emailVerified.value = false
-  codeSent.value = false
-  errors.email = ''
-
   emailCheck.status = 'idle'
   emailCheck.message = ''
 
@@ -246,35 +199,11 @@ onUnmounted(() => {
   if (nicknameCheckTimer) clearTimeout(nicknameCheckTimer)
 })
 
-async function handleSendCode() {
-  if (!emailPattern.test(form.email)) {
-    errors.email = '올바른 이메일 형식이 아닙니다.'
-    return
-  }
-  emailSending.value = true
-  try {
-    // TODO: 인증번호 발송 API 호출
-    codeSent.value = true
-  } catch {
-    errors.email = '중복된 이메일입니다.'
-  } finally {
-    emailSending.value = false
-  }
-}
-
-function handleVerifyCode() {
-  // TODO: 인증번호 검증 API 호출
-  if (form.code.length === 6) {
-    emailVerified.value = true
-    errors.email = ''
-  } else {
-    errors.email = '인증번호가 올바르지 않습니다.'
-  }
-}
-
 // --- 비밀번호 검증 ---
 function validatePassword() {
-  errors.password = form.password.length >= 8 ? '' : '비밀번호는 8자 이상이어야 합니다.'
+  errors.password = passwordPattern.test(form.password)
+    ? ''
+    : '비밀번호는 문자, 숫자, 특수기호를 모두 포함해 8~20자로 입력해주세요.'
   errors.passwordConfirm =
     form.passwordConfirm && form.password !== form.passwordConfirm ? '불일치' : ''
 }
@@ -343,23 +272,65 @@ function onNicknameChange(e) {
 }
 
 // --- 제출 ---
-async function handleSubmit() {
-  validatePassword()
+const canSubmit = computed(
+  () =>
+    emailCheck.status === 'available' &&
+    nicknameCheck.status === 'available' &&
+    passwordPattern.test(form.password) &&
+    form.password === form.passwordConfirm &&
+    form.password.length > 0,
+)
 
-  if (!emailVerified.value) {
-    errors.email = '이메일 인증을 완료해 주세요.'
-    return
-  }
-  if (errors.password || errors.passwordConfirm) return
-  if (nicknameCheck.status !== 'available') {
-    errors.nickname = '닉네임 중복확인을 해주세요.'
-    return
-  }
+async function handleSubmit() {
+  if (!canSubmit.value) return
 
   submitting.value = true
   try {
-    // TODO: 회원가입 API 호출
+    await axios.post(
+      'http://localhost:8080/auth/signup',
+      {
+        email: form.email,
+        password: form.password,
+        passwordConfirm: form.passwordConfirm,
+        nickname: form.nickname,
+      },
+      { withCredentials: true },
+    )
+
+    alert('회원가입이 완료되었습니다.')
     router.push('/login')
+  } catch (err) {
+    const errorCode = err.response?.data?.errorCode
+    const message = err.response?.data?.message
+
+    switch (errorCode) {
+      case 'EMAIL_DUPLICATE':
+        emailCheck.status = 'duplicate'
+        emailCheck.message = message || '이미 사용중인 이메일입니다.'
+        break
+      case 'NICKNAME_DUPLICATE':
+        nicknameCheck.status = 'duplicate'
+        nicknameCheck.message = message || '이미 사용중인 닉네임입니다.'
+        break
+      case 'INVALID_EMAIL_FORMAT':
+        emailCheck.status = 'invalid'
+        emailCheck.message = message || '올바른 이메일 형식을 입력해주세요.'
+        break
+      case 'INVALID_NICKNAME_FORMAT':
+        nicknameCheck.status = 'invalid'
+        nicknameCheck.message =
+          message || '닉네임은 2~10자의 한글, 영문, 숫자만 사용 가능합니다.'
+        break
+      case 'PASSWORD_MISMATCH':
+        errors.passwordConfirm = message || '비밀번호가 일치하지 않습니다.'
+        break
+      case 'INVALID_PASSWORD_FORMAT':
+        errors.password =
+          message || '비밀번호는 문자, 숫자, 특수기호를 모두 포함해 8~20자로 입력해주세요.'
+        break
+      default:
+        alert('회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+    }
   } finally {
     submitting.value = false
   }
@@ -401,20 +372,6 @@ async function handleSubmit() {
 .field__label {
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
-}
-.field__row {
-  display: flex;
-  gap: var(--space-2);
-}
-.field__row--code {
-  margin-top: var(--space-2);
-}
-.field__row .input {
-  flex: 1;
-}
-.field__action {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 /* 인풋 두 개 세로 배치 시 간격 */
 .field__spacer {
