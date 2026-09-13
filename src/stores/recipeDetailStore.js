@@ -8,9 +8,9 @@ export const recipeDetailStore = defineStore('detail', {
     ingredientUnitList: [],
     relationList: [],
     cookieList: [],
-    reviewList:[],
+    reviewList: [],
     likeExist: 0,
-    markExist: 0
+    markExist: 0,
   }),
   actions: {
     async recipeDetailData(no) {
@@ -24,12 +24,30 @@ export const recipeDetailStore = defineStore('detail', {
       console.log(res.data)
       this.recipeData = res.data.recipeData
       this.manualList = res.data.manualList
-      this.cookieList = res.data.cookieList
       this.ingredientUnitList = res.data.ingredientUnitList
       this.likeExist = res.data.likeExist
       this.markExist = res.data.markExist
-      this.relationList = res.data.relationList
+    },
+
+    async recipeCookie() {
+      const res = await axios.get('http://localhost:8080/recipe/cookie', {
+        params: {},
+        withCredentials: true,
+      })
+      console.log(res.data)
+      this.cookieList = res.data.cookieList
+    },
+
+    async recipeDetailSub(no) {
+      const res = await axios.get('http://localhost:8080/recipe/detail_sub', {
+        params: {
+          rcp_seq: no,
+        },
+        withCredentials: true,
+      })
+      console.log(res.data)
       this.reviewList = res.data.reviewList
+      this.relationList = res.data.relationList
     },
 
     async recipeLikeClick(no, type) {
@@ -42,6 +60,5 @@ export const recipeDetailStore = defineStore('detail', {
         withCredentials: true,
       })
     },
-
   },
 })

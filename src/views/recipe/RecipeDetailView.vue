@@ -16,7 +16,7 @@
           <div class="detail__author">
             <span class="chip chip--accent">{{ recipe.badge }}</span>
             <span class="detail__chef">{{ recipe.chef }}</span>
-            <button class="btn btn--outline detail__follow">
+            <button class="btn btn--outline detail__follow" @click="connectWebSocket">
               레시피 재료 문의하기
             </button>
           </div>
@@ -110,6 +110,14 @@
           />
         </div>
     </div>
+    <transition name="chat-slide">
+    <ChatPanel
+      v-if="isChatOpen"
+      @close="isChatOpen = false"
+      :client="client"
+      :room_id="room_id"
+    />
+  </transition>
   </div>
 </template>
 
@@ -122,12 +130,19 @@ import { storeToRefs } from 'pinia'
 import { recipeDetailStore } from '@/stores/recipeDetailStore'
 import { useRoute } from 'vue-router'
 import RecipeCookie from '@/components/recipe/RecipeCookie.vue'
+import ChatPanel from '@/components/chat/ChatPanel.vue'
+import { Client } from '@stomp/stompjs'
+import { chatStore } from '@/stores/ChatStore'
 
 const route = useRoute()
+const isChatOpen = ref(false)
+const client = ref(null)
 
 const id = computed(() => route.params.id)
 
 const store = recipeDetailStore()
+const chatstore = chatStore()
+
 const { recipeData } = storeToRefs(store) // 레시피 상세 정보
 const { manualList } = storeToRefs(store) // 조리과정 리스트
 const { ingredientUnitList } = storeToRefs(store) // 재료 리스트
@@ -137,8 +152,43 @@ const { cookieList } = storeToRefs(store) //방문 레시피
 const { relationList } = storeToRefs(store) // 연관 레시피 리스트
 const { reviewList } = storeToRefs(store) // 리뷰 리스트
 
+const { room_id } = storeToRefs(chatstore) 
+
+
+const connectWebSocket = async () => {
+  await chatstore.chatRoomCrerate(recipeData.value.user_id,recipeData.value.rcp_seq)
+
+  if (client.value?.connected) {
+    isChatOpen.value = true
+    return
+  }
+
+  client.value = new Client({
+    brokerURL: 'ws://localhost:8080/chat-ws',
+    reconnectDelay: 5000,
+
+    onConnect: () => {
+      isChatOpen.value = true
+    },
+
+    onStompError: (frame) => {
+      console.error('STOMP ERROR', frame)
+    },
+
+    onWebSocketError: (error) => {
+      console.error('WebSocket ERROR', error)
+    }
+  })
+
+  client.value.activate()
+}
+
+
+
 onMounted(() => {
   store.recipeDetailData(id.value) 
+  store.recipeCookie()
+  store.recipeDetailSub(id.value)
 })
 
 watch(
