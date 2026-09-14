@@ -174,6 +174,7 @@ const routes = [
       name: 'recipe-edit',
       component: () => import('@/views/mypage/MyPageNewRecipe.vue'),  // 등록 컴포넌트 재사용
   },
+
   ],
 }
 ]
