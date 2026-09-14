@@ -82,7 +82,17 @@
             </li>
           </ul>
         </section>
+        <!-- 매칭 시작 버튼 -->
+        <button
+          class="btn btn--primary btn--block"
+          :disabled="!selectedNames.length"
+          @click="handleMatch"
+          style="margin-bottom: 16px;"
+        >
+           레시피 찾기
+        </button>
       </aside>
+      
 
       <!-- ===== 우: 검색 결과 ===== -->
       <div class="fridge__results">
@@ -93,22 +103,16 @@
             <span class="legend"><i class="legend__dot legend__dot--miss"></i> 추가로 필요한 재료</span>
           </div>
           <div class="sort">
-            <button
-              class="sort__btn"
-              :class="{ 'is-active': sort === 'match' }"
-              @click="sort = 'match'"
-            >
+            <button class="sort__btn" :class="{ 'is-active': sort === 'match' }" @click="sort = 'match'">
               일치율순
             </button>
-            <button
-              class="sort__btn"
-              :class="{ 'is-active': sort === 'popular' }"
-              @click="sort = 'popular'"
-            >
+            <button class="sort__btn" :class="{ 'is-active': sort === 'popular' }" @click="sort = 'popular'">
               인기순
             </button>
           </div>
         </div>
+
+        
 
         <p v-if="loading" class="results__empty text-muted">불러오는 중…</p>
         <div v-else-if="recipes.length" class="results__list">
@@ -118,6 +122,9 @@
             :recipe="recipe"
           />
         </div>
+        <p v-else-if="!hasSearched" class="results__empty text-muted">
+          재료를 선택하고 버튼을 눌러 레시피를 찾아보세요.
+        </p>
         <p v-else class="results__empty text-muted">
           선택한 재료로 만들 수 있는 레시피가 없습니다.
         </p>
@@ -139,30 +146,20 @@ const { recipes, totalCount, loading } = storeToRefs(fridgeStore)
 const fridgeQuery = ref('')
 const extraQuery = ref('')
 const sort = ref('match')
+const hasSearched = ref(false)   // 매칭을 한 번이라도 실행했는지
 
-const extra = ref([
-  // { id: 'e1', name: '돼지고기', checked: true },
-  // { id: 'e2', name: '고추장', checked: true },
-  // { id: 'e3', name: '간장', checked: true },
-  // { id: 'e4', name: '설탕', checked: false },
-  // { id: 'e5', name: '참기름', checked: false },
-  // { id: 'e6', name: '고춧가루', checked: false },
-])
-// 냉장고 재료: store에서 로드한 재료에 화면용 checked 를 입힌 로컬 목록
-// (checked = 이번 검색에 사용할지 여부. 체크 상태는 이 화면에서만 쓰는 UI 상태)
+const extra = ref([])
 const fridge = ref([])
 
-
-// 진입 시: 재료 마스터 + 내 냉장고 로드 → checked=true 로 초기화
 onMounted(async () => {
   await fridgeStore.loadMyFridge(2)
   fridge.value = fridgeStore.myIngredients
-  .filter((r) => r.ingredient)   // ingredient가 없는 항목은 걸러냄
-  .map((r) => ({
-    id: r.ingredient_id,
-    name: r.ingredient.ingredient_name,
-    checked: true,
-  }))
+    .filter((r) => r.ingredient)
+    .map((r) => ({
+      id: r.ingredient_id,
+      name: r.ingredient.ingredient_name,
+      checked: true,
+    }))
 })
 
 watch(extraQuery, async (newVal) => {
@@ -178,47 +175,46 @@ watch(extraQuery, async (newVal) => {
   }))
 })
 
-// 검색 필터
 const filteredFridge = computed(() =>
   fridge.value.filter((i) => i.name.includes(fridgeQuery.value.trim()))
 )
-
 const filteredExtra = computed(() =>
   extra.value.filter((i) => i.name.includes(extraQuery.value.trim()))
 )
 
-// 전체 선택 (냉장고)
 const allFridgeSelected = computed(
   () => fridge.value.length > 0 && fridge.value.every((i) => i.checked)
 )
 function toggleAllFridge(e) {
-  
   const val = e.target.checked
   fridge.value.forEach((i) => (i.checked = val))
 }
 
-// 선택한 재료 = 냉장고✓ + 추가재료✓ 합집합
 const selectedIngredients = computed(() => [
   ...fridge.value.filter((i) => i.checked),
-  ...extra.value.filter((i) => i.checked)
-
+  ...extra.value.filter((i) => i.checked),
 ])
 const selectedNames = computed(() => selectedIngredients.value.map((i) => i.name))
 
 function deselect(ing) {
   const inFridge = fridge.value.find((i) => i.id === ing.id)
   if (inFridge) inFridge.checked = false
-   const inExtra = extra.value.find((i) => i.id === ing.id)   
+  const inExtra = extra.value.find((i) => i.id === ing.id)
   if (inExtra) inExtra.checked = false
-
 }
 
-// 선택 재료·정렬이 바뀔 때마다 store action 으로 재조회
-watch(
-  [selectedNames, sort],
-  () => fridgeStore.loadMatches(selectedNames.value, sort.value),
-  { immediate: true }
-)
+// 버튼 클릭 시에만 실행되는 매칭 함수
+async function handleMatch() {
+  await fridgeStore.loadMatches(selectedNames.value, sort.value)
+  hasSearched.value = true
+}
+
+// 정렬 기준이 바뀌면, 이미 검색을 한 번 했을 때만 자동 재조회
+watch(sort, () => {
+  if (hasSearched.value) {
+    fridgeStore.loadMatches(selectedNames.value, sort.value)
+  }
+})
 </script>
 
 <style scoped>
