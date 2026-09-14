@@ -6,7 +6,7 @@
         <!-- 대표 이미지 -->
         <img
           class="detail__hero"
-          :src="recipeData?.att_file_no_main"
+          :src="getImageUrl(recipeData?.att_file_no_main)"
           :alt="`${recipe.title} 완성 대표 이미지`"
         />
 
@@ -16,7 +16,7 @@
           <div class="detail__author">
             <span class="chip chip--accent">{{ recipe.badge }}</span>
             <span class="detail__chef">{{ recipe.chef }}</span>
-            <button class="btn btn--outline detail__follow">
+            <button class="btn btn--outline detail__follow" @click="connectWebSocket">
               레시피 재료 문의하기
             </button>
           </div>
@@ -46,7 +46,7 @@
               <img
                 v-if="step.manual_img"
                 class="steps__image"
-                :src="step.manual_img"
+                :src="getImageUrl(step.manual_img)"
                 :alt="`순서 ${i + 1} 이미지`"
                 loading="lazy"
               />
@@ -110,6 +110,14 @@
           />
         </div>
     </div>
+    <transition name="chat-slide">
+    <ChatPanel
+      v-if="isChatOpen"
+      @close="isChatOpen = false"
+      :client="client"
+      :room_id="room_id"
+    />
+  </transition>
   </div>
 </template>
 
@@ -123,12 +131,22 @@ import { recipeDetailStore } from '@/stores/recipeDetailStore'
 import { useRoute } from 'vue-router'
 import RecipeCookie from '@/components/recipe/RecipeCookie.vue'
 
+import { getImageUrl } from '@/utils/image'
+
+import ChatPanel from '@/components/chat/ChatPanel.vue'
+import { Client } from '@stomp/stompjs'
+import { chatStore } from '@/stores/ChatStore'
+
+
 const route = useRoute()
+const isChatOpen = ref(false)
+const client = ref(null)
 
 const id = computed(() => route.params.id)
 
-console.log(id)
 const store = recipeDetailStore()
+const chatstore = chatStore()
+
 const { recipeData } = storeToRefs(store) // 레시피 상세 정보
 const { manualList } = storeToRefs(store) // 조리과정 리스트
 const { ingredientUnitList } = storeToRefs(store) // 재료 리스트
@@ -138,8 +156,43 @@ const { cookieList } = storeToRefs(store) //방문 레시피
 const { relationList } = storeToRefs(store) // 연관 레시피 리스트
 const { reviewList } = storeToRefs(store) // 리뷰 리스트
 
+const { room_id } = storeToRefs(chatstore) 
+
+
+const connectWebSocket = async () => {
+  await chatstore.chatRoomCrerate(recipeData.value.user_id,recipeData.value.rcp_seq)
+
+  if (client.value?.connected) {
+    isChatOpen.value = true
+    return
+  }
+
+  client.value = new Client({
+    brokerURL: 'ws://localhost:8080/chat-ws',
+    reconnectDelay: 5000,
+
+    onConnect: () => {
+      isChatOpen.value = true
+    },
+
+    onStompError: (frame) => {
+      console.error('STOMP ERROR', frame)
+    },
+
+    onWebSocketError: (error) => {
+      console.error('WebSocket ERROR', error)
+    }
+  })
+
+  client.value.activate()
+}
+
+
+
 onMounted(() => {
   store.recipeDetailData(id.value) 
+  store.recipeCookie()
+  store.recipeDetailSub(id.value)
 })
 
 watch(
@@ -223,9 +276,9 @@ const cookieRecipes = computed(() =>
 const relationRecipes = computed(() =>
   relationList.value.map(item => ({
     nickname:item.nickname,
-    like_count:item.like_count,
+    like_count:item.count,
     //hash_tag:item.hash_tag,
-    user_id:item.user_id,
+    user_id:2,
     rcp_seq: item.rcp_seq,
     info_eng: item.info_eng,
     rcp_nm: item.rcp_nm,
