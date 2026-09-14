@@ -74,9 +74,13 @@ export async function fetchFridgeMatches({ ingredientNames = [], sort = 'match' 
  * 등록 화면용 재료 마스터 목록을 조회한다.
  * @returns {Promise<Ingredient[]>}
  */
-export async function fetchIngredients() {
+/* export async function fetchIngredients() {
   // TODO: const res = await fetch('/api/ingredients'); return res.json()
   return MOCK_INGREDIENTS
+} */
+export async function searchIngredientsApi(keyword) {
+  const res = await fetch(`/api/ingredients/search?keyword=${keyword}`)
+  return res.json()
 }
 
 /**
@@ -104,33 +108,6 @@ export async function saveMyFridge(ingredientIds) {
 // 재료 마스터 목업 (ingredient 테이블 가정)
 // ─────────────────────────────────────────────
 
-/** @type {Ingredient[]} */
-const MOCK_INGREDIENTS = [
-  { id: 1, name: '양파', category: 'vegetable' },
-  { id: 2, name: '감자', category: 'vegetable' },
-  { id: 3, name: '당근', category: 'vegetable' },
-  { id: 4, name: '대파', category: 'vegetable' },
-  { id: 5, name: '마늘', category: 'vegetable' },
-  { id: 6, name: '애호박', category: 'vegetable' },
-  { id: 7, name: '파프리카', category: 'vegetable' },
-  { id: 8, name: '돼지고기', category: 'meat' },
-  { id: 9, name: '소고기', category: 'meat' },
-  { id: 10, name: '닭고기', category: 'meat' },
-  { id: 11, name: '새우', category: 'meat' },
-  { id: 12, name: '달걀', category: 'dairy' },
-  { id: 13, name: '우유', category: 'dairy' },
-  { id: 14, name: '치즈', category: 'dairy' },
-  { id: 15, name: '두부', category: 'dairy' },
-  { id: 16, name: '쌀', category: 'grain' },
-  { id: 17, name: '소면', category: 'grain' },
-  { id: 18, name: '스파게티', category: 'grain' },
-  { id: 19, name: '간장', category: 'sauce' },
-  { id: 20, name: '고추장', category: 'sauce' },
-  { id: 21, name: '된장', category: 'sauce' },
-  { id: 22, name: '설탕', category: 'sauce' },
-  { id: 23, name: '참기름', category: 'sauce' },
-  { id: 24, name: '고춧가루', category: 'sauce' },
-]
 
 // 사용자가 이미 담아둔 냉장고 재료 id (서버 저장 상태 가정)
 let MOCK_MY_FRIDGE_IDS = [1, 2, 3]

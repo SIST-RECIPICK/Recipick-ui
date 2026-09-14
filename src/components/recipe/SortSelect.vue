@@ -20,7 +20,7 @@ const emit = defineEmits(['update:modelValue'])
 
 const options = [
   { value: 'latest', label: '최신순' },
-  { value: 'popular', label: '인기순' },
+  { value: 'hit', label: '인기순' },
 ]
 </script>
 

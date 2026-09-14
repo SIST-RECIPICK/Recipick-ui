@@ -55,7 +55,7 @@
             <li v-for="ing in filteredFridge" :key="ing.id" class="checklist__row">
               <label class="checklist__label">
                 <input type="checkbox" v-model="ing.checked" />
-                {{ ing.name }}
+                {{ ing.name}}
               </label>
             </li>
           </ul>
@@ -77,7 +77,7 @@
             <li v-for="ing in filteredExtra" :key="ing.id" class="checklist__row">
               <label class="checklist__label">
                 <input type="checkbox" v-model="ing.checked" />
-                {{ ing.name }}
+                {{ing.name}}
               </label>
             </li>
           </ul>
@@ -132,7 +132,6 @@ import { storeToRefs } from 'pinia'
 import { IconX, IconSearch, IconPlus } from '@tabler/icons-vue'
 import FridgeRecipeCard from '@/components/fridge/FridgeRecipeCard.vue'
 import { useFridgeStore } from '@/stores/fridgeStore'
-
 const fridgeStore = useFridgeStore()
 const { recipes, totalCount, loading } = storeToRefs(fridgeStore)
 
@@ -141,34 +140,49 @@ const fridgeQuery = ref('')
 const extraQuery = ref('')
 const sort = ref('match')
 
+const extra = ref([
+  // { id: 'e1', name: '돼지고기', checked: true },
+  // { id: 'e2', name: '고추장', checked: true },
+  // { id: 'e3', name: '간장', checked: true },
+  // { id: 'e4', name: '설탕', checked: false },
+  // { id: 'e5', name: '참기름', checked: false },
+  // { id: 'e6', name: '고춧가루', checked: false },
+])
 // 냉장고 재료: store에서 로드한 재료에 화면용 checked 를 입힌 로컬 목록
 // (checked = 이번 검색에 사용할지 여부. 체크 상태는 이 화면에서만 쓰는 UI 상태)
 const fridge = ref([])
 
+
 // 진입 시: 재료 마스터 + 내 냉장고 로드 → checked=true 로 초기화
 onMounted(async () => {
-  await Promise.all([fridgeStore.loadIngredients(), fridgeStore.loadMyFridge()])
-  fridge.value = fridgeStore.myIngredients.map((ing) => ({
-    id: ing.id,
-    name: ing.name,
+  await fridgeStore.loadMyFridge(2)
+  fridge.value = fridgeStore.myIngredients
+  .filter((r) => r.ingredient)   // ingredient가 없는 항목은 걸러냄
+  .map((r) => ({
+    id: r.ingredient_id,
+    name: r.ingredient.ingredient_name,
     checked: true,
   }))
 })
 
-// 추가 재료: "냉장고엔 없지만 있다 치고" 넣어보는 임시 재료 (화면 로컬)
-const extra = ref([
-  { id: 'e1', name: '돼지고기', checked: true },
-  { id: 'e2', name: '고추장', checked: true },
-  { id: 'e3', name: '간장', checked: true },
-  { id: 'e4', name: '설탕', checked: false },
-  { id: 'e5', name: '참기름', checked: false },
-  { id: 'e6', name: '고춧가루', checked: false },
-])
+watch(extraQuery, async (newVal) => {
+  if (newVal.trim().length < 2) {
+    extra.value = []
+    return
+  }
+  await fridgeStore.searchIngredients(newVal.trim())
+  extra.value = fridgeStore.ingredients.map((ing) => ({
+    id: ing.id,
+    name: ing.ingredient_name,
+    checked: false,
+  }))
+})
 
 // 검색 필터
 const filteredFridge = computed(() =>
   fridge.value.filter((i) => i.name.includes(fridgeQuery.value.trim()))
 )
+
 const filteredExtra = computed(() =>
   extra.value.filter((i) => i.name.includes(extraQuery.value.trim()))
 )
@@ -178,6 +192,7 @@ const allFridgeSelected = computed(
   () => fridge.value.length > 0 && fridge.value.every((i) => i.checked)
 )
 function toggleAllFridge(e) {
+  
   const val = e.target.checked
   fridge.value.forEach((i) => (i.checked = val))
 }
@@ -185,15 +200,17 @@ function toggleAllFridge(e) {
 // 선택한 재료 = 냉장고✓ + 추가재료✓ 합집합
 const selectedIngredients = computed(() => [
   ...fridge.value.filter((i) => i.checked),
-  ...extra.value.filter((i) => i.checked),
+  ...extra.value.filter((i) => i.checked)
+
 ])
 const selectedNames = computed(() => selectedIngredients.value.map((i) => i.name))
 
 function deselect(ing) {
   const inFridge = fridge.value.find((i) => i.id === ing.id)
   if (inFridge) inFridge.checked = false
-  const inExtra = extra.value.find((i) => i.id === ing.id)
+   const inExtra = extra.value.find((i) => i.id === ing.id)   
   if (inExtra) inExtra.checked = false
+
 }
 
 // 선택 재료·정렬이 바뀔 때마다 store action 으로 재조회

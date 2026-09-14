@@ -1,10 +1,11 @@
 <script setup>
 import { useRecipeSearch } from '@/composables/useRecipeSearch.js'
 import { useDragDrop } from '@/composables/useDragDrop.js' // 드롭파일 임포트
-
+import { useRecipePreviewStore } from '@/stores/recipePreview'
 const props = defineProps({
   userId: { type: [Number, Object], required: true },
 })
+const previewStore = useRecipePreviewStore()
 
 const { keyword, results, loading, errorMsg, search } = useRecipeSearch(props.userId)
 const { dragging, startDrag } = useDragDrop() // 드래그 파일에서 두개의 함수 가져오기
@@ -18,6 +19,10 @@ function onPointerDown(event, recipe) {
   if (event.target.closest('button')) return // 버튼 클릭시 드래그 방지
   startDrag(recipe, event) // 버튼이 아니면 함수 실행(useDragDrop)
 }
+function onPreviewClick(rcpSeq){
+  previewStore.loadPreview(rcpSeq)
+}
+
 </script>
 
 <template>
@@ -34,7 +39,7 @@ function onPointerDown(event, recipe) {
       <input
         v-model="keyword"
         class="recipe-panel__search-input"
-        type="search"
+        type="text"
         placeholder="레시피, 재료, 카테고리 검색"
         @keyup.enter="search"
       />
@@ -69,18 +74,22 @@ function onPointerDown(event, recipe) {
         <div class="recipe-card__thumb">
           <img v-if="r.att_file_no_main" :src="r.att_file_no_main" alt="" draggable="false" />
           <span v-else class="recipe-card__thumb-fallback">🍳</span>
-          <span v-if="r.is_bookmark" class="recipe-card__bookmark">★</span>
+          
         </div>
 
         <div class="recipe-card__body">
-          <div class="recipe-card__name">{{ r.rcp_nm }}</div>
+          <div class="recipe-card__name-row">
+            <span class="recipe-card__name">{{ r.rcp_nm }}</span>
+            <span v-if="r.is_bookmark" class="recipe-card__bookmark">⭐</span>
+          </div>
           <div class="recipe-card__stats">
             <span>{{ r.info_eng }} kcal</span>
             <span class="recipe-card__dot">·</span>
             <span>{{ r.rcp_pat2 }}</span>
+            
           </div>
           <div class="recipe-card__actions">
-            <button class="recipe-card__btn recipe-card__btn--preview">미리보기</button>
+            <button class="recipe-card__btn recipe-card__btn--preview" @click.stop="onPreviewClick(r.rcp_seq)">미리보기</button>
           </div>
         </div>
       </div>
@@ -230,12 +239,15 @@ function onPointerDown(event, recipe) {
 }
 .recipe-card__thumb img { width: 100%; height: 100%; object-fit: cover; }
 .recipe-card__thumb-fallback { font-size: 22px; }
+.recipe-card__name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
 .recipe-card__bookmark {
-  position: absolute;
-  top: 3px;
-  left: 3px;
   color: var(--accent);
-  font-size: 12px;
+  font-size: 16px;
   text-shadow: 0 0 3px rgba(255,255,255,.9);
 }
 

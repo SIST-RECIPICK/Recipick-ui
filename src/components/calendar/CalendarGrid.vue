@@ -3,10 +3,10 @@ import { onMounted, onUnmounted } from 'vue'
 import { useDragDrop } from '@/composables/useDragDrop.js'
 
 defineProps({
-  calendarCells: { type: Array, required: true },
-  weekdays: { type: Array, required: true },
+  calendarCells: { type: Array, required: true }, // 배열 빈값 없음
+  weekdays: { type: Array, required: true }, // 배열 빈값없음
 })
-
+// 부모 MealPlanView에 보낼 이벤트 선언
 const emit = defineEmits(['slot-click', 'recipe-drop','recipe-delete'])
 
 // 표시용 축약 라벨 (매칭 키로 쓰는 원래 값(아침/점심/저녁)은 안 건드림)
@@ -17,7 +17,7 @@ function onSlotClick(cell, meal) { // 어느 날짜 칸인지 , 어느 끼니인
 }
 function onDeleteClick(cell,meal){
   emit('recipe-delete',{dateStr : cell.dateStr,mealType:meal.type}) 
-  //recipe-delete를 실시해 부모(MealPlan)가 실행되게 함 , 어느 날짜의 어느 끼니인지 정보
+  //recipe-delete를 실시해 부모(MealPlan)가 실행되게 함 어느 날짜의 어느 끼니인지 정보
 }
 const { registerDropHandler } = useDragDrop() // 함수 가져오기
 
@@ -49,6 +49,7 @@ onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이
               v-for="meal in cell.meals"
               :key="meal.type"
               class="meal-slot" 
+              :class="`meal-slot--${meal.type}`"
               data-meal-slot
               :data-date-str="cell.dateStr"
               :data-meal-type="meal.type"
@@ -101,10 +102,13 @@ onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: var(--space-1);
+  min-width: 0;
 }
 
 .calendar-grid__day {
   min-height: 96px;
+  min-width: 0;
+  overflow: hidden;
   background: var(--surface-card);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -126,12 +130,18 @@ onUnmounted(() => registerDropHandler(null)) // 컴포넌트가 사라지면 이
   align-items: center;
   gap: 6px;
   padding: 2px 0;
-  min-height: 18px;
+  min-height: 30px;
+  min-width: 0;
   color: var(--text-primary);
   cursor: pointer;
   border-radius: 4px;
 }
-body.is-dragging-recipe .meal-slot:hover { background: var(--accent-subtle); outline: 1px dashed var(--accent); }
+body.is-dragging-recipe .meal-slot:hover .meal-slot__box,
+body.is-dragging-recipe .meal-slot:hover .meal-slot__empty
+ { 
+  background: var(--accent-subtle); 
+  outline: 1px dashed var(--accent); 
+}
 
 .meal-slot__box {
   display: flex;
@@ -164,6 +174,7 @@ body.is-dragging-recipe .meal-slot:hover { background: var(--accent-subtle); out
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
   font-size: 11px;
 }
 .meal-slot__empty {
@@ -185,5 +196,28 @@ body.is-dragging-recipe .meal-slot:hover { background: var(--accent-subtle); out
 }
 .meal-slot__delete:hover {
   color: var(--danger);
+}
+.meal-slot--아침 .meal-slot__box {
+  background: #fef3c7; /* 연한 노랑 */
+}
+.meal-slot--아침 .chip {
+  background: #f59e0b;
+  color: white;
+}
+
+.meal-slot--점심 .meal-slot__box {
+  background: #dbeafe; /* 연한 파랑 */
+}
+.meal-slot--점심 .chip {
+  background: #3b82f6;
+  color: white;
+}
+
+.meal-slot--저녁 .meal-slot__box {
+  background: #ede9fe; /* 연한 보라 */
+}
+.meal-slot--저녁 .chip {
+  background: #8b5cf6;
+  color: white;
 }
 </style>
