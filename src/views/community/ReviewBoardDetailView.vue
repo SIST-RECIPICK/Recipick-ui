@@ -1,39 +1,112 @@
+```vue
 <template>
-  <div>
-    <!-- 1. 리뷰 본문 영역 -->
-    <h3>{{ board.subject }}</h3>
-    <div>
-      <p>작성자: {{ board.writer_nickname }} | 조회수: {{ board.hit }}</p>
-      <p>작성일: {{ board.created_at }}</p>
-      <p v-if="board.image_url">
-        <img :src="board.image_url" alt="리뷰 이미지" width="300" />
-      </p>
-      <p>{{ board.content }}</p>
+  <div class="container community-page">
 
-      <!-- 본인 글 삭제 (SessionStorage 기반) -->
-      <button v-if="board.writer_id === currentUserId" @click="deleteReview">리뷰 삭제</button>
-    </div>
+    <!-- 리뷰 본문 -->
+    <section class="review-detail">
+      <div class="review-detail__header">
+        <h1>
+          {{ board.subject }}
+        </h1>
 
-    <hr />
+        <div class="review-detail__meta">
+          <span>
+            작성자: {{ board.writer_nickname }}
+          </span>
 
-    <!-- 2. 댓글 목록 영역 -->
-    <div>
-      <h4>댓글 ({{ replyList.length }})</h4>
-      <p v-if="replyList.length === 0">등록된 댓글이 없습니다.</p>
+          <span>
+            조회수: {{ board.hit }}
+          </span>
 
-      <div v-for="reply in replyList" :key="reply.id">
-        <p>
-          <b>{{ reply.writer_nickname }}</b>: {{ reply.content }}
-          <button v-if="reply.users_id === currentUserId" @click="deleteReply(reply.id)">삭제</button>
+          <span>
+            {{ board.created_at }}
+          </span>
+        </div>
+      </div>
+
+      <div class="review-detail__body">
+        <img
+          v-if="board.image_url"
+          :src="board.image_url"
+          alt="리뷰 이미지"
+          class="review-detail__image"
+        />
+
+        <p class="review-detail__content">
+          {{ board.content }}
         </p>
       </div>
-    </div>
 
-    <!-- 3. 댓글 작성 영역 -->
-    <div>
-      <input type="text" v-model="replyContent" placeholder="댓글을 입력하세요" />
-      <button @click="insertReply">댓글 작성</button>
-    </div>
+      <!-- 본인 글 삭제 -->
+      <div class="review-detail__actions">
+        <button
+          v-if="board.writer_id === currentUserId"
+          type="button"
+          class="btn btn--primary"
+          @click="deleteReview"
+        >
+          리뷰 삭제
+        </button>
+      </div>
+    </section>
+
+    <!-- 댓글 -->
+    <section class="review-detail__reply">
+      <h2>
+        댓글 ({{ replyList.length }})
+      </h2>
+
+      <p
+        v-if="replyList.length === 0"
+        class="review-detail__empty"
+      >
+        등록된 댓글이 없습니다.
+      </p>
+
+      <div
+        v-for="reply in replyList"
+        :key="reply.id"
+        class="review-detail__reply-item"
+      >
+        <div class="review-detail__reply-content">
+          <strong>
+            {{ reply.writer_nickname }}
+          </strong>
+
+          <p>
+            {{ reply.content }}
+          </p>
+        </div>
+
+        <button
+          v-if="reply.users_id === currentUserId"
+          type="button"
+          class="btn btn--ghost"
+          @click="deleteReply(reply.id)"
+        >
+          삭제
+        </button>
+      </div>
+
+      <!-- 댓글 작성 -->
+      <div class="review-detail__reply-form">
+        <input
+          v-model="replyContent"
+          type="text"
+          class="input"
+          placeholder="댓글을 입력하세요"
+        />
+
+        <button
+          type="button"
+          class="btn btn--primary"
+          @click="insertReply"
+        >
+          댓글 작성
+        </button>
+      </div>
+    </section>
+
   </div>
 </template>
 
@@ -43,8 +116,8 @@ import axios from 'axios'
 export default {
   data() {
     return {
-      reviewId: this.$route.query.id || 1, // URL 쿼리 파라미터(?id=1) 받기
-      currentUserId: Number(sessionStorage.getItem('users_id')) || 4, // 로그인 사용자 ID
+      reviewId: this.$route.query.id || 1,
+      currentUserId: Number(sessionStorage.getItem('users_id')) || 4,
       board: {},
       replyList: [],
       replyContent: ''
@@ -54,7 +127,6 @@ export default {
     this.fetchDetail()
   },
   methods: {
-    // 상세 조회 API 호출
     fetchDetail() {
       axios.get(`http://localhost:8080/review/detail?id=${this.reviewId}`)
         .then(res => {
@@ -63,7 +135,7 @@ export default {
         })
         .catch(err => console.error('상세 조회 에러:', err))
     },
-    // 리뷰 삭제 API 호출
+
     deleteReview() {
       if (!confirm('리뷰를 삭제하시겠습니까?')) return
 
@@ -74,7 +146,7 @@ export default {
         })
         .catch(err => console.error('삭제 에러:', err))
     },
-    // 댓글 작성 API 호출
+
     insertReply() {
       if (!this.replyContent.trim()) return
 
@@ -87,17 +159,17 @@ export default {
       axios.post('http://localhost:8080/review/reply/insert', data)
         .then(() => {
           this.replyContent = ''
-          this.fetchDetail() // 댓글 목록 새로고침
+          this.fetchDetail()
         })
         .catch(err => console.error('댓글 작성 에러:', err))
     },
-    // 댓글 삭제 API 호출
+
     deleteReply(replyId) {
       if (!confirm('댓글을 삭제하시겠습니까?')) return
 
       axios.delete(`http://localhost:8080/review/reply/delete?id=${replyId}`)
         .then(() => {
-          this.fetchDetail() // 댓글 목록 새로고침
+          this.fetchDetail()
         })
         .catch(err => console.error('댓글 삭제 에러:', err))
     }
@@ -107,184 +179,132 @@ export default {
 
 <style scoped>
 .community-page {
-  padding-block: var(--space-8);
   max-width: 800px;
   margin: 0 auto;
-}
-
-.community-page__title {
-  font-size: var(--text-2xl);
-  margin-bottom: var(--space-3);
+  padding-block: var(--space-8);
 }
 
 .review-detail {
-  margin-top: 24px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: var(--space-5);
 }
 
-/* 헤더 영역 */
-.review-header {
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 16px;
+.review-detail__header {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 
-.review-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 12px;
-  color: #111827;
+.review-detail__header h1 {
+  margin: 0;
 }
 
-.review-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.writer-info {
+.review-detail__meta {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 
-.profile-img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.nickname {
-  font-weight: 600;
-  color: #374151;
-}
-
-.post-info {
-  display: flex;
-  gap: 12px;
-}
-
-/* 본문 영역 */
-.review-body {
+.review-detail__body {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
-.main-image-wrapper {
+.review-detail__image {
   width: 100%;
   max-height: 400px;
-  overflow: hidden;
-  border-radius: 8px;
-}
-
-.main-image {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
 }
 
-.review-content {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #1f2937;
+.review-detail__content {
+  margin: 0;
   white-space: pre-line;
 }
 
-/* 댓글 / 관련 리뷰 섹션 공통 */
-.section-title {
-  font-size: 1.15rem;
-  font-weight: bold;
-  margin-bottom: 16px;
-  color: #111827;
+.review-detail__actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
-.empty-state {
-  padding: 20px;
-  background-color: #f9fafb;
-  border-radius: 6px;
-  color: #9ca3af;
+.review-detail__reply {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border);
+}
+
+.review-detail__reply h2 {
+  margin: 0 0 var(--space-4);
+}
+
+.review-detail__empty {
+  margin: 0;
+  padding: var(--space-5);
   text-align: center;
-  font-size: 0.9rem;
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
 }
 
-/* 댓글 목록 */
-.reply-list {
-  list-style: none;
-  padding: 0;
+.review-detail__reply-item {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border);
 }
 
-.reply-item {
-  padding: 12px;
-  border-bottom: 1px solid #f3f4f6;
+.review-detail__reply-content {
+  min-width: 0;
 }
 
-.reply-writer {
+.review-detail__reply-content strong {
+  font-size: var(--text-sm);
+}
+
+.review-detail__reply-content p {
+  margin: var(--space-2) 0 0;
+}
+
+.review-detail__reply-item .btn {
+  flex-shrink: 0;
+  padding-inline: var(--space-2);
+}
+
+.review-detail__reply-form {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 
-.reply-profile {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+.review-detail__reply-form .input {
+  flex: 1;
+  min-width: 0;
 }
 
-.reply-nickname {
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-.reply-date {
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-.reply-content {
-  font-size: 0.9rem;
-  color: #374151;
-  margin: 0;
-}
-
-/* 그리드 카드 영역 */
-.review-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-}
-
-.review-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.card-img {
-  width: 100%;
-  height: 100px;
-  object-fit: cover;
-}
-
-.card-title {
-  padding: 8px;
-  font-size: 0.8rem;
-  margin: 0;
+.review-detail__reply-form .btn {
+  flex-shrink: 0;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.loading-state, .error-state {
-  padding: 40px 0;
-  text-align: center;
+@media (max-width: 768px) {
+  .review-detail__meta {
+    flex-wrap: wrap;
+  }
+
+  .review-detail__reply-form {
+    flex-direction: column;
+  }
+
+  .review-detail__reply-form .btn {
+    width: 100%;
+  }
 }
 </style>
+```

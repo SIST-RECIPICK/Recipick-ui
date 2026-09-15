@@ -103,9 +103,19 @@ const routes = [
     component: () => import('@/views/community/ReviewBoardView.vue'),
   },
   {
-    path: '/community/reviews/detail',
+    path: '/community/reviews/:id',
     name: 'community-reviews-detail',
     component: () => import('@/views/community/ReviewBoardDetailView.vue'),
+  },
+  {
+  path: '/community/reviews/write',
+    name: 'community-reviews-write',
+    component: () => import('@/views/community/ReviewInsert.vue'),
+  },
+  {
+    path: '/community/reviews/:id/edit',
+    name: 'community-reviews-edit',
+    component: () => import('@/views/community/ReviewUpdate.vue'),
   },
   {
     path: '/community/curations',
@@ -132,7 +142,7 @@ const routes = [
   {
   path: '/mypage',
   component: () => import('@/components/layout/MyPageLayout.vue'),
-  redirect: '/mypage/main',
+  redirect: '/mypage/myrecipe',
   children: [
     {
       path: 'main',
