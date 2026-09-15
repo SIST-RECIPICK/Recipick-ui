@@ -1,9 +1,10 @@
 // composables/useRecipeSearch.js
 import { ref } from "vue";
-
+import { useAuthStore } from "@/stores/auth";
 const API_BASE = "http://localhost:8080";
 
 export function useRecipeSearch(userId) { // 어디서든 임포트 가능하게 설정
+  const authStore = useAuthStore();
   const keyword = ref("");  // 검색창에 입력 텍스트
   const results = ref([]);  // 검색창 결과 배열
   const loading = ref(false); // 로딩상태
@@ -16,11 +17,14 @@ export function useRecipeSearch(userId) { // 어디서든 임포트 가능하게
     try {
         const params = new URLSearchParams({ // 서버에 보낼 조건 정리
             keyword: keyword.value, // 검색창 입력 텍스트
-            user_id: userId.value ?? userId, // ref면 value 아니면 그냥 userId
         });
 
         // 서버요청
-        const res=await fetch(`${API_BASE}/recipe/search?${params.toString()}`);
+        const res=await fetch(`${API_BASE}/recipe/search?${params.toString()}`,{
+            headers: {
+                Authorization: `Bearer ${authStore.accessToken}`,
+            },
+        });
 
         if(!res.ok) throw new Error(`검색 실패: ${res.status}`); // 실패시 catch이동
 

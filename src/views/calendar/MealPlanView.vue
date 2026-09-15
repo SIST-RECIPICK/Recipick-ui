@@ -9,17 +9,16 @@ import RecipeSearchPanel from '@/components/calendar/RecipeSearchPanel.vue'
 import FillRateGauge  from '@/components/calendar/FillRateGauge.vue'
 import MacroGauge from '@/components/calendar/MacroGauge.vue'
 import { useRecipePreviewStore } from '@/stores/recipePreview'
+import { useAuthStore } from '@/stores/auth'
 
-
-
+const authStore = useAuthStore()
 const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기  
 
 const router = useRouter() // 라우터 가져오기
 // TODO: 실제 로그인 스토어 연결되면 여기서 userId 가져오기
-const userId = computed(() => 2) // 임시 하드코딩
-
+const userId = computed(() => authStore.user?.userId)
 const {
-  year, month, items, loading, errorMsg,
+  year, month, loading, errorMsg,
   calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,deleteItem,
 } = useCalendarItems(userId)
 
@@ -27,8 +26,6 @@ const {
 const {
   info, loading: summaryLoading, errorMsg: summaryError, loadSummary,
 } = useCalendarInfo(userId, year, month)
-
-
 
 const previewStore = useRecipePreviewStore()
 function handleSlotClick({ cell, meal }) {
