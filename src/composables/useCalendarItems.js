@@ -1,6 +1,6 @@
 // 식단 캘린더 데이터 fetch + 월 이동 + 날짜별 매핑 + 배치(upsert) 로직
 import { ref, computed } from "vue";
-import { useAuthStore } from "@/stores/auth";
+import axios from "axios";
 // ref = 값 하나 반응형
 // computed = 다른 반응형 값을 가지고 계산된값 자동 생성
 const API_BASE = "http://localhost:8080";
@@ -13,7 +13,6 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 export function useCalendarItems(userId) { // userId로 받는 이유 : 유저아이디를 알아야 달력을 뿌리기 때문
   // 오늘의 날짜 구하기 
   // 페이지를 열때 오늘 날짜 기준으로 달력 출력
-  const authStore = useAuthStore(); 
   const today = new Date();
   const year = ref(today.getFullYear());
   const month = ref(today.getMonth() + 1);
@@ -63,18 +62,14 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
     loading.value = true; // 시작과 동시에 로딩
     errorMsg.value = ""; // 에러메세지는 지움
     try {
-      const params = new URLSearchParams({ // 서버에 보낼 조건들
-       
-        year: year.value,  // 년도 가져오기
-        month: String(month.value).padStart(2, "0"), // 백앤드에서 월을 09 두자리기 때문에 2자리로 설정
-      });
-      const res = await fetch(`${API_BASE}/calendar/list?${params.toString()}`,{ //서버에 요청 보내고 await로 기다림
-        headers:{
-          Authorization : `Bearer ${authStore.accessToken}`,
+      // Authorization 헤더는 axios 인터셉터가 자동 첨부
+      const res = await axios.get(`${API_BASE}/calendar/list`, {
+        params: {
+          year: year.value,  // 년도 가져오기
+          month: String(month.value).padStart(2, "0"), // 백앤드에서 월을 09 두자리기 때문에 2자리로 설정
         },
       });
-      if (!res.ok) throw new Error(`캘린더 조회 실패: ${res.status}`); // 실패시 에러메세지
-      items.value = await res.json(); // 성공시 json으로 받아서 저장
+      items.value = res.data; // 성공시 저장
     } catch (e) {
       errorMsg.value = "캘린더를 불러오지 못했습니다.";
       console.error(e);
@@ -87,18 +82,12 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
   // 추가가 아니라 POST로 처리
   async function placeRecipe(dateStr, mealType, recipe) { // 드래그시 호출 함수 
     try {
-      const res = await fetch(`${API_BASE}/calendar/item`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" ,
-           Authorization: `Bearer ${authStore.accessToken}`,
-         },
-        body: JSON.stringify({ // json 문자열로 바꿔서 서버로 보냄
-          meal_date: dateStr,
-          meal_type: mealType,
-          rcp_seq: recipe.rcp_seq,
-        }),
+      // Authorization 헤더는 axios 인터셉터가 자동 첨부
+      await axios.post(`${API_BASE}/calendar/item`, {
+        meal_date: dateStr,
+        meal_type: mealType,
+        rcp_seq: recipe.rcp_seq,
       });
-      if (!res.ok) throw new Error(`배치 실패: ${res.status}`);
 
       // 기존에 같은 슬롯에 있던 항목 찾기 (upsert였으니 있을 수도, 없을 수도)
       const idx = items.value.findIndex( // 같으면 첫 원소의 인덱스 값 반환
@@ -127,18 +116,13 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
   // 슬롯의 레시피 삭제
   async function deleteItem(dateStr, mealType){
     try {
-      const params = new URLSearchParams({ // 필요한 params들
-        meal_date: dateStr,
-        meal_type: mealType,
-      });
-
-      const res = await fetch(`${API_BASE}/calendar/item?${params.toString()}`,{ // 서버에 요청 보내고 await로 기다림
-        method : "DELETE", // 메소드는 삭제 메소드
-        headers: {
-          Authorization: `Bearer ${authStore.accessToken}`,
+      // Authorization 헤더는 axios 인터셉터가 자동 첨부
+      await axios.delete(`${API_BASE}/calendar/item`, {
+        params: { // 필요한 params들
+          meal_date: dateStr,
+          meal_type: mealType,
         },
       });
-      if(!res.ok) throw new Error(`삭제 실패 : ${res.status}`); // 만약 실패시 에러
 
       // 전체 재조회 대신, 로컬 배열에서 해당 슬롯만 제거
       items.value = items.value.filter( // 조건히 true인것만 모아 새 배열 생성
