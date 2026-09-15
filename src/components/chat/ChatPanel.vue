@@ -184,10 +184,9 @@ const subscribeRoom = (roomId) => {
     async (message) => {
       const data = JSON.parse(message.body)
       console.log('받은 메시지:', data)
-      await chatstore.chatRoomList()
+      chatstore.messageList.push(data)//전송한 메세지 표시
     }
   )
-
 }
 
 const messageInput = ref('')
@@ -210,8 +209,7 @@ const sendMessage = async() => {
   })
   
   messageInput.value = ''
-
-  chatstore.messageList.push(data) // 전송한 메세지 표시
+  
 }
 </script>
 

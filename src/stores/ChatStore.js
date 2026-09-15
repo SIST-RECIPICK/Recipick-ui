@@ -5,7 +5,7 @@ export const chatStore = defineStore('chat', {
   state: () => ({
     room_id: 0,
     roomList: [],
-    messageList: [],
+    messageList: []
   }),
   actions: {
     async chatRoomCrerate(id, no) {
