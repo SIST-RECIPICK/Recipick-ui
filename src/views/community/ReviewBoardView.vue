@@ -5,6 +5,7 @@
     <!-- 검색 / 글쓰기 -->
     <div class="review-board__control">
       <button
+        v-if="auth.isLoggedIn"
         type="button"
         class="btn btn--primary"
         @click="goToWrite"
@@ -64,6 +65,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Pagination from '@/components/common/Pagination.vue'
 import ReviewCard from '@/components/review/ReviewCard.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const reviewList = ref([])
 
@@ -115,9 +117,16 @@ const goToDetail = (id) => {
   router.push(`/community/reviews/${id}`)
 }
 
+
+const auth = useAuthStore()
+
 </script>
 
 <style scoped>
+.community-page {
+  padding-block: var(--space-6);
+}
+
 .review-board__control {
   display: flex;
   align-items: center;
@@ -144,7 +153,6 @@ const goToDetail = (id) => {
 
 .review-board__search .input {
   width: 180px;
-  flex-shrink: 0;
 }
 
 .review-board__search .btn {
