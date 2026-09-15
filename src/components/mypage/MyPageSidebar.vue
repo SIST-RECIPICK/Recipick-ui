@@ -1,4 +1,3 @@
-```vue
 <template>
   <aside class="mypage-sidebar">
 
@@ -322,4 +321,3 @@ const replyCount = ref(10)
   }
 }
 </style>
-```
