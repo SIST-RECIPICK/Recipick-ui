@@ -211,7 +211,7 @@ async function handleSave() {
   saving.value = true
   try {
     const volist = Array.from(picked.value.keys()).map((id) => ({
-      users_id: 2,
+      users_id: 1004,
       ingredient_id: id,
     }))
     await fridgeStore.saveFridge(volist)

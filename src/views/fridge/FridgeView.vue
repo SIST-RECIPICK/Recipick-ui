@@ -152,7 +152,8 @@ const extra = ref([])
 const fridge = ref([])
 
 onMounted(async () => {
-  await fridgeStore.loadMyFridge(2)
+  await fridgeStore.loadMyFridge(1004)
+  console.log('myIngredients:', fridgeStore.myIngredients)   // 이 줄 추가해서 확인
   fridge.value = fridgeStore.myIngredients
     .filter((r) => r.ingredient)
     .map((r) => ({
@@ -160,6 +161,7 @@ onMounted(async () => {
       name: r.ingredient.ingredient_name,
       checked: true,
     }))
+  console.log('fridge.value:', fridge.value)   // 이것도 추가
 })
 
 watch(extraQuery, async (newVal) => {
@@ -205,6 +207,7 @@ function deselect(ing) {
 
 // 버튼 클릭 시에만 실행되는 매칭 함수
 async function handleMatch() {
+  console.log('selectedNames:', selectedNames.value)   // 이 줄 추가
   await fridgeStore.loadMatches(selectedNames.value, sort.value)
   hasSearched.value = true
 }
