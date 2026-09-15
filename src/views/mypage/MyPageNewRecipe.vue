@@ -1,4 +1,5 @@
 <template>
+
   <div class="new-recipe-view">
     <h2 class="page-title">{{ isEdit ? '레시피 수정' : '레시피 등록' }}</h2>
 
@@ -29,8 +30,8 @@
 
       <!-- 기준 인원 -->
       <div class="form-row">
-        <label for="info_wgt">기준 인원</label>
-        <input id="info_wgt" v-model="form.info_wgt" type="text" placeholder="예: 2인분" required />
+        <label for="info_wgt">기준 인원 / 중량</label>
+        <input id="info_wgt" v-model="form.info_wgt" type="text" placeholder="예: 2인분 또는 250g" required />
       </div>
 
       <!-- 영양정보 (선택사항) -->
@@ -98,15 +99,14 @@
       <!-- 재료 -->
       <div class="form-row">
         <label>재료</label>
-        <div class="ingredient-inputs">
-          <input
-            v-for="(ing, idx) in ingredientInputs"
-            :key="idx"
-            v-model="ingredientInputs[idx]"
-            type="text"
-            placeholder="예: 돼지고기 200g"
-            class="ingredient-input"
-          />
+        <div v-for="(ing, idx) in ingredientInputs" :key="idx" class="ingredient-inputs">
+           <!--  ing => v-for="(ing, idx) in ingredientInputs" -->        
+          <input v-model="ing.name" type="text" placeholder="예: 재료명"  class="ingredient-input"/>
+          <input v-model="ing.amount" type="text" placeholder="예: 수량"  class="ingredient-input"/>
+          <input v-model="ing.unit" type="text" placeholder="예: 단위" class="ingredient-input"/>  
+          <button type="button" class="btn-small btn-danger" @click="removeIngredientlStep(idx)">
+           🗑️
+          </button>
         </div>
         <button type="button" class="btn-small" @click="addIngredientInput">
           + 재료 추가
@@ -158,11 +158,12 @@ import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import { recipeDetailStore } from '@/stores/recipeDetailStore'
 import { storeToRefs } from 'pinia'
+import { getImageUrl } from '@/utils/image'
 
 const router = useRouter()
 const route = useRoute()
 
-const TEMP_USER_ID = 3
+
 
 // route에 :id가 있으면 수정 모드, 없으면 등록 모드
 const isEdit = computed(() => !!route.params.id)
@@ -172,8 +173,8 @@ const rcpSeq = computed(() => route.params.id)
 const detailStore = recipeDetailStore()
 const { recipeData, manualList: detailManualList } = storeToRefs(detailStore)
 
-const wayOptions = ['끓이기', '찜', '볶기', '굽기', '무침']
-const patOptions = ['국/찌개', '밥/죽', '반찬', '면', '디저트']
+const wayOptions = ['끓이기', '찜', '볶기', '굽기', '무침', '찌기', '튀기기', '기타']
+const patOptions = ['국/찌개', '국&찌개', '밥/죽', '반찬', '면', '디저트', '후식', '일품', '밥', '기타']
 
 // form : 텍스트 + 영양정보 필드들 모아둔 그릇
 // 영양정보는 선택사항이라 빈 문자열로 시작 (입력 안 하면 서버에서 0으로 처리됨)
@@ -194,10 +195,10 @@ const hashTagInputs = ref([''])
 function addHashTagInput() {
   if (hashTagInputs.value.length < 5) hashTagInputs.value.push('')
 }
-
-const ingredientInputs = ref([''])
+// 재료 리스트 
+const ingredientInputs = ref([{name:'', amount:'',unit:''}])
 function addIngredientInput() {
-  ingredientInputs.value.push('')
+  ingredientInputs.value.push({name:'', amount:'',unit:''})
 }
 
 const mainImageFile = ref(null)
@@ -216,8 +217,14 @@ const manualList = ref([{ desc: '', imageFile: null, existingImg: '' }])
 function addManualStep() {
   manualList.value.push({ desc: '', imageFile: null, existingImg: '' })
 }
+// 조리단계 삭제
 function removeManualStep(idx) {
   manualList.value.splice(idx, 1)
+}
+
+// 재료정보 삭제
+function removeIngredientlStep(idx) {
+  ingredientInputs.value.splice(idx,1)
 }
 function onManualImageChange(e, idx) {
   const file = e.target.files[0]
@@ -247,19 +254,28 @@ onMounted(async () => {
       ? recipeData.value.hash_tag.split(',').map(t => t.trim())
       : ['']
 
-    // 3. 재료: 콤마 문자열 -> 배열로 쪼개기
-    ingredientInputs.value = recipeData.value.rcp_parts_dtls
-      ? recipeData.value.rcp_parts_dtls.split(',').map(i => i.trim())
-      : ['']
+    // 3. 재료: 콤마 문자열 -> {name, amount, unit} 객체 배열로 쪼개기
+ingredientInputs.value = recipeData.value.rcp_parts_dtls // 재료 입력칸에 디비에서 가져온 재료 텍스트 넣을 준비 
+  ? recipeData.value.rcp_parts_dtls.split(',').map(ingredientText => { // ? : 삼항연산자 재료텍스트에 값이 있으면 ,로 나눠서 배열로 만들기, 각 항목 꺼내서  담는 작업 반복
+      const cleanText = ingredientText.trim() // 앞뒤 공백제거
+      const parsed = cleanText.match(/^(\D+)\s*(\d+\.?\d*)\s*(\S*)$/) // 정규식 => 이름 / 수량 / 단위로 쪼개서 parsed에 담음 패턴 안 맞으면 null
+      // parsed[1]=이름, parsed[2]=수량, parsed[3]=단위
 
-    // 4. 대표 이미지 미리보기 (기존 이미지 그대로 표시)
-    mainImagePreview.value = recipeData.value.att_file_no_main
+      if (parsed) {
+        return { name: parsed[1].trim(), amount: parsed[2], unit: parsed[3] }
+      }
+      // 패턴이 안 맞는 예외적인 경우, 이름 칸에만 원본 텍스트를 넣어둠
+      return { name: cleanText, amount: '', unit: '' }
+    })
+  : [{ name: '', amount: '', unit: '' }]
 
+    // 4. 대표 이미지 미리보기 (파일명을 완전한 URL로 변환해서 표시)
+    mainImagePreview.value =  getImageUrl(recipeData.value.att_file_no_main)
     // 5. 조리순서: 스토어의 manualList를 폼에서 쓰는 형태로 변환
     manualList.value = detailManualList.value.map(m => ({
       desc: m.manual_desc,
       imageFile: null,
-      existingImg: m.manual_img
+      existingImg: getImageUrl(m.manual_img)
     }))
   }
 })
@@ -268,7 +284,9 @@ const submitting = ref(false)
 
 async function handleSubmit() {
   const hashTag = hashTagInputs.value.filter(t => t.trim() !== '').join(',')
-  const rcpPartsDtls = ingredientInputs.value.filter(i => i.trim() !== '').join(',')
+  const rcpPartsDtls = ingredientInputs.value.filter(ing => ing.name.trim() !== '').map(ing  => `${ing.name} ${ing.amount}${ing.unit}`).join(',')
+  // filter로 걸러낸 결과를 담는 변수 => 이름이 채워진 재료만 담김
+  const validIngredients = ingredientInputs.value.filter(ing => ing.name.trim() !== '')
 
   const formData = new FormData()
   formData.append('rcp_nm', form.rcp_nm)
@@ -285,6 +303,7 @@ async function handleSubmit() {
   formData.append('info_fat', form.info_fat)
   formData.append('info_na', form.info_na)
 
+
   if (mainImageFile.value) {
     formData.append('att_file_no_main', mainImageFile.value)
   }
@@ -295,6 +314,17 @@ async function handleSubmit() {
     if (step.imageFile) {
       formData.append(`manual_img_${idx + 1}`, step.imageFile)
     }
+  })
+
+  // 진짜 재료 개수
+  formData.append('ingredientCount', validIngredients.length)
+  // 각 재료 번호 붙여서 보내기 => 몇변째 재료 정보인지 구분하기 위해 idx
+  validIngredients.forEach((ing,idx)=>{
+
+    // 재료 세분화 데이터
+    formData.append(`ingredient_name_${idx + 1}`, ing.name)
+    formData.append(`ingredient_amount_${idx + 1}`, ing.amount)
+    formData.append(`ingredient_unit_${idx + 1}`, ing.unit)
   })
 
   submitting.value = true
@@ -308,9 +338,7 @@ async function handleSubmit() {
       router.push(`/recipes/${rcpSeq.value}`)
     } else {
       // 등록 모드
-      const res = await axios.post('http://localhost:8080/recipe/insert', formData, {
-        params: { user_id: TEMP_USER_ID }
-      })
+      const res = await axios.post('http://localhost:8080/recipe/insert', formData)
       const newRcpSeq = res.data.rcp_seq
       router.push(`/recipes/${newRcpSeq}`)
     }
@@ -371,11 +399,21 @@ async function handleSubmit() {
   max-width: 200px;
   border-radius: var(--radius-md, 6px);
 }
-.tag-inputs,
-.ingredient-inputs {
+.tag-inputs {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+.ingredient-inputs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.ingredient-inputs .ingredient-input:first-child {
+  flex: 2;
+}
+.ingredient-inputs .ingredient-input {
+  flex: 1;
 }
 .tag-input {
   width: 120px;

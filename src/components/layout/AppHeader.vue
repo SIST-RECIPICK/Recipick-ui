@@ -63,7 +63,7 @@
               </RouterLink>
             </li>
             <!-- TODO: 권한 기능 구현 후 v-if="auth.isAdmin" 로 복구할 것 (개발 중 임시 노출) -->
-            <li role="none">
+            <li role="none" v-if="auth.isAdmin">
               <RouterLink to="/admin" class="profile__item" role="menuitem">
                 <IconSettings :size="18" /> 관리자페이지
               </RouterLink>
