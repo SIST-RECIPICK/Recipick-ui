@@ -1,4 +1,5 @@
 <template>
+
   <div class="new-recipe-view">
     <h2 class="page-title">{{ isEdit ? '레시피 수정' : '레시피 등록' }}</h2>
 

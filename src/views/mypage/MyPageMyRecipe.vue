@@ -1,4 +1,5 @@
 <template>
+
   <div class="my-recipe-list">
     <h1>나의 레시피 <span class="my-recipe-list__count">({{ totalCount }})</span></h1>
 
@@ -125,3 +126,4 @@ onMounted(() => {
 @media (max-width: 992px) { .my-recipe-list__grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 480px) { .my-recipe-list__grid { grid-template-columns: 1fr; } }
 </style>
+
