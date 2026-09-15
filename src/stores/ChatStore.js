@@ -11,7 +11,6 @@ export const chatStore = defineStore('chat', {
     async chatRoomCrerate(id, no) {
       const res = await axios.get('http://localhost:8080/chat/create', {
         params: {
-          user_id1: 2,
           user_id2: id,
           recipe_id: no,
         },
@@ -22,9 +21,7 @@ export const chatStore = defineStore('chat', {
 
     async chatRoomList() {
       const res = await axios.get('http://localhost:8080/chat/room_list', {
-        params: {
-          user_id: 2,
-        },
+        params: {},
         withCredentials: true,
       })
       this.roomList = res.data.roomList

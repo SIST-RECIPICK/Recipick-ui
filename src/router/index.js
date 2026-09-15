@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 
 // 관리자 가드 복구 시 아래 import도 함께 해제할 것
-// import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/auth'
 
 
 const routes = [
@@ -30,11 +30,13 @@ const routes = [
   { 
     path: '/fridge',
     name: 'fridge', 
+    meta: { requiresAuth: true }, 
     component: () => import('@/views/fridge/FridgeView.vue') 
   },
   { 
     path: '/fridge/register', 
     name: 'fridge-register', 
+    meta: { requiresAuth: true }, 
     component: () => import('@/views/fridge/FridgeRegisterView.vue') 
   },
   {
@@ -127,11 +129,13 @@ const routes = [
     // 식단표
     path: '/meal-plan',
     name: "MealPlan",
+    meta: { requiresAuth: true },
     component: () => import('@/views/calendar/MealPlanView.vue')
   },
   {
   path: '/mypage',
   component: () => import('@/components/layout/MyPageLayout.vue'),
+  meta: { requiresAuth: true },
   redirect: '/mypage/myrecipe',
   children: [
     {
@@ -187,13 +191,23 @@ const router = createRouter({
 
 // 관리자 라우트 가드
 // TODO: 권한 기능 구현 후 아래 주석을 해제해 활성화할 것 (개발 중에는 /admin 접근 허용)
-router.beforeEach(() => {
-  // if (to.meta.requiresAdmin) {
-  //   const auth = useAuthStore()
-  //   if (!auth.isAdmin) {
-  //     return { name: 'home' }
-  //   }
-  // }
+router.beforeEach((to) => {
+  const auth = useAuthStore()
+  console.log("로그인 여부",auth.isLoggedIn)
+  console.log("관리자 여부",auth.isAdmin)
+  //로그인 여부
+  if (to.meta.requiresAuth) {
+    if (!auth.isLoggedIn) {
+      return { name: 'login' }
+    }
+  }
+
+  //관리자 여부
+  if (to.meta.requiresAdmin) {
+    if (!auth.isAdmin) {
+      return { name: 'home' }
+    }
+  }
 })
 
 export default router

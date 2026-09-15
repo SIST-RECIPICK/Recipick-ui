@@ -16,7 +16,6 @@ export const recipeDetailStore = defineStore('detail', {
     async recipeDetailData(no) {
       const res = await axios.get('http://localhost:8080/recipe/detail', {
         params: {
-          user_id: 2,
           rcp_seq: no,
         },
         withCredentials: true,
@@ -53,7 +52,6 @@ export const recipeDetailStore = defineStore('detail', {
     async recipeLikeClick(no, type) {
       await axios.get('http://localhost:8080/recipe/interaction', {
         params: {
-          user_id: 2,
           rcp_seq: no,
           type: type,
         },
