@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { useAuthStore } from './auth'
+
 
 export const recipeDetailStore = defineStore('detail', {
   state: () => ({
@@ -14,9 +16,11 @@ export const recipeDetailStore = defineStore('detail', {
   }),
   actions: {
     async recipeDetailData(no) {
+      const authStore = useAuthStore()
       const res = await axios.get('http://localhost:8080/recipe/detail', {
         params: {
           rcp_seq: no,
+          user_id: authStore.user?.userId
         },
         withCredentials: true,
       })
