@@ -1,5 +1,6 @@
 <template>
     <h1>저장한 레시피</h1>
+
     <div class="related">
     <RecipeCard
         v-for="r in myMarkLists"

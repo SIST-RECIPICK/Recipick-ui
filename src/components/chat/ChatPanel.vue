@@ -102,6 +102,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { chatStore } from '@/stores/ChatStore'
 import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
 
 defineEmits(['close'])
 
@@ -111,6 +112,7 @@ const props = defineProps({
 })
 
 const chatstore = chatStore()
+const auth = useAuthStore()
 const { roomList } = storeToRefs(chatstore)
 const { messageList } = storeToRefs(chatstore)
 
@@ -136,7 +138,7 @@ const messages = computed(() =>
       hour: '2-digit',
       minute: '2-digit'
     }),
-    mine: item.user_id == 2 ? true : false
+    mine: item.user_id === auth.user.userId ? true : false
   }))
 )
 
@@ -145,7 +147,7 @@ onMounted(async () => {
   //채팅방 목록 가져오기
   await chatstore.chatRoomList()
 
-  // room_id가 존재하면 그 방 선택 없으면 첫 번째 방 선택
+  // room_id가 존재하면 그 방 선택, 없으면 첫 번째 방 선택
   selectedRoom.value =
     chatRooms.value.find(
       room => Number(room.id) === Number(props.room_id)
@@ -165,8 +167,8 @@ onMounted(async () => {
   }
 })
 
-  // 채팅방 선택
-  const selectRoom = async (room) => {
+// 채팅방 선택
+const selectRoom = async (room) => {
   selectedRoom.value = room
   // 선택한 방의 기존 메시지 가져오기
   await chatstore.chatMessageList(room.id)
@@ -182,7 +184,6 @@ const subscribeRoom = (roomId) => {
     async (message) => {
       const data = JSON.parse(message.body)
       console.log('받은 메시지:', data)
-      chatstore.messageList.push(data) // 전송한 메세지 표시
       await chatstore.chatRoomList()
     }
   )
@@ -199,7 +200,7 @@ const sendMessage = async() => {
   
   const data = {
     room_id: selectedRoom.value?.id, //방번호
-    user_id: 2, //전송하는 사람
+    user_id: auth.user.userId,
     message: messageInput.value
   }
 
@@ -209,6 +210,8 @@ const sendMessage = async() => {
   })
   
   messageInput.value = ''
+
+  chatstore.messageList.push(data) // 전송한 메세지 표시
 }
 </script>
 
