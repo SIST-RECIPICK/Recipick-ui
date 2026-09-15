@@ -1,6 +1,6 @@
 <template>
   <div class="cat-carousel">
-    <button class="cat-carousel__arrow" aria-label="이전 카테고리">
+    <button class="cat-carousel__arrow" aria-label="이전 카테고리" @click="moveCategory(-1)">
       <IconChevronLeft :size="20" />
     </button>
 
@@ -19,19 +19,36 @@
       </li>
     </ul>
 
-    <button class="cat-carousel__arrow" aria-label="다음 카테고리">
+    <button class="cat-carousel__arrow" aria-label="다음 카테고리" @click="moveCategory(1)">
       <IconChevronRight :size="20" />
     </button>
   </div>
 </template>
 <script setup>
+
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-vue'
 
-defineProps({
+const props =  defineProps({
   categories: { type: Array, required: true }, // [{ key, label, icon }]
   modelValue: { type: String, required: true }, // 선택된 key
 })
-const emit = defineEmits(['update:modelValue'])
+// direction => 방향이랑 한 칸 이동량
+// 1 => 다음 칸 / -1 => 이전 칸
+function moveCategory (direction)
+{
+  /* 지금 선택된 카테고리가 배열에서 몇번째 자리에 있는지 위치를 미리 구해놓음 
+      => 현재 위치 */
+   const idx = props.categories.findIndex(cat => cat.key === props.modelValue)
+   // idx + direction이 -1처럼 음수가 나옴 
+   // 자바스크립트에서는 음수 % 음수 => 음수라서 우리다 원하는 동작 X
+   // 순환으로 만드는 중
+   const newIdx = (idx + direction + props.categories.length) % props.categories.length
+   // 무슨 이벤트를 보낼지 / 이벤트와 함께 보낼 데이터
+   emit ('update:modelValue', props.categories[newIdx].key)
+}
+
+   const emit = defineEmits(['update:modelValue'])
+
 </script>
 
 <style scoped>

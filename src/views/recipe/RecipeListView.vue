@@ -39,13 +39,20 @@
       <SortSelect v-model="sort" @update:model-value="loadRecipes" />
     </div>
 
+ <!-- 검색/필터 결과가 없을 때 안내 메시지 -->
+    <p v-if="recipes.length === 0" class="home__empty text-secondary">
+      검색 결과가 없어요. 다른 키워드나 카테고리로 시도해보세요.
+    </p>
+
     <!-- 그리드 -->
      <!-- :key="recipe.rcp_seq => 각 카드가 서로 다른 레시피로 제대로 구분-->
-    <section class="home__grid">
+  <!-- RecipeCard를 직접 렌더링 -->
+     <section class="home__grid">
       <RecipeCard
         v-for="recipe in recipes"
         :key="recipe.rcp_seq" 
         :recipe="recipe"
+        @tag-click="searchByTag"
       />
     </section>
 
@@ -64,6 +71,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useCountUp } from '@/composables/useCountUp'
 import axios from 'axios'
 import {
@@ -92,8 +100,11 @@ const categories = [
 ]
 const activeCategory = ref('all')
 
+// 현재 URL 정보를 읽기 위한 route 객체 (예: /recipes?keyword=저탄수화물)
+const route = useRoute()
+
 // --- 검색 · 정렬 · 페이지 ---
-const keyword = ref('')
+const keyword = ref(route.query.keyword || '')
 const sort = ref('latest')
 const page = ref({
   curpage: 1,
@@ -106,6 +117,12 @@ const recipes = ref([])
 
 const heroText = computed(() => `${countDisplay.value.toLocaleString()}`)
 
+// 해시태그 배지 클릭 시: 검색창에 태그만 채움 (검색 실행은 엔터/아이콘 클릭 시)
+function searchByTag(tag) {
+  keyword.value = tag
+ 
+}
+
 async function loadRecipes(pageinfo = 1) {
   // pageinfo가 숫자가 아니면(카테고리/정렬 변경 등에서 잘못 넘어온 값이면) 1페이지로 처리
   const targetPage = typeof pageinfo === 'number' ? pageinfo : 1
@@ -113,10 +130,28 @@ async function loadRecipes(pageinfo = 1) {
   // 현재 선택된 카테고리 정보 찾기 (value가 null이면 '전체' 카테고리)
   const selected = categories.find(cat => cat.key === activeCategory.value)
 
-  let res
+      let res
 
-  if (selected.value === null) {
-    // '전체' 카테고리 선택 시: /recipe/list 로 요청
+  if (keyword.value.trim() !== '' && selected.value !== null) {
+    // 검색어 + 카테고리 둘 다 있으면 통합 필터 API 호출
+    res = await axios.get('http://localhost:8080/recipe/filter', {
+      params: {
+        main_category: selected.value, // 선택된 카테고리 값
+        keyword: keyword.value,        // 검색창에 입력한 검색어
+        page: targetPage,
+        sort: sort.value
+      }
+    })
+  } else if (keyword.value.trim() !== '') {
+    // 검색어만 있으면 키워드 검색
+    res = await axios.get('http://localhost:8080/recipe/keyword', {
+      params: {
+        keyword: keyword.value,   // 검색창에 입력한 검색어
+        page: targetPage,         // 몇 페이지를 조회할지
+        sort: sort.value          // 정렬 기준 (최신순 / 인기순)
+      }
+    })
+  } else if (selected.value === null) {    // '전체' 카테고리 선택 시: /recipe/list 로 요청
     // sort.value에는 SortSelect에서 고른 'latest' 또는 'hit'이 들어있음
     res = await axios.get('http://localhost:8080/recipe/list', {
       params: {
@@ -134,9 +169,14 @@ async function loadRecipes(pageinfo = 1) {
       }
     })
   }
-
   // 응답으로 받은 레시피 목록을 화면에 뿌릴 배열에 저장
-  recipes.value = res.data.list
+    recipes.value = res.data.list
+  // 검색(keyword) API 응답에는 totalCount가 없으므로, 없을 때는 값 갱신하지 않고 이전 값 유지
+  if (res.data.totalCount !== undefined) {
+    // 레시피 총 개수
+    totalCount.value = res.data.totalCount 
+  }
+
 
   // 페이지네이션 정보 저장 (백엔드가 배열 형태로 [현재페이지, 전체페이지, 시작페이지, 끝페이지] 순으로 줌)
   page.value = {

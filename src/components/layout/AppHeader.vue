@@ -146,10 +146,11 @@ const navItems = [
 const menuOpen = ref(false)   // 프로필 드롭다운
 const mobileOpen = ref(false) // 모바일 메뉴
 
-function handleLogout() {
-  auth.logout()
+async function handleLogout() {
+  await auth.logout()
   menuOpen.value = false
-  router.push('/login') }
+  router.push('/login')
+}
 </script>
 
 <style scoped>
