@@ -1,5 +1,5 @@
 <template>
-  <RouterLink :to="`/recipes/${recipe.id}`" class="fr-card card card--hoverable">
+  <RouterLink :to="`/recipes/${recipe.recipeId}`" class="fr-card card card--hoverable">
     <!-- 대표 이미지 -->
     <div class="fr-card__thumb">
       <img
