@@ -1,7 +1,11 @@
 <script setup>
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRecipeSearch } from '@/composables/useRecipeSearch.js'
 import { useDragDrop } from '@/composables/useDragDrop.js' // 드롭파일 임포트
 import { useRecipePreviewStore } from '@/stores/recipePreview'
+import { useFridgeStore } from '@/stores/fridgeStore'
+import FridgeRecipeCard from '@/components/fridge/FridgeRecipeCard.vue'
+
 const props = defineProps({
   userId: { type: [Number, Object], required: true },
 })
@@ -9,7 +13,61 @@ const previewStore = useRecipePreviewStore()
 
 const { keyword, results, loading, errorMsg, search } = useRecipeSearch(props.userId)
 const { dragging, startDrag } = useDragDrop() // 드래그 파일에서 두개의 함수 가져오기
+const fridgeStore = useFridgeStore()
 
+const activeTab = ref('search')// 현재 탭(search)
+
+const fridge = ref([])
+// 나의 냉장고 재료 목록 (체크박스 상태 포함)
+
+const hasSearched = ref(false)
+// 매칭을 한 번이라도 실행했는지
+
+async function initFridgeTab() {
+  console.log('initFridgeTab 실행됨!')  // 임시 추가
+  const userIdValue = props.userId.value ?? props.userId
+  console.log('userIdValue:', userIdValue)  // 임시 추가
+  await fridgeStore.loadMyFridge(userIdValue)
+  console.log('myIngredients:', fridgeStore.myIngredients)  // 임시 추가
+  fridge.value = fridgeStore.myIngredients
+    .filter((r) => r.ingredient)
+    .map((r) => ({
+      id: r.ingredient_id,
+      name: r.ingredient.ingredient_name,
+      checked: true,
+    }))
+  console.log('fridge.value:', fridge.value)  // 임시 추가
+}
+
+const allFridgeSelected = computed(
+  () => fridge.value.length > 0 && fridge.value.every((i) => i.checked)
+)
+
+function toggleAllFridge(e) {
+  const val = e.target.checked
+  fridge.value.forEach((i) => (i.checked = val))
+}
+
+const selectedIngredients = computed(() =>
+  fridge.value.filter((i) => i.checked)
+)
+// extra 없이, fridge만 필터링
+
+const selectedNames = computed(() => selectedIngredients.value.map((i) => i.name))
+
+function deselect(ing) {
+  const inFridge = fridge.value.find((i) => i.id === ing.id)
+  if (inFridge) inFridge.checked = false
+}
+// extra 관련 부분 제거
+
+async function handleMatch() {
+  await fridgeStore.loadMatches(selectedNames.value)
+  hasSearched.value = true
+}
+function switchToSearchTab() {
+  activeTab.value = 'search'
+}
 function clearQuery() {
   keyword.value = ''
   results.value = []
@@ -22,17 +80,59 @@ function onPointerDown(event, recipe) {
 function onPreviewClick(rcpSeq){
   previewStore.loadPreview(rcpSeq)
 }
+function onFridgeCardPointerDown(event, recipe) {
+  const startX = event.clientX
+  const startY = event.clientY  // 시작 x,y 좌표
+  let dragStarted = false
 
+  function onMove(moveEvent) {
+    const dx = Math.abs(moveEvent.clientX - startX)
+    const dy = Math.abs(moveEvent.clientY - startY)
+    // 5px 이상 움직이면 "드래그 의도"로 판단
+    if (!dragStarted && (dx > 5 || dy > 5)) {
+      dragStarted = true
+      // 이 시점에 실제 드래그 시작 
+      event.preventDefault()
+      const dragRecipe = {
+        rcp_seq: recipe.rcpSeq,
+        rcp_nm: recipe.title,
+        att_file_no_main: recipe.image,
+      }
+      console.log('드래그 시작 recipe:', dragRecipe)
+      startDrag(dragRecipe, event)
+      cleanup()
+    }
+  }
+
+  function onUp() {
+    // 많이 안 움직이고 그냥 놓았으면 -> 아무것도 안 함, RouterLink가 알아서 클릭 처리
+    cleanup()
+  }
+
+  function cleanup() {
+    window.removeEventListener('pointermove', onMove)
+    window.removeEventListener('pointerup', onUp)
+  }
+
+  window.addEventListener('pointermove', onMove)
+  window.addEventListener('pointerup', onUp)
+}
 </script>
 
 <template>
   <aside class="recipe-panel">
     <!-- 탭 (냉장고 모드는 추후 연결) -->
     <div class="recipe-panel__tabs">
-      <button class="recipe-panel__tab recipe-panel__tab--active">레시피 검색</button>
-      <button class="recipe-panel__tab" disabled title="추후 지원 예정">나의 냉장고</button>
+      <button class="recipe-panel__tab"
+              :class="{ 'recipe-panel__tab--active': activeTab === 'search' }"
+              @click="switchToSearchTab"
+      >레시피 검색</button>
+      <button class="recipe-panel__tab"
+              :class="{ 'recipe-panel__tab--active': activeTab === 'fridge' }"
+              @click="activeTab = 'fridge'; initFridgeTab()"
+      >나의 냉장고</button>
     </div>
-
+    <template v-if="activeTab === 'search'">
     <!-- 검색창 -->
     <div class="recipe-panel__search-box">
       <span class="recipe-panel__search-dot"></span>
@@ -98,6 +198,75 @@ function onPreviewClick(rcpSeq){
         검색 결과가 없어요.<br>다른 키워드로 찾아보세요.
       </div>
     </div>
+    </template>
+    <template v-else>      
+      <!-- 선택한 재료 목록: 체크된 재료들이 여기 모여서 보임 -->
+      <div class="fridge-panel__section">
+        <span class="fridge-panel__section-title">선택한 재료</span>
+        <ul v-if="selectedIngredients.length" class="fridge-panel__chosen-list">
+          <li
+            v-for="ing in selectedIngredients"
+            :key="ing.id"
+            class="fridge-panel__chosen-item"
+          >
+            <span>{{ ing.name }}</span>
+            <button class="fridge-panel__remove-btn" @click="deselect(ing)">×</button>
+          </li>
+        </ul>
+        <p v-else class="fridge-panel__empty-hint">아래에서 재료를 선택하세요.</p>
+      </div>
+
+      <!-- 나의 냉장고: 검색창 없이 체크박스 목록만 -->
+      <div class="fridge-panel__section">
+        <div class="fridge-panel__section-head">
+          <span class="fridge-panel__section-title">나의 냉장고 ({{ fridge.length }})</span>
+          <label class="fridge-panel__select-all">
+            <input
+              type="checkbox"
+              :checked="allFridgeSelected"
+              @change="toggleAllFridge"
+            />
+            전체선택
+          </label>
+        </div>
+        <ul class="fridge-panel__checklist">
+          <li v-for="ing in fridge" :key="ing.id" class="fridge-panel__checklist-item">
+            <label>
+              <input type="checkbox" v-model="ing.checked" />
+              {{ ing.name }}
+            </label>
+          </li>
+        </ul>
+      </div>
+
+      <!-- 매칭 시작 버튼 -->
+      <button
+        class="fridge-panel__match-btn"
+        :disabled="!selectedNames.length"
+        @click="handleMatch"
+      >선택한 재료로 검색</button>
+
+      <!-- 검색 결과 -->
+      <div class="fridge-panel__section">
+        <span class="fridge-panel__section-title">검색 결과 {{ fridgeStore.totalCount }}건</span>
+        <p v-if="fridgeStore.loading" class="recipe-panel__status">불러오는 중...</p>
+        <p v-else-if="!hasSearched" class="recipe-panel__status">
+          재료를 선택하고 버튼을 눌러 레시피를 찾아보세요.
+        </p>
+        <p v-else-if="fridgeStore.recipes.length === 0" class="recipe-panel__status">
+          선택한 재료로 만들 수 있는 레시피가 없어요.
+        </p>
+        <div v-else class="recipe-panel__list">
+          <div
+            v-for="r in fridgeStore.recipes"
+            :key="r.id"
+            @pointerdown="onFridgeCardPointerDown($event, r)"
+          >
+          <FridgeRecipeCard :recipe="r"/>
+        </div>
+      </div>
+    </div>
+    </template>
   </aside>
 </template>
 
@@ -202,6 +371,43 @@ function onPreviewClick(rcpSeq){
   max-height: 480px;
   overflow-y: auto;
 }
+.recipe-panel__list :deep(.fr-card) {
+  /* 기존 4컬럼(썸네일/본문/도넛/화살표) 가로 배치를 세로로 변경 */
+  display: flex;
+  flex-direction: row;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.recipe-panel__list :deep(.fr-card__thumb) {
+  /* 썸네일을 카드 폭에 맞게 줄임 */
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+.recipe-panel__list :deep(.fr-card__tags) {
+  gap: 4px;
+}
+.recipe-panel__list :deep(.fr-card__chef) {
+  display: none;
+}
+.recipe-panel__list :deep(.fr-tag) {
+  font-size: 10px;
+  padding: 1px 6px;
+}
+.recipe-panel__list :deep(.fr-card__body) {
+  flex: 1;
+  min-width: 0;
+}
+.recipe-panel__list :deep(.fr-card__title) {
+  font-size: var(--text-sm);
+}
+
+.recipe-panel__list :deep(.fr-card__arrow) {
+  /* 화살표는 좁은 카드에서 불필요하니 숨김 */
+  display: none;
+}
 .recipe-panel__empty {
   padding: 36px 12px;
   text-align: center;
@@ -289,4 +495,102 @@ function onPreviewClick(rcpSeq){
   color: var(--text-secondary);
 }
 .recipe-card__btn--open:hover { color: var(--accent); }
+/* 냉장고 탭 전체 섹션 공통 */
+.fridge-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fridge-panel__section-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.fridge-panel__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 선택한 재료 태그 목록 */
+.fridge-panel__chosen-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.fridge-panel__chosen-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--accent-subtle);
+  border-radius: var(--radius-full, 999px);
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.fridge-panel__remove-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+
+.fridge-panel__empty-hint {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+/* 전체선택 체크박스 라벨 */
+.fridge-panel__select-all {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* 나의 냉장고 체크박스 리스트 */
+.fridge-panel__checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.fridge-panel__checklist-item label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+/* 매칭 버튼 */
+.fridge-panel__match-btn {
+  width: 100%;
+  padding: 10px 0;
+  background: var(--accent);
+  color: var(--text-on-inverse);
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.fridge-panel__match-btn:disabled {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
 </style>
