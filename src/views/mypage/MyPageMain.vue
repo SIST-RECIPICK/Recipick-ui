@@ -11,9 +11,10 @@
       </div>
 
       <div class="my-page-main__recipe-list">
+        
+        <!--<MyRecipeCard />
         <MyRecipeCard />
-        <MyRecipeCard />
-        <MyRecipeCard />
+        <MyRecipeCard />-->
       </div>
     </section>
 
@@ -28,9 +29,9 @@
       </div>
 
       <div class="my-page-main__recipe-list">
+        <!--<MyRecipeCard />
         <MyRecipeCard />
-        <MyRecipeCard />
-        <MyRecipeCard />
+        <MyRecipeCard />-->
       </div>
     </section>
 
