@@ -17,7 +17,7 @@ app.use(router)
 const auth = useAuthStore()
 
 const API_BASE = 'http://localhost:8080'
-const EXCLUDE_FROM_INTERCEPTOR = ['/auth/reissue', '/auth/login']
+const EXCLUDE_FROM_INTERCEPTOR = ['/auth/reissue', '/auth/login', '/auth/logout']
 
 // --- 요청 인터셉터: accessToken 자동 첨부 ---
 axios.interceptors.request.use((config) => {

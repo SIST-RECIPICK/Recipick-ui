@@ -32,10 +32,15 @@ export const useAuthStore = defineStore('auth', {
         this.logout()
       }
     },
-    logout() {
-      // TODO: 서버 로그아웃(POST /auth/logout) 연동은 별도 작업으로 진행 예정
-      this.user = null
-      this.accessToken = null
+    async logout() {
+      try {
+        await axios.post(`${API_BASE}/auth/logout`, null, { withCredentials: true })
+      } catch {
+        // 401(이미 로그아웃된 토큰)이어도 결과적으로 로그아웃 상태이므로 별도 처리 없이 무시
+      } finally {
+        this.user = null
+        this.accessToken = null
+      }
     },
   },
 })
