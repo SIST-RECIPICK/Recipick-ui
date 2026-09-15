@@ -103,9 +103,19 @@ const routes = [
     component: () => import('@/views/community/ReviewBoardView.vue'),
   },
   {
+    path: '/community/reviews/detail',
+    name: 'community-reviews-detail',
+    component: () => import('@/views/community/ReviewBoardDetailView.vue'),
+  },
+  {
     path: '/community/curations',
     name: 'community-curations',
     component: () => import('@/views/community/CurationBoardView.vue'),
+  },
+  {
+    path: '/community/curations/:id',
+    name: 'community-curations-detail',
+    component: () => import('@/views/community/CurationDetailView.vue'),
   },
   {
     // 개발 참조용 스타일가이드
@@ -118,7 +128,54 @@ const routes = [
     path: '/meal-plan',
     name: "MealPlan",
     component: () => import('@/views/calendar/MealPlanView.vue')
-  }
+  },
+  {
+  path: '/mypage',
+  component: () => import('@/components/layout/MyPageLayout.vue'),
+  redirect: '/mypage/main',
+  children: [
+    {
+      path: 'main',
+      name: 'mypage-main',
+      component: () => import('@/views/mypage/MyPageMain.vue'),
+    },
+    {
+      path: 'myrecipe',
+      name: 'mypage-my-recipe',
+      component: () => import('@/views/mypage/MyPageMyRecipe.vue'),
+    },
+    {
+      path: 'saverecipe',
+      name: 'mypage-save-recipe',
+      component: () => import('@/views/mypage/MyPageSaveRecipe.vue'),
+    },
+    {
+      path: 'newrecipe',
+      name: 'mypage-new-recipe',
+      component: () => import('@/views/mypage/MyPageNewRecipe.vue'),
+    },
+    {
+      path: 'myreview',
+      name: 'mypage-my-review',
+      component: () => import('@/views/mypage/MyPageMyReview.vue'),
+    },
+    {
+      path: 'myreply',
+      name: 'mypage-my-reply',
+      component: () => import('@/views/mypage/MyPageMyReply.vue'),
+    },
+    {
+      path: 'accountsetting',
+      name: 'mypage-account-setting',
+      component: () => import('@/views/mypage/MyPageAccountSetting.vue'),
+    },
+    {
+      path: '/recipes/:id/edit',
+      name: 'recipe-edit',
+      component: () => import('@/views/mypage/MyPageNewRecipe.vue'),  // 등록 컴포넌트 재사용
+  },
+  ],
+}
 ]
 
 const router = createRouter({

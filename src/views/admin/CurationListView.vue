@@ -117,16 +117,16 @@ onMounted(()=>{
   border-bottom: 1px solid var(--border);
 }
 .clist__col-no {
-  width: 80px;
+  width: 50px;
 }
 .clist__col-title {
-  width: 200px;
+  width: 300px;
 }
 .clist__col-ym {
-  width: 150px;
+  width: 130px;
 }
 .clist__col-date {
-  width: 100px;
+  width: 80px;
 }
 
 .clist__row {

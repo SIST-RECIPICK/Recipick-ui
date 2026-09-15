@@ -1,37 +1,40 @@
 <template>
   <AdminPanel>
     <!-- 제목 + 액션 -->
-    <div class="cdetail__head">
-      <div>
-        <h1 class="cdetail__title">{{ curation.title }}</h1>
-        <p class="cdetail__meta text-secondary">
-          {{ curation.targetday }} · 등록일 {{ curation.created_at }}
-        </p>
+    <p v-if="loading" class="text-muted">불러오는 중입니다…</p>
+    <template v-else>
+      <div class="cdetail__head">
+        <div>
+          <h1 class="cdetail__title">{{ curation.title }}</h1>
+          <p class="cdetail__meta text-secondary">
+            {{ curation.targetday }} · 등록일 {{ curation.created_at }}
+          </p>
+        </div>
+        <div class="cdetail__actions">
+          <RouterLink :to="`/admin/curations/${curation.id}/edit`" class="btn btn--outline">
+            수정
+          </RouterLink>
+          <button class="btn btn--outline" @click="handleDelete(curation.id)">삭제</button>
+        </div>
       </div>
-      <div class="cdetail__actions">
-        <RouterLink :to="`/admin/curations/${curation.id}/edit`" class="btn btn--outline">
-          수정
-        </RouterLink>
-        <button class="btn btn--outline" @click="handleDelete(curation.id)">삭제</button>
+
+      <!-- 재료 칩 -->
+      <div class="cdetail__chips">
+        <span v-for="ing in curation.group" :key="ing.ingredient_id" class="chip chip--accent">
+          {{ ing.ingredient_name }}
+        </span>
       </div>
-    </div>
 
-    <!-- 재료 칩 -->
-    <div class="cdetail__chips">
-      <span v-for="ing in curation.group" :key="ing.ingredient_id" class="chip chip--accent">
-        {{ ing.ingredient_name }}
-      </span>
-    </div>
-
-    <!-- 재료별 그룹 -->
-    <div class="cdetail__groups">
-      <CurationGroup
-        v-for="ing in curation.group"
-        :key="ing.ingredient_id"
-        :ingredient="ing.ingredient_name"
-        :recipes="ing.recipes"
-      />
-    </div>
+      <!-- 재료별 그룹 -->
+      <div class="cdetail__groups">
+        <CurationGroup
+          v-for="ing in curation.group"
+          :key="ing.ingredient_id"
+          :ingredient="ing.ingredient_name"
+          :recipes="ing.recipes"
+        />
+      </div>
+    </template>
   </AdminPanel>
 </template>
 
@@ -40,7 +43,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios';
 import AdminPanel from '@/components/admin/AdminPanel.vue'
-import CurationGroup from '@/components/admin/CurationGroup.vue'
+import CurationGroup from '@/components/common/CurationGroup.vue'
 
 const route = useRoute()   // 현재 URL 정보 읽을 때 사용
 const router = useRouter() // 화면 이동시킬 때 사용
@@ -52,10 +55,20 @@ const curation = ref({
   id: 0,
   group: [],        // v-for 도는 배열은 빈 배열로 초기화
 })
+
+const loading = ref(true)   // 추가: 초기값 true
+
 async function loadDetailCuration(id){
   // url에 값을 그냥 붙여서 보낼 때는 백틱(`) 을 붙여야하고 "" 로 감싸면 그냥 문자열이라 안된다
-  const res = await axios.get(`http://localhost:8080/admin/curation/${id}`)
-  curation.value = res.data
+  try {
+    const res = await axios.get(`http://localhost:8080/admin/curation/${id}`)
+    curation.value = res.data
+  } catch (error) {
+    console.error('상세보기 조회 실패',error)
+  } finally {
+    loading.value = false
+  }
+  
 }
 
 onMounted(()=>{
@@ -74,7 +87,7 @@ async function handleDelete(id) {
     await axios.delete(`http://localhost:8080/admin/curation/${id}`)
     router.push(`/admin/curations`)
   } catch (error) {
-    console.log(error)
+    console.error('삭제 처리 실패', error)
   } 
 }
 
@@ -89,7 +102,7 @@ async function handleDelete(id) {
   margin-bottom: var(--space-4);
 }
 .cdetail__title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-lg);
   margin-bottom: var(--space-1);
 }
 .cdetail__meta {
