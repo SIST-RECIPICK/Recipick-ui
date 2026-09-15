@@ -1,23 +1,45 @@
 <template>
   <aside class="mypage-sidebar">
-    <p class="mypage-sidebar__brand">마이페이지</p>
+    <p class="mypage-sidebar__brand" style="font-size: var(--text-base)">마이페이지</p>
     <nav class="mypage-sidebar__nav" aria-label="마이페이지 메뉴">
-      <RouterLink v-for="item in menu" :key="item.to" :to="item.to" class="mypage-sidebar__link">
-        {{ item.label }}
-      </RouterLink>
+      <div v-for="group in menuGroups" :key="group.label" class="mypage-sidebar__group">
+        <p class="mypage-sidebar__group-label">{{ group.label }}</p>
+        <RouterLink
+          v-for="item in group.items"
+          :key="item.to"
+          :to="item.to"
+          class="mypage-sidebar__link"
+        >
+          {{ item.label }}
+        </RouterLink>
+      </div>
     </nav>
   </aside>
 </template>
 
 <script setup>
-const menu = [
-  { label: '전체 보기', to: '/mypage/main' },
-  { label: '내 레시피', to: '/mypage/myrecipe' },
-  { label: '저장한 레시피', to: '/mypage/saverecipe' },
-  { label: '새 레시피 작성', to: '/mypage/newrecipe' },
-  { label: '나의 후기', to: '/mypage/myreview' },
-  { label: '나의 댓글', to: '/mypage/myreply' },
-  { label: '회원정보 변경', to: '/mypage/accountsetting' },
+const menuGroups = [
+  {
+    label: '레시피',
+    items: [
+      { label: '내 레시피', to: '/mypage/myrecipe' },
+      { label: '새 레시피 작성', to: '/mypage/newrecipe' },
+    ],
+  },
+  {
+    label: '활동',
+    items: [
+      { label: '좋아요 레시피', to: '/mypage/saverecipe' },
+      { label: '나의 후기', to: '/mypage/myreview' },
+      { label: '나의 댓글', to: '/mypage/myreply' },
+    ],
+  },
+  {
+    label: '계정',
+    items: [
+      { label: '회원정보 변경', to: '/mypage/accountsetting' },
+    ],
+  },
 ]
 </script>
 
@@ -27,7 +49,7 @@ const menu = [
   flex-shrink: 0;
   border-right: 1px solid var(--border);
   padding: var(--space-5) var(--space-3);
-  align-self: stretch; /* 세로선이 끝까지 내려오도록 추가 */
+  align-self: stretch;
 }
 
 .mypage-sidebar__brand {
@@ -39,8 +61,22 @@ const menu = [
 
 .mypage-sidebar__nav {
   display: flex;
-  flex-direction: column; /* PC 화면에서 확실하게 세로 배열 */
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.mypage-sidebar__group {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-1);
+}
+
+.mypage-sidebar__group-label {
+  padding: 0 var(--space-3) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
 }
 
 .mypage-sidebar__link {
@@ -64,7 +100,6 @@ const menu = [
   font-weight: var(--weight-medium);
 }
 
-/* 🔥 핵심 원인 해결: 브라우저 창이 좁아졌을 때의 반응형 레이아웃 */
 @media (max-width: 768px) {
   .mypage-sidebar {
     width: 100%;
@@ -73,16 +108,25 @@ const menu = [
     padding: var(--space-3);
   }
   .mypage-sidebar__brand {
-    display: none; /* 모바일에서는 타이틀 숨김 */
+    display: none;
   }
   .mypage-sidebar__nav {
-    flex-direction: row; /* 세로로 쭈욱 늘어지지 않고 가로로 나열 */
-    overflow-x: auto; /* 항목이 7개라 넘치므로 가로 스크롤 허용 */
+    flex-direction: row;
+    gap: var(--space-4);
+    overflow-x: auto;
     white-space: nowrap;
     scrollbar-width: none;
   }
   .mypage-sidebar__nav::-webkit-scrollbar {
-    display: none; /* 크롬 스크롤바 숨김 */
+    display: none;
+  }
+  .mypage-sidebar__group {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .mypage-sidebar__group-label {
+    display: none;
   }
 }
 </style>

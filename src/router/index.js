@@ -132,7 +132,7 @@ const routes = [
   {
   path: '/mypage',
   component: () => import('@/components/layout/MyPageLayout.vue'),
-  redirect: '/mypage/main',
+  redirect: '/mypage/myrecipe',
   children: [
     {
       path: 'main',
