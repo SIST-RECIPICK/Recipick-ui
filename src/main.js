@@ -11,10 +11,12 @@ import './assets/styles/base.css'
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+
+app.use(pinia)
 app.use(router)
 
-const auth = useAuthStore()
+const auth = useAuthStore(pinia)
 
 const API_BASE = 'http://localhost:8080'
 const EXCLUDE_FROM_INTERCEPTOR = ['/auth/reissue', '/auth/login', '/auth/logout']
