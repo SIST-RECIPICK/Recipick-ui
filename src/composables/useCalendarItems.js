@@ -1,5 +1,6 @@
 // 식단 캘린더 데이터 fetch + 월 이동 + 날짜별 매핑 + 배치(upsert) 로직
 import { ref, computed } from "vue";
+import { useAuthStore } from "@/stores/auth";
 // ref = 값 하나 반응형
 // computed = 다른 반응형 값을 가지고 계산된값 자동 생성
 const API_BASE = "http://localhost:8080";
@@ -12,6 +13,7 @@ const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 export function useCalendarItems(userId) { // userId로 받는 이유 : 유저아이디를 알아야 달력을 뿌리기 때문
   // 오늘의 날짜 구하기 
   // 페이지를 열때 오늘 날짜 기준으로 달력 출력
+  const authStore = useAuthStore(); 
   const today = new Date();
   const year = ref(today.getFullYear());
   const month = ref(today.getMonth() + 1);
@@ -62,11 +64,15 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
     errorMsg.value = ""; // 에러메세지는 지움
     try {
       const params = new URLSearchParams({ // 서버에 보낼 조건들
-        user_id: userId.value ?? userId,  // userId가 ref면 value 아니면 그냥 userId
+       
         year: year.value,  // 년도 가져오기
         month: String(month.value).padStart(2, "0"), // 백앤드에서 월을 09 두자리기 때문에 2자리로 설정
       });
-      const res = await fetch(`${API_BASE}/calendar/list?${params.toString()}`); // 서버에 요청 보내고 await로 기다림
+      const res = await fetch(`${API_BASE}/calendar/list?${params.toString()}`,{ //서버에 요청 보내고 await로 기다림
+        headers:{
+          Authorization : `Bearer ${authStore.accessToken}`,
+        },
+      });
       if (!res.ok) throw new Error(`캘린더 조회 실패: ${res.status}`); // 실패시 에러메세지
       items.value = await res.json(); // 성공시 json으로 받아서 저장
     } catch (e) {
@@ -83,9 +89,10 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
     try {
       const res = await fetch(`${API_BASE}/calendar/item`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" ,
+           Authorization: `Bearer ${authStore.accessToken}`,
+         },
         body: JSON.stringify({ // json 문자열로 바꿔서 서버로 보냄
-          user_id: userId.value ?? userId,
           meal_date: dateStr,
           meal_type: mealType,
           rcp_seq: recipe.rcp_seq,
@@ -121,13 +128,15 @@ export function useCalendarItems(userId) { // userId로 받는 이유 : 유저�
   async function deleteItem(dateStr, mealType){
     try {
       const params = new URLSearchParams({ // 필요한 params들
-        user_id: userId.value ?? userId,
         meal_date: dateStr,
         meal_type: mealType,
       });
 
       const res = await fetch(`${API_BASE}/calendar/item?${params.toString()}`,{ // 서버에 요청 보내고 await로 기다림
         method : "DELETE", // 메소드는 삭제 메소드
+        headers: {
+          Authorization: `Bearer ${authStore.accessToken}`,
+        },
       });
       if(!res.ok) throw new Error(`삭제 실패 : ${res.status}`); // 만약 실패시 에러
 
