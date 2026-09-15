@@ -139,9 +139,10 @@ import { storeToRefs } from 'pinia'
 import { IconX, IconSearch, IconPlus } from '@tabler/icons-vue'
 import FridgeRecipeCard from '@/components/fridge/FridgeRecipeCard.vue'
 import { useFridgeStore } from '@/stores/fridgeStore'
+import { useAuthStore } from '@/stores/auth'
 const fridgeStore = useFridgeStore()
 const { recipes, totalCount, loading } = storeToRefs(fridgeStore)
-
+const authStore = useAuthStore()
 // ── 화면 로컬 UI 상태 ──
 const fridgeQuery = ref('')
 const extraQuery = ref('')
@@ -152,16 +153,21 @@ const extra = ref([])
 const fridge = ref([])
 
 onMounted(async () => {
-  await fridgeStore.loadMyFridge(1004)
-  console.log('myIngredients:', fridgeStore.myIngredients)   // 이 줄 추가해서 확인
-  fridge.value = fridgeStore.myIngredients
+  await fridgeStore.loadMyFridge(authStore.user.userId)
+  
+  // ingredient_id 기준으로 중복 제거
+  const uniqueMap = new Map()
+  fridgeStore.myIngredients
     .filter((r) => r.ingredient)
-    .map((r) => ({
-      id: r.ingredient_id,
-      name: r.ingredient.ingredient_name,
-      checked: true,
-    }))
-  console.log('fridge.value:', fridge.value)   // 이것도 추가
+    .forEach((r) => {
+      uniqueMap.set(r.ingredient_id, {
+        id: r.ingredient_id,
+        name: r.ingredient.ingredient_name,
+        checked: true,
+      })
+    })
+  
+  fridge.value = Array.from(uniqueMap.values())
 })
 
 watch(extraQuery, async (newVal) => {
