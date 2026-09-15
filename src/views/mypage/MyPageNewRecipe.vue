@@ -3,11 +3,12 @@
   <div class="new-recipe-view">
     <h2 class="page-title">{{ isEdit ? '레시피 수정' : '레시피 등록' }}</h2>
 
-    <form class="recipe-form" @submit.prevent="handleSubmit">
+    <!--@keydown.enter => 상위 폼태그에 엔터 키 눌렀을 시 등록되는 상황 한번에 방지 기능 추가 -->
+    <form class="recipe-form" @submit.prevent="handleSubmit" @keydown.enter="blockEnter">
       <!-- 레시피 제목 -->
       <div class="form-row">
         <label for="rcp_nm">레시피 제목</label>
-        <input id="rcp_nm" v-model="form.rcp_nm" type="text" required />
+        <input id="rcp_nm" v-model="form.rcp_nm" type="text" required/>
       </div>
 
       <!-- 조리방법 -->
@@ -101,9 +102,9 @@
         <label>재료</label>
         <div v-for="(ing, idx) in ingredientInputs" :key="idx" class="ingredient-inputs">
            <!--  ing => v-for="(ing, idx) in ingredientInputs" -->        
-          <input v-model="ing.name" type="text" placeholder="예: 재료명"  class="ingredient-input"/>
-          <input v-model="ing.amount" type="text" placeholder="예: 수량"  class="ingredient-input"/>
-          <input v-model="ing.unit" type="text" placeholder="예: 단위" class="ingredient-input"/>  
+          <input v-model="ing.name" type="text" placeholder="예: 김치 또는 양파"  class="ingredient-input"/>
+          <input v-model="ing.amount" type="text" placeholder="예: 200 또는 1"  class="ingredient-input"/>
+          <input v-model="ing.unit" type="text" placeholder="예: g 또는 개" class="ingredient-input"/>  
           <button type="button" class="btn-small btn-danger" @click="removeIngredientlStep(idx)">
            🗑️
           </button>
@@ -153,12 +154,14 @@
 </template>
 
 <script setup>
+// 다른 파일에 있는 것을 가져올 때 
 import { ref, reactive, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 import { recipeDetailStore } from '@/stores/recipeDetailStore'
 import { storeToRefs } from 'pinia'
 import { getImageUrl } from '@/utils/image'
+
 
 const router = useRouter()
 const route = useRoute()
@@ -174,7 +177,7 @@ const detailStore = recipeDetailStore()
 const { recipeData, manualList: detailManualList } = storeToRefs(detailStore)
 
 const wayOptions = ['끓이기', '찜', '볶기', '굽기', '무침', '찌기', '튀기기', '기타']
-const patOptions = ['국/찌개', '국&찌개', '밥/죽', '반찬', '면', '디저트', '후식', '일품', '밥', '기타']
+const patOptions = ['국&찌개', '반찬', '후식', '일품', '밥', '기타']
 
 // form : 텍스트 + 영양정보 필드들 모아둔 그릇
 // 영양정보는 선택사항이라 빈 문자열로 시작 (입력 안 하면 서버에서 0으로 처리됨)
@@ -232,6 +235,12 @@ function onManualImageChange(e, idx) {
   manualList.value[idx].imageFile = file
 }
 
+// 레시피 등록 시 입력칸 엔터로 전송되는 상황 방지
+function blockEnter(event){
+  if (event.target.tagName ==='INPUT') { // textarea일 땐 막아야 조리순서 적을 때 줄바꿈이 가능해 그래서 INPUT일 때만 적용되게끔 조건을 줌
+        event.preventDefault()
+  }
+}
 // 수정 모드일 때, 상세조회 API로 기존 데이터를 불러와서 폼에 채워 넣음
 onMounted(async () => {
   if (isEdit.value) {
@@ -283,10 +292,32 @@ ingredientInputs.value = recipeData.value.rcp_parts_dtls // 재료 입력칸에 
 const submitting = ref(false)
 
 async function handleSubmit() {
+  if (!mainImageFile.value && !mainImagePreview.value) {
+    alert('대표 이미지를 꼭 등록해주세요.')
+    return
+  }
+  
+  const hasEmptyStepImage = manualList.value.some(step => !step.imageFile && !step.existingImg)
+  if (hasEmptyStepImage) {
+    alert('모든 조리순서 단계에 이미지를 등록해주세요.')
+    return
+  }
+
+  const hasEmptyStepDesc = manualList.value.some(step => step.desc.trim() === '')
+if (hasEmptyStepDesc) {
+  alert('모든 조리순서 단계에 설명을 입력해주세요.')
+  return
+}
+
   const hashTag = hashTagInputs.value.filter(t => t.trim() !== '').join(',')
   const rcpPartsDtls = ingredientInputs.value.filter(ing => ing.name.trim() !== '').map(ing  => `${ing.name} ${ing.amount}${ing.unit}`).join(',')
   // filter로 걸러낸 결과를 담는 변수 => 이름이 채워진 재료만 담김
-  const validIngredients = ingredientInputs.value.filter(ing => ing.name.trim() !== '')
+ const validIngredients = ingredientInputs.value.filter(ing => ing.name.trim() !== '')
+
+if (validIngredients.length === 0) {
+  alert('재료를 최소 1개 이상 입력해주세요.')
+  return
+}
 
   const formData = new FormData()
   formData.append('rcp_nm', form.rcp_nm)
