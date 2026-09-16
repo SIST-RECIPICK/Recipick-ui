@@ -11,12 +11,13 @@ import './assets/styles/base.css'
 
 const app = createApp(App)
 
-app.use(createPinia())
+const pinia = createPinia()
+
+app.use(pinia)
 app.use(router)
 
-const auth = useAuthStore()
+const auth = useAuthStore(pinia)
 
-const API_BASE = 'http://localhost:8080'
 const EXCLUDE_FROM_INTERCEPTOR = ['/auth/reissue', '/auth/login', '/auth/logout']
 
 // --- 요청 인터셉터: accessToken 자동 첨부 ---
@@ -30,12 +31,6 @@ axios.interceptors.request.use((config) => {
 // --- 응답 인터셉터: 401 감지 시 자동 재발급 (동시 요청은 단일 재발급으로 묶어서 처리) ---
 let isReissuing = false
 let pendingQueue = []
-
-async function reissueToken() {
-  const res = await axios.post(`${API_BASE}/auth/reissue`, null, { withCredentials: true })
-  auth.setAccessToken(res.data.accessToken)
-  return res.data.accessToken
-}
 
 axios.interceptors.response.use(
   (res) => res,
@@ -70,7 +65,7 @@ axios.interceptors.response.use(
 
     isReissuing = true
 
-    return reissueToken()
+    return auth.reissue()
       .then(() => {
         pendingQueue.forEach(({ resolve, originalRequest: queuedRequest }) =>
           resolve(axios(queuedRequest)),
@@ -92,11 +87,6 @@ axios.interceptors.response.use(
 )
 
 // --- 앱 시작 시 1회 재발급 시도 (새로고침으로 비워진 Pinia 상태 복구) ---
-reissueToken()
-  .then(() => auth.fetchMe())
-  .catch(() => {
-    // 재발급 실패 = 비로그인 상태로 시작 (강제 이동 없이 조용히 무시)
-  })
-  .finally(() => {
-    app.mount('#app')
-  })
+auth.restoreSession().finally(() => {
+  app.mount('#app')
+})
