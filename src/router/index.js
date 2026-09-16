@@ -4,13 +4,12 @@ import HomeView from '@/views/HomeView.vue'
 // 관리자 가드 복구 시 아래 import도 함께 해제할 것
 import { useAuthStore } from '@/stores/auth'
 
-
 const routes = [
   { path: '/', name: 'home', component: HomeView },
   {
     path: '/recipes',
     name: 'recipes',
-    component: () => import('@/views/recipe/RecipeListView.vue')
+    component: () => import('@/views/recipe/RecipeListView.vue'),
   },
   {
     path: '/recipes/:id',
@@ -27,17 +26,17 @@ const routes = [
     name: 'signup',
     component: () => import('@/views/SignupView.vue'),
   },
-  { 
+  {
     path: '/fridge',
-    name: 'fridge', 
-    meta: { requiresAuth: true }, 
-    component: () => import('@/views/fridge/FridgeView.vue') 
+    name: 'fridge',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/fridge/FridgeView.vue'),
   },
-  { 
-    path: '/fridge/register', 
-    name: 'fridge-register', 
-    meta: { requiresAuth: true }, 
-    component: () => import('@/views/fridge/FridgeRegisterView.vue') 
+  {
+    path: '/fridge/register',
+    name: 'fridge-register',
+    meta: { requiresAuth: true },
+    component: () => import('@/views/fridge/FridgeRegisterView.vue'),
   },
   {
     path: '/admin',
@@ -110,13 +109,15 @@ const routes = [
     component: () => import('@/views/community/ReviewBoardDetailView.vue'),
   },
   {
-  path: '/community/reviews/write',
+    path: '/community/reviews/write',
     name: 'community-reviews-write',
+    meta: { requiresAuth: true },
     component: () => import('@/views/community/ReviewInsert.vue'),
   },
   {
     path: '/community/reviews/:id/edit',
     name: 'community-reviews-edit',
+    meta: { requiresAuth: true },
     component: () => import('@/views/community/ReviewUpdate.vue'),
   },
   {
@@ -131,66 +132,65 @@ const routes = [
   },
   {
     // 개발 참조용 스타일가이드
-    path: '/styleguide', 
+    path: '/styleguide',
     name: 'styleguide',
     component: () => import('@/views/StyleGuideView.vue'),
   },
   {
     // 식단표
     path: '/meal-plan',
-    name: "MealPlan",
+    name: 'MealPlan',
     meta: { requiresAuth: true },
-    component: () => import('@/views/calendar/MealPlanView.vue')
+    component: () => import('@/views/calendar/MealPlanView.vue'),
   },
   {
-  path: '/mypage',
-  component: () => import('@/components/layout/MyPageLayout.vue'),
-  meta: { requiresAuth: true },
-  redirect: '/mypage/main',
-  children: [
-    {
-      path: 'main',
-      name: 'mypage-main',
-      component: () => import('@/views/mypage/MyPageMain.vue'),
-    },
-    {
-      path: 'myrecipe',
-      name: 'mypage-my-recipe',
-      component: () => import('@/views/mypage/MyPageMyRecipe.vue'),
-    },
-    {
-      path: 'saverecipe',
-      name: 'mypage-save-recipe',
-      component: () => import('@/views/mypage/MyPageSaveRecipe.vue'),
-    },
-    {
-      path: 'newrecipe',
-      name: 'mypage-new-recipe',
-      component: () => import('@/views/mypage/MyPageNewRecipe.vue'),
-    },
-    {
-      path: 'myreview',
-      name: 'mypage-my-review',
-      component: () => import('@/views/mypage/MyPageMyReview.vue'),
-    },
-    {
-      path: 'myreply',
-      name: 'mypage-my-reply',
-      component: () => import('@/views/mypage/MyPageMyReply.vue'),
-    },
-    {
-      path: 'accountsetting',
-      name: 'mypage-account-setting',
-      component: () => import('@/views/mypage/MyPageAccountSetting.vue'),
-    },
-    {
-      path: '/recipes/:id/edit',
-      name: 'recipe-edit',
-      component: () => import('@/views/mypage/MyPageNewRecipe.vue'),  // 등록 컴포넌트 재사용
+    path: '/mypage',
+    component: () => import('@/components/layout/MyPageLayout.vue'),
+    meta: { requiresAuth: true },
+    redirect: '/mypage/main',
+    children: [
+      {
+        path: 'main',
+        name: 'mypage-main',
+        component: () => import('@/views/mypage/MyPageMain.vue'),
+      },
+      {
+        path: 'myrecipe',
+        name: 'mypage-my-recipe',
+        component: () => import('@/views/mypage/MyPageMyRecipe.vue'),
+      },
+      {
+        path: 'saverecipe',
+        name: 'mypage-save-recipe',
+        component: () => import('@/views/mypage/MyPageSaveRecipe.vue'),
+      },
+      {
+        path: 'newrecipe',
+        name: 'mypage-new-recipe',
+        component: () => import('@/views/mypage/MyPageNewRecipe.vue'),
+      },
+      {
+        path: 'myreview',
+        name: 'mypage-my-review',
+        component: () => import('@/views/mypage/MyPageMyReview.vue'),
+      },
+      {
+        path: 'myreply',
+        name: 'mypage-my-reply',
+        component: () => import('@/views/mypage/MyPageMyReply.vue'),
+      },
+      {
+        path: 'accountsetting',
+        name: 'mypage-account-setting',
+        component: () => import('@/views/mypage/MyPageAccountSetting.vue'),
+      },
+      {
+        path: '/recipes/:id/edit',
+        name: 'recipe-edit',
+        component: () => import('@/views/mypage/MyPageNewRecipe.vue'), // 등록 컴포넌트 재사용
+      },
+    ],
   },
-
-  ],
-}
 ]
 
 const router = createRouter({
