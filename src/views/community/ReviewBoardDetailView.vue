@@ -129,7 +129,7 @@
       v-if="recipeReviews.length > 0"
       class="review-detail__other-section"
     >
-      <h3>다른 사람의 해당 레시피 후기</h3>
+      <h3>이 레시피의 다른 후기</h3>
 
       <div class="review-detail__card-grid">
         <OtherReviewCard
