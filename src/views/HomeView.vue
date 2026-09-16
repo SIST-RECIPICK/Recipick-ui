@@ -35,13 +35,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import { RouterLink } from 'vue-router'
-import { IconArrowRight, IconBowlChopsticks, IconSoup, IconSalad } from '@tabler/icons-vue'
+import { RouterLink, useRouter } from 'vue-router'
+import { IconArrowRight, IconBowlChopsticks} from '@tabler/icons-vue'
+import { useAuthStore } from '@/stores/auth'
+
 
 import HeroSearch from '@/components/home/HeroSearch.vue'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import FridgeMatch from '@/components/home/FridgeMatch.vue'
 import WeeklyDietPreview from '@/components/home/WeeklyDietPreview.vue'
+
 
 // 오늘의 인기 레시피 (조회수 상위 4개, 실 API)
 const popularRecipes = ref([])
@@ -49,18 +52,54 @@ const popularRecipes = ref([])
 // 히어로 검색창의 검색어 상태 (HeroSearch와 v-model로 연결)
 const heroKeyword = ref('')
 
-// 인기 레시피 카드의 해시태그 클릭 시: 히어로 검색창에 값만 채움 (검색 실행은 안 함)
+
+const router = useRouter()
+// 인기 레시피 카드의 해시태그 클릭 시: 검색실행
 function fillHeroKeyword(tag) {
-  heroKeyword.value = tag
+ router.push({path:'/recipes',query:{keyword: tag}})
 }
 
 // 내 냉장고 속 맞춤 레시피 (mock)
-const fridgeIngredients = ['밥', '당근', '계란', '김치', '대파']
-const fridgeMatches = [
-  { id: 11, title: '계란볶음밥', icon: IconBowlChopsticks, matchLabel: '재료 4/5 보유' },
-  { id: 12, title: '감자조림', icon: IconSoup, matchLabel: '재료 3/5 보유' },
-  { id: 13, title: '김치무침', icon: IconSalad, matchLabel: '재료 5/5 보유' },
-]
+const fridgeIngredients =ref([])
+
+const authStore = useAuthStore()
+const fridgeMatches = ref([])
+
+onMounted(async () => {
+  if (!authStore.user) {
+    return   // 로그인 안 했으면 그냥 빈 상태로 둠
+  }
+
+  // 1. 내 냉장고 재료 조회
+  const fridgeRes = await axios.get('http://localhost:8080/refrige/fridgedata', {
+    params: { user_id: authStore.user.userId },
+  })
+
+  fridgeIngredients.value = [...new Set(
+  fridgeRes.data
+    .filter((r) => r.ingredient)
+    .map((r) => r.ingredient.ingredient_name)
+  )]
+  if (fridgeIngredients.value.length === 0) {
+    return   // 냉장고가 비어있으면 매칭 조회 안 함
+  }
+  
+
+  // 2. 그 재료로 레시피 매칭 조회
+  const matchRes = await axios.post('http://localhost:8080/refrige/recommand', {
+    ingredients: fridgeIngredients.value,
+    sort: 'match',
+  })
+
+  if (matchRes.data.success) {
+    fridgeMatches.value = matchRes.data.recipes.slice(0, 3).map((r) => ({
+      id: r.recipe_id, 
+      title: r.recipeName,
+      icon: IconBowlChopsticks,
+      matchLabel: `재료 ${r.haveIngredients.length}/${r.haveIngredients.length + r.missingIngredients.length} 보유`,
+    }))
+  }
+})
 
 // 이번 주 식단표 (mock)
 const weeklyDiet = [
