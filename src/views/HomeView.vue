@@ -35,14 +35,16 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import { IconArrowRight, IconBowlChopsticks} from '@tabler/icons-vue'
 import { useAuthStore } from '@/stores/auth'
+
 
 import HeroSearch from '@/components/home/HeroSearch.vue'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
 import FridgeMatch from '@/components/home/FridgeMatch.vue'
 import WeeklyDietPreview from '@/components/home/WeeklyDietPreview.vue'
+
 
 // 오늘의 인기 레시피 (조회수 상위 4개, 실 API)
 const popularRecipes = ref([])
@@ -50,9 +52,11 @@ const popularRecipes = ref([])
 // 히어로 검색창의 검색어 상태 (HeroSearch와 v-model로 연결)
 const heroKeyword = ref('')
 
-// 인기 레시피 카드의 해시태그 클릭 시: 히어로 검색창에 값만 채움 (검색 실행은 안 함)
+
+const router = useRouter()
+// 인기 레시피 카드의 해시태그 클릭 시: 검색실행
 function fillHeroKeyword(tag) {
-  heroKeyword.value = tag
+ router.push({path:'/recipes',query:{keyword: tag}})
 }
 
 // 내 냉장고 속 맞춤 레시피 (mock)
