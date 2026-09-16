@@ -115,11 +115,15 @@
 
 <script setup>
 import { onBeforeUnmount, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter,useRoute } from 'vue-router'
 import axios from 'axios'
 import ReviewRecipeSelect from '@/components/review/ReviewRecipeSelect.vue'
 
 const router = useRouter()
+const route = useRoute()
+const rcp_seqs = route.query.rcp_seq
+//레시피 상세보기에서 넘어올 시
+console.log('선택된 레시피:', rcp_seqs)
 
 const showRecipeModal = ref(false)
 const selectedRecipe = ref(null)
