@@ -5,75 +5,84 @@
     <section class="my-page-main__section">
       <div class="my-page-main__header">
         <h2>내 레시피</h2>
-        <button type="button" class="btn btn--ghost">
+        <RouterLink to="/mypage/myrecipe" class="btn btn--ghost">
           더보기 &gt;
-        </button>
+        </RouterLink>
       </div>
 
       <div class="my-page-main__recipe-list">
-        
-        <!--<MyRecipeCard />
-        <MyRecipeCard />
-        <MyRecipeCard />-->
-
+        <MyRecipeCard
+          v-for="recipe in myRecipes"
+          :key="recipe.rcp_seq"
+          :recipe="recipe"
+        />
       </div>
     </section>
-
 
     <!-- 찜한 레시피 -->
     <section class="my-page-main__section">
       <div class="my-page-main__header">
         <h2>찜한 레시피</h2>
-        <button type="button" class="btn btn--ghost">
-          더보기 &gt;
-        </button>
+          <RouterLink to="/mypage/saverecipe" class="btn btn--ghost">
+            더보기 &gt;
+          </RouterLink>
       </div>
 
       <div class="my-page-main__recipe-list">
-
-        <!--<MyRecipeCard />
-        <MyRecipeCard />
-        <MyRecipeCard />-->
-
+        <RecipeCard
+          v-for="recipe in bookmarkedRecipes"
+          :key="recipe.rcp_seq"
+          :recipe="recipe"
+        />
       </div>
     </section>
-
 
     <!-- 후기 / 댓글 -->
     <div class="my-page-main__activity">
 
       <!-- 내 후기 -->
-      <section class="my-page-main__section">
-        <div class="my-page-main__header">
-          <h2>내 후기</h2>
-          <button type="button" class="btn btn--ghost">
+  <section class="my-page-main__section">
+    <div class="my-page-main__header">
+      <h2>내 후기</h2>
+        <RouterLink to="/mypage/myreview" class="btn btn--ghost">
+          더보기 &gt;
+        </RouterLink>
+      </div>
+
+      <div class="my-page-main__text-list">
+        <div
+          v-for="review in myReviews"
+          :key="review.id"
+          class="my-page-main__text-item"
+        >
+          <p class="my-page-main__text-title">
+            {{ review.subject }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 내 댓글 -->
+    <section class="my-page-main__section">
+      <div class="my-page-main__header">
+        <h2>내 댓글</h2>
+          <RouterLink to="/mypage/myreply" class="btn btn--ghost">
             더보기 &gt;
-          </button>
-        </div>
+          </RouterLink>
+      </div>
 
-        <div class="my-page-main__text-list">
-          <p>정말 맛있게 먹었습니다.</p>
-          <p>간단하고 맛있어서 좋았습니다.</p>
-          <p>다음에도 다시 만들어 먹을 것 같아요.</p>
+      <div class="my-page-main__text-list">
+        <div
+          v-for="reply in myReplies"
+          :key="reply.id"
+          class="my-page-main__text-item"
+        >
+          <p class="my-page-main__text-content">
+            {{ reply.content }}
+          </p>
         </div>
-      </section>
-
-
-      <!-- 내 댓글 -->
-      <section class="my-page-main__section">
-        <div class="my-page-main__header">
-          <h2>내 댓글</h2>
-          <button type="button" class="btn btn--ghost">
-            더보기 &gt;
-          </button>
-        </div>
-
-        <div class="my-page-main__text-list">
-          <p>이 레시피 정말 맛있네요.</p>
-          <p>재료를 구하기도 쉬워서 좋았습니다.</p>
-          <p>저도 한번 만들어봐야겠어요.</p>
-        </div>
-      </section>
+      </div>
+    </section>
 
     </div>
 
@@ -81,7 +90,92 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
 import MyRecipeCard from '@/components/mypage/MyRecipeCard.vue'
+import RecipeCard from '@/components/recipe/RecipeCard.vue'
+
+const myRecipes = ref([])
+const bookmarkedRecipes = ref([])
+const myReviews = ref([])
+const myReplies = ref([])
+
+const loadMyRecipes = async () => {
+  try {
+    const res = await axios.get(
+      'http://localhost:8080/recipe/mylist',
+      {
+        params: {
+          page: 1
+        }
+      }
+    )
+
+    myRecipes.value = res.data.list.slice(0, 3)
+  } catch (error) {
+    console.error('내 레시피 조회 실패:', error)
+  }
+}
+
+const loadBookmarkedRecipes = async () => {
+  try {
+    const res = await axios.get(
+      'http://localhost:8080/recipe/my-list',
+      {
+        params: {
+          page: 1,
+          type: 'mark'
+        }
+      }
+    )
+
+    bookmarkedRecipes.value = res.data.myMarkList.slice(0, 3)
+  } catch (error) {
+    console.error('찜한 레시피 조회 실패:', error)
+  }
+}
+
+const loadMyReviews = async () => {
+  try {
+    const res = await axios.get(
+      'http://localhost:8080/mypage/reviews',
+      {
+        params: {
+          page: 1
+        }
+      }
+    )
+
+    myReviews.value = res.data.list.slice(0, 5)
+  } catch (error) {
+    console.error('내 후기 조회 실패:', error)
+  }
+}
+
+const loadMyReplies = async () => {
+  try {
+    const res = await axios.get(
+      'http://localhost:8080/mypage/replies',
+      {
+        params: {
+          page: 1
+        }
+      }
+    )
+
+    myReplies.value = res.data.list.slice(0, 5)
+  } catch (error) {
+    console.error('내 댓글 조회 실패:', error)
+  }
+}
+
+onMounted(() => {
+  loadMyRecipes()
+  loadBookmarkedRecipes()
+  loadMyReviews()
+  loadMyReplies()
+})
 </script>
 
 <style scoped>
@@ -115,13 +209,33 @@ import MyRecipeCard from '@/components/mypage/MyRecipeCard.vue'
 .my-page-main__text-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
 }
 
-.my-page-main__text-list p {
+.my-page-main__text-item {
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+
+.my-page-main__text-item:first-child {
+  padding-top: 0;
+}
+
+.my-page-main__text-title,
+.my-page-main__text-content {
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.my-page-main__text-title {
+  margin-bottom: var(--space-1);
+  font-weight: var(--weight-medium);
+}
+
+.my-page-main__text-content {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
 }
 </style>
