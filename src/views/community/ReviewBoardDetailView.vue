@@ -319,7 +319,7 @@ const goToRecipeDetail = (rcpSeq) => {
 
 // 수정 페이지
 const goToEdit = () => {
-  router.push(`/community/reviews/edit/${reviewId.value}`)
+  router.push(`/community/reviews/${reviewId.value}/edit/`)
 }
 
 // 다른 후기 상세
@@ -335,13 +335,26 @@ const handleDelete = async () => {
 
   try {
     await axios.delete(
-      `http://localhost:8080/review/delete/${reviewId.value}`
+      'http://localhost:8080/review/delete',
+      {
+        params: {
+          id: reviewId.value
+        }
+      }
     )
 
     alert('삭제되었습니다.')
     router.push('/community/reviews')
   } catch (err) {
     console.error('삭제 에러:', err)
+
+    if (err.response?.status === 401) {
+      alert('로그인이 필요합니다.')
+    } else if (err.response?.status === 403) {
+      alert('삭제할 권한이 없습니다.')
+    } else {
+      alert(err.response?.data || '삭제에 실패했습니다.')
+    }
   }
 }
 
@@ -349,7 +362,10 @@ const handleDelete = async () => {
 const isReplyOwner = (userId) => {
   return (
     auth.isLoggedIn &&
-    auth.user?.userId === userId
+    (
+      auth.user?.userId === userId ||
+      auth.user?.role === 'ADMIN'
+    )
   )
 }
 
@@ -384,12 +400,26 @@ const deleteReply = async (replyId) => {
 
   try {
     await axios.delete(
-      `http://localhost:8080/review/reply/delete/${replyId}`
+      'http://localhost:8080/review/reply/delete',
+      {
+        params: {
+          id: replyId
+        }
+      }
     )
 
     await fetchDetail()
+
   } catch (err) {
     console.error('댓글 삭제 에러:', err)
+
+    if (err.response?.status === 403) {
+      alert('댓글을 삭제할 권한이 없습니다.')
+    } else if (err.response?.status === 401) {
+      alert('로그인이 필요합니다.')
+    } else {
+      alert(err.response?.data || '댓글 삭제에 실패했습니다.')
+    }
   }
 }
 

@@ -1,85 +1,67 @@
-```vue
 <template>
   <div class="container community-page">
     <h2>후기 작성</h2>
 
     <!-- 레시피 선택 -->
     <section class="write-section">
-      <label class="form-label">사용한 레시피</label>
+      <label class="form-label">레시피</label>
 
       <div
         v-if="!selectedRecipe"
-        class="card recipe-select"
-        @click="openModal"
+        class="recipe-select"
+        @click="openRecipeModal"
       >
-        <span class="text-secondary">
-          + 레시피를 선택해 주세요.
-        </span>
+        <span class="text-secondary">레시피를 선택해주세요.</span>
       </div>
 
-      <div
-        v-else
-        class="card recipe-selected"
-      >
+      <div v-else class="recipe-selected card">
         <div class="recipe-selected__info">
           <img
+            class="recipe-selected__thumb"
             :src="selectedRecipe.att_file_no_main"
             :alt="selectedRecipe.rcp_nm"
-            class="recipe-selected__thumb"
           />
 
           <div>
-            <h3>{{ selectedRecipe.rcp_nm }}</h3>
+            <h4>{{ selectedRecipe.rcp_nm }}</h4>
           </div>
         </div>
 
         <button
           type="button"
           class="btn btn--ghost"
-          @click="removeSelectedRecipe"
+          @click="openRecipeModal"
         >
-          취소
+          변경
         </button>
       </div>
     </section>
 
-    <!-- 사진 -->
+    <!-- 이미지 -->
     <section class="write-section">
       <label class="form-label">사진</label>
 
       <div class="image-upload">
-        <div
-          v-if="imagePreview"
-          class="image-preview"
-        >
-          <img
-            :src="imagePreview"
-            alt="후기 사진 미리보기"
-          />
+        <div v-if="imagePreview" class="image-preview">
+          <img :src="imagePreview" alt="업로드 이미지 미리보기" />
 
           <button
             type="button"
-            class="btn btn--ghost image-preview__remove"
+            class="image-preview__remove"
             @click="removeImage"
           >
-            ✕
+            삭제
           </button>
         </div>
 
-        <label
-          v-else
-          class="card image-upload__button"
-        >
+        <label v-else class="image-upload__button">
+          <span class="text-secondary">사진 추가</span>
           <input
             type="file"
-            accept="image/*"
             class="file-input-hidden"
-            @change="handleFileChange"
+            accept="image/*"
+            @change="handleImageChange"
           />
-
-          <span class="text-secondary">
-            + 사진 추가
-          </span>
         </label>
       </div>
     </section>
@@ -87,101 +69,102 @@
     <!-- 제목 -->
     <section class="write-section">
       <div class="label-group">
-        <label class="form-label">제목</label>
-
-        <span class="text-secondary">
-          {{ subject.length }}/50
-        </span>
+        <label for="subject" class="form-label">제목</label>
       </div>
 
       <input
+        id="subject"
         v-model="subject"
         type="text"
         class="input"
-        placeholder="제목을 입력해주세요."
-        maxlength="50"
+        placeholder="후기 제목을 입력해주세요."
+        maxlength="100"
       />
     </section>
 
     <!-- 내용 -->
     <section class="write-section">
-      <label class="form-label">내용</label>
+      <label for="content" class="form-label">내용</label>
 
       <textarea
+        id="content"
         v-model="content"
         class="input write-textarea"
-        placeholder="레시피를 사용한 후기를 자유롭게 작성해주세요."
-        rows="8"
+        placeholder="레시피를 만들어본 후기를 작성해주세요."
       ></textarea>
     </section>
 
-    <!-- 등록 -->
-    <div class="write-actions">
+    <div class="write-section">
       <button
         type="button"
-        class="btn btn--primary"
-        @click="handleSubmit"
+        class="btn btn--primary btn--block"
+        :disabled="isSubmitting"
+        @click="submitReview"
       >
-        등록하기
+        {{ isSubmitting ? '등록 중...' : '후기 등록' }}
       </button>
     </div>
 
-    <!-- 레시피 선택 모달 -->
     <ReviewRecipeSelect
-      v-if="isModalOpen"
-      @close="closeModal"
-      @select="handleRecipeSelect"
+      v-if="showRecipeModal"
+      @select="selectRecipe"
+      @close="closeRecipeModal"
     />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
-import ReviewRecipeSelect from './ReviewRecipeSelect.vue'
+import ReviewRecipeSelect from '@/components/review/ReviewRecipeSelect.vue'
 
 const router = useRouter()
 
-const isModalOpen = ref(false)
+const showRecipeModal = ref(false)
 const selectedRecipe = ref(null)
 
 const subject = ref('')
 const content = ref('')
 
 const imageFile = ref(null)
-const imagePreview = ref('')
+const imagePreview = ref(null)
+const isSubmitting = ref(false)
 
-const openModal = () => {
-  isModalOpen.value = true
+const MAX_IMAGE_SIZE = 8 * 1024 * 1024
+
+const openRecipeModal = () => {
+  showRecipeModal.value = true
 }
 
-const closeModal = () => {
-  isModalOpen.value = false
+const closeRecipeModal = () => {
+  showRecipeModal.value = false
 }
 
-const handleRecipeSelect = (recipe) => {
+const selectRecipe = (recipe) => {
   selectedRecipe.value = recipe
-  isModalOpen.value = false
+  closeRecipeModal()
 }
 
-const removeSelectedRecipe = () => {
-  selectedRecipe.value = null
-}
+const handleImageChange = (event) => {
+  const file = event.target.files?.[0]
 
-const handleFileChange = (e) => {
-  const file = e.target.files[0]
+  if (!file) return
 
-  if (!file) {
+  if (!file.type.startsWith('image/')) {
+    alert('이미지 파일만 업로드할 수 있습니다.')
+    event.target.value = ''
     return
   }
 
-  const MAX_SIZE = 8 * 1024 * 1024
-
-  if (file.size > MAX_SIZE) {
-    alert('이미지 용량은 8MB를 초과할 수 없습니다.')
-    e.target.value = ''
+  if (file.size > MAX_IMAGE_SIZE) {
+    alert('이미지는 8MB 이하만 업로드할 수 있습니다.')
+    event.target.value = ''
     return
+  }
+
+  if (imagePreview.value) {
+    URL.revokeObjectURL(imagePreview.value)
   }
 
   imageFile.value = file
@@ -194,24 +177,26 @@ const removeImage = () => {
   }
 
   imageFile.value = null
-  imagePreview.value = ''
+  imagePreview.value = null
 }
 
-const handleSubmit = async () => {
+const submitReview = async () => {
+  if (!selectedRecipe.value) {
+    alert('레시피를 선택해주세요.')
+    return
+  }
+
   if (!subject.value.trim()) {
-    alert('제목을 입력해 주세요.')
+    alert('제목을 입력해주세요.')
     return
   }
 
   if (!content.value.trim()) {
-    alert('내용을 입력해 주세요.')
+    alert('내용을 입력해주세요.')
     return
   }
 
-  if (!selectedRecipe.value) {
-    alert('사용한 레시피를 선택해 주세요.')
-    return
-  }
+  if (isSubmitting.value) return
 
   const boardData = {
     subject: subject.value.trim(),
@@ -223,10 +208,9 @@ const handleSubmit = async () => {
 
   formData.append(
     'board',
-    new Blob(
-      [JSON.stringify(boardData)],
-      { type: 'application/json' }
-    )
+    new Blob([JSON.stringify(boardData)], {
+      type: 'application/json'
+    })
   )
 
   if (imageFile.value) {
@@ -234,6 +218,8 @@ const handleSubmit = async () => {
   }
 
   try {
+    isSubmitting.value = true
+
     await axios.post(
       'http://localhost:8080/review/insert',
       formData
@@ -241,11 +227,19 @@ const handleSubmit = async () => {
 
     alert('후기가 등록되었습니다.')
     router.push('/community/reviews')
-  } catch (err) {
-    console.error('등록 실패:', err)
-    alert(err.response?.data || '등록에 실패했습니다.')
+  } catch (error) {
+    console.error(error)
+    alert('후기 등록에 실패했습니다.')
+  } finally {
+    isSubmitting.value = false
   }
 }
+
+onBeforeUnmount(() => {
+  if (imagePreview.value) {
+    URL.revokeObjectURL(imagePreview.value)
+  }
+})
 </script>
 
 <style scoped>
@@ -269,7 +263,6 @@ const handleSubmit = async () => {
   justify-content: space-between;
 }
 
-/* 레시피 선택 */
 .recipe-select {
   display: flex;
   align-items: center;
@@ -302,7 +295,6 @@ const handleSubmit = async () => {
   border-radius: var(--radius-md);
 }
 
-/* 사진 */
 .image-upload {
   display: flex;
 }
@@ -343,24 +335,16 @@ const handleSubmit = async () => {
   top: var(--space-1);
   right: var(--space-1);
   padding: var(--space-1) var(--space-2);
-  background: rgb(0 0 0 / 50%);
-  color: #fff;
+  background: var(--surface-inverse);
+  color: var(--text-on-inverse);
+  border: 0;
   border-radius: var(--radius-pill);
 }
 
-/* 내용 */
 .write-textarea {
   height: auto;
   min-height: 200px;
   padding-block: var(--space-3);
   resize: vertical;
 }
-
-/* 등록 */
-.write-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--space-6);
-}
 </style>
-```
