@@ -10,6 +10,9 @@ export const useFridgeStore = defineStore('fridge', () => {
   const recipes = ref([])
   const totalCount = ref(0)
   const loading = ref(false)
+  const recipeDetail = ref([])
+  const extraIngredients = ref([])
+  
 
   // ── getters ──
   const myIngredients = computed(() => myFridgeData.value)
@@ -24,6 +27,19 @@ export const useFridgeStore = defineStore('fridge', () => {
       params: { keyword }
     })
     ingredients.value = res.data
+  }
+
+  function clearMatches() {
+  recipes.value = []
+  totalCount.value = 0
+}
+
+  // 추가 재료 검색 (새 action, 별도 state에 저장)
+  async function searchExtraIngredients(keyword) {
+    const res = await axios.get('http://localhost:8080/ingredients/list', {
+      params: { keyword }
+    })
+    extraIngredients.value = res.data
   }
 
   async function loadMyFridge(user_id) {
@@ -41,12 +57,13 @@ export const useFridgeStore = defineStore('fridge', () => {
   async function loadMatches(ingredientNames, sort = 'match') {
     loading.value = true
     try {
-      const response = await axios.post('http://localhost:8080/refrige/recommand', {
+      const response = await axios.post('http://localhost:8080/refrige/recommand', {      
         ingredients: ingredientNames,
-        sort: sort
+        sort: sort,      
       })
 
       if (response.data.success) {
+         console.log('원본 응답 recipes[0]:', response.data.recipes[0])
         recipes.value = response.data.recipes.map((r) => {
           const haveList = r.haveIngredients || []
           const missList = r.missingIngredients || []
@@ -55,6 +72,7 @@ export const useFridgeStore = defineStore('fridge', () => {
           return {
             id: r.id,
             title: r.recipeName,
+            recipeId: r.recipe_id,
             chef: r.foodType || '',
             image: r.recipeImage,
             matchCount: haveList.length,
@@ -79,9 +97,16 @@ export const useFridgeStore = defineStore('fridge', () => {
     }
   }
 
+  async function loadRecipeDetail(rcp_seq) {
+    console.log('스토어로 들어온 rcp_seq:', rcp_seq); // 값이 출력되는지 확인!
+  if (!rcp_seq) return;
+  const res = await axios.get(`http://localhost:8080/refrige/recipe/${rcp_seq}`)
+  recipeDetail.value = res.data
+}
+
   return {
     ingredients, myFridgeIds, recipes, totalCount, loading,
     myIngredients, myIngredientNames, myFridgeData,
-    searchIngredients, loadMyFridge, saveFridge, loadMatches,
+    searchIngredients, loadMyFridge, saveFridge, loadMatches,loadRecipeDetail,recipeDetail,searchExtraIngredients,extraIngredients,clearMatches
   }
 })

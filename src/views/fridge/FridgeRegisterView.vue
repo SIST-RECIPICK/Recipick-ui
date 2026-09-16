@@ -114,7 +114,8 @@ import {
   IconSearch, IconPlus, IconCheck, IconX, IconFridge,
 } from '@tabler/icons-vue'
 import { useFridgeStore } from '@/stores/fridgeStore'
-
+import { useAuthStore } from '@/stores/auth'
+const authStore = useAuthStore()
 const router = useRouter()
 const fridgeStore = useFridgeStore()
 const { ingredients } = storeToRefs(fridgeStore)
@@ -142,18 +143,20 @@ const categories = {
 //   picked.value = new Map(fridgeStore.myFridgeIds)
 // })
 onMounted(async () => {
-  await fridgeStore.loadMyFridge(2)
-  const next = new Map()
+  await fridgeStore.loadMyFridge(authStore.user.userId)
+  
+  // 중복 제거해서 fridge.value 만들기 (만약 이 파일이 fridge.value를 쓰고 있다면)
+  const uniqueMap = new Map()
   fridgeStore.myFridgeData.forEach((r) => {
     if (r.ingredient) {
-      next.set(r.ingredient_id, {
+      uniqueMap.set(r.ingredient_id, {
         id: r.ingredient_id,
         category_name: r.ingredient.category_name,
         ingredient_name: r.ingredient.ingredient_name,
       })
     }
   })
-  picked.value = next
+  picked.value = uniqueMap
 })
 
 // 검색어 변경 시 서버에 검색 요청
@@ -211,7 +214,7 @@ async function handleSave() {
   saving.value = true
   try {
     const volist = Array.from(picked.value.keys()).map((id) => ({
-      users_id: 1004,
+      users_id: authStore.user.userId,
       ingredient_id: id,
     }))
     await fridgeStore.saveFridge(volist)

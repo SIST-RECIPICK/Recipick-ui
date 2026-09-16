@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 
 // 관리자 가드 복구 시 아래 import도 함께 해제할 것
-// import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '@/stores/auth'
 
 
 const routes = [
@@ -30,11 +30,13 @@ const routes = [
   { 
     path: '/fridge',
     name: 'fridge', 
+    meta: { requiresAuth: true }, 
     component: () => import('@/views/fridge/FridgeView.vue') 
   },
   { 
     path: '/fridge/register', 
     name: 'fridge-register', 
+    meta: { requiresAuth: true }, 
     component: () => import('@/views/fridge/FridgeRegisterView.vue') 
   },
   {
@@ -103,9 +105,19 @@ const routes = [
     component: () => import('@/views/community/ReviewBoardView.vue'),
   },
   {
-    path: '/community/reviews/detail',
+    path: '/community/reviews/:id',
     name: 'community-reviews-detail',
     component: () => import('@/views/community/ReviewBoardDetailView.vue'),
+  },
+  {
+  path: '/community/reviews/write',
+    name: 'community-reviews-write',
+    component: () => import('@/views/community/ReviewInsert.vue'),
+  },
+  {
+    path: '/community/reviews/:id/edit',
+    name: 'community-reviews-edit',
+    component: () => import('@/views/community/ReviewUpdate.vue'),
   },
   {
     path: '/community/curations',
@@ -127,12 +139,14 @@ const routes = [
     // 식단표
     path: '/meal-plan',
     name: "MealPlan",
+    meta: { requiresAuth: true },
     component: () => import('@/views/calendar/MealPlanView.vue')
   },
   {
   path: '/mypage',
   component: () => import('@/components/layout/MyPageLayout.vue'),
-  redirect: '/mypage/myrecipe',
+  meta: { requiresAuth: true },
+  redirect: '/mypage/main',
   children: [
     {
       path: 'main',
@@ -187,13 +201,26 @@ const router = createRouter({
 
 // 관리자 라우트 가드
 // TODO: 권한 기능 구현 후 아래 주석을 해제해 활성화할 것 (개발 중에는 /admin 접근 허용)
-router.beforeEach(() => {
-  // if (to.meta.requiresAdmin) {
-  //   const auth = useAuthStore()
-  //   if (!auth.isAdmin) {
-  //     return { name: 'home' }
-  //   }
-  // }
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+  // 새로고침 직후 첫 네비게이션은 이 시점에 아직 인증 복구(재발급+me)가
+  // 끝나지 않았을 수 있으므로, 아래 체크 전에 복구 완료를 기다린다.
+  // 이미 복구가 끝난 이후의 네비게이션은 캐시된 Promise라 즉시 통과한다.
+  await auth.restoreSession()
+
+  //로그인 여부
+  if (to.meta.requiresAuth) {
+    if (!auth.isLoggedIn) {
+      return { name: 'login' }
+    }
+  }
+
+  //관리자 여부
+  if (to.meta.requiresAdmin) {
+    if (!auth.isAdmin) {
+      return { name: 'home' }
+    }
+  }
 })
 
 export default router

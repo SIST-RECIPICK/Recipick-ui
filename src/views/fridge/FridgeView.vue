@@ -52,10 +52,15 @@
             />
           </div>
           <ul class="checklist">
-            <li v-for="ing in filteredFridge" :key="ing.id" class="checklist__row">
+            <li
+              v-for="ing in fridge"
+              v-show="ing.name.includes(fridgeQuery.trim())"
+              :key="ing.id"
+              class="checklist__row"
+            >
               <label class="checklist__label">
                 <input type="checkbox" v-model="ing.checked" />
-                {{ ing.name}}
+                {{ ing.name }}
               </label>
             </li>
           </ul>
@@ -102,35 +107,33 @@
             <span class="legend"><i class="legend__dot legend__dot--have"></i> 냉장고 재료</span>
             <span class="legend"><i class="legend__dot legend__dot--miss"></i> 추가로 필요한 재료</span>
           </div>
-          <div class="sort">
-            <button class="sort__btn" :class="{ 'is-active': sort === 'match' }" @click="sort = 'match'">
-              일치율순
-            </button>
-            <button class="sort__btn" :class="{ 'is-active': sort === 'popular' }" @click="sort = 'popular'">
-              인기순
-            </button>
-          </div>
         </div>
 
         
 
-        <p v-if="loading" class="results__empty text-muted">불러오는 중…</p>
-        <div v-else-if="recipes.length" class="results__list">
-          <FridgeRecipeCard
-            v-for="recipe in recipes"
-            :key="recipe.id"
-            :recipe="recipe"
-          />
-        </div>
-        <p v-else-if="!hasSearched" class="results__empty text-muted">
-          재료를 선택하고 버튼을 눌러 레시피를 찾아보세요.
-        </p>
-        <p v-else class="results__empty text-muted">
-          선택한 재료로 만들 수 있는 레시피가 없습니다.
-        </p>
-      </div>
+       <p v-if="!hasSearched && !selectedNames.length" class="results__empty text-muted">
+  재료를 선택해주세요.
+</p>
+<p v-else-if="loading" class="results__empty text-muted">불러오는 중…</p>
+    <div v-else-if="recipes.length" class="results__list">
+  <FridgeRecipeCard
+    v-for="recipe in recipes"
+    :key="recipe.id"
+    :recipe="recipe"
+  />
+</div>
+    <p v-else-if="!hasSearched" class="results__empty text-muted">
+  재료를 선택하고 버튼을 눌러 레시피를 찾아보세요.
+</p>
+<p v-else-if="!selectedNames.length" class="results__empty text-muted">
+  재료를 선택해주세요.
+</p>
+<p v-else class="results__empty text-muted">
+  선택한 재료로 만들 수 있는 레시피가 없습니다.
+</p>
     </div>
   </div>
+</div>
 </template>
 
 <script setup>
@@ -139,9 +142,10 @@ import { storeToRefs } from 'pinia'
 import { IconX, IconSearch, IconPlus } from '@tabler/icons-vue'
 import FridgeRecipeCard from '@/components/fridge/FridgeRecipeCard.vue'
 import { useFridgeStore } from '@/stores/fridgeStore'
+import { useAuthStore } from '@/stores/auth'
 const fridgeStore = useFridgeStore()
 const { recipes, totalCount, loading } = storeToRefs(fridgeStore)
-
+const authStore = useAuthStore()
 // ── 화면 로컬 UI 상태 ──
 const fridgeQuery = ref('')
 const extraQuery = ref('')
@@ -152,34 +156,53 @@ const extra = ref([])
 const fridge = ref([])
 
 onMounted(async () => {
-  await fridgeStore.loadMyFridge(1004)
-  console.log('myIngredients:', fridgeStore.myIngredients)   // 이 줄 추가해서 확인
-  fridge.value = fridgeStore.myIngredients
+  await fridgeStore.loadMyFridge(authStore.user.userId)
+  
+  // ingredient_id 기준으로 중복 제거
+  const uniqueMap = new Map()
+  fridgeStore.myIngredients
     .filter((r) => r.ingredient)
-    .map((r) => ({
-      id: r.ingredient_id,
-      name: r.ingredient.ingredient_name,
-      checked: true,
-    }))
-  console.log('fridge.value:', fridge.value)   // 이것도 추가
+    .forEach((r) => {
+      uniqueMap.set(r.ingredient_id, {
+        id: r.ingredient_id,
+        name: r.ingredient.ingredient_name,
+        checked: true,
+      })
+    })
+  
+  fridge.value = Array.from(uniqueMap.values())
 })
 
 watch(extraQuery, async (newVal) => {
+  // 기존에 체크된(선택된) 추가 재료는 보존
+  const checkedItems = extra.value.filter((i) => i.checked)
+
   if (newVal.trim().length < 2) {
-    extra.value = []
+    extra.value = checkedItems   // 검색어 지워도 체크된 건 유지
     return
   }
-  await fridgeStore.searchIngredients(newVal.trim())
-  extra.value = fridgeStore.ingredients.map((ing) => ({
+
+  await fridgeStore.searchExtraIngredients(newVal.trim())
+
+  const searchResults = fridgeStore.extraIngredients.map((ing) => ({
     id: ing.id,
     name: ing.ingredient_name,
     checked: false,
   }))
+
+  // 체크된 항목 + 새 검색 결과를 합치되, id 중복 제거 (체크된 것 우선)
+  const merged = new Map()
+  checkedItems.forEach((i) => merged.set(i.id, i))
+  searchResults.forEach((i) => {
+    if (!merged.has(i.id)) merged.set(i.id, i)
+  })
+
+  extra.value = Array.from(merged.values())
 })
 
-const filteredFridge = computed(() =>
-  fridge.value.filter((i) => i.name.includes(fridgeQuery.value.trim()))
-)
+// const filteredFridge = computed(() =>
+//   fridge.value.filter((i) => i.name.includes(fridgeQuery.value.trim()))
+// )
 const filteredExtra = computed(() =>
   extra.value.filter((i) => i.name.includes(extraQuery.value.trim()))
 )
@@ -207,7 +230,12 @@ function deselect(ing) {
 
 // 버튼 클릭 시에만 실행되는 매칭 함수
 async function handleMatch() {
-  console.log('selectedNames:', selectedNames.value)   // 이 줄 추가
+  console.log('fridge.value:', JSON.stringify(fridge.value))   // 이 줄 추가
+  console.log('handleMatch 실행됨, selectedNames:', selectedNames.value)
+  if (!selectedNames.value.length) {
+    fridgeStore.clearMatches()
+    return
+  }
   await fridgeStore.loadMatches(selectedNames.value, sort.value)
   hasSearched.value = true
 }
@@ -333,7 +361,13 @@ watch(sort, () => {
 }
 
 /* 체크리스트 */
-.checklist { display: flex; flex-direction: column; }
+.checklist {
+ display: flex; flex-direction: column;
+  max-height: 280px;    
+  overflow-y: auto;        
+  padding-right: var(--space-2);  
+} 
+ 
 .checklist__row {
   display: flex;
   align-items: center;

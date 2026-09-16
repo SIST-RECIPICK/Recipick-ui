@@ -3,29 +3,34 @@
 
     <!-- 회원 정보 -->
     <div class="mypage-sidebar__profile">
-
-      <!-- 사진 + 이름 -->
       <div class="mypage-sidebar__profile-top">
 
+        <!-- 프로필 이미지 -->
         <div class="mypage-sidebar__profile-image">
-          사진
+          <img
+            v-if="profileImage"
+            :src="profileImage"
+            alt="프로필 이미지"
+          />
+
+          <span v-else>
+            {{ profileNickname?.charAt(0) }}
+          </span>
         </div>
 
+        <!-- 닉네임 -->
         <p class="mypage-sidebar__name">
-          홍길동
+          {{ profileNickname }}
         </p>
 
       </div>
 
-
-      <!-- 회원정보 관리 -->
       <RouterLink
         to="/mypage/accountsetting"
         class="btn btn--primary btn--block"
       >
         회원정보 관리
       </RouterLink>
-
     </div>
 
     <br>
@@ -37,7 +42,6 @@
     >
       새 레시피 작성
     </RouterLink>
-
 
     <!-- 마이페이지 메뉴 -->
     <nav
@@ -53,10 +57,8 @@
         전체 보기
       </RouterLink>
 
-
       <!-- 레시피 -->
       <div class="mypage-sidebar__section">
-
         <p class="mypage-sidebar__section-title">
           레시피
         </p>
@@ -66,6 +68,7 @@
           class="mypage-sidebar__link"
         >
           <span>나의 레시피</span>
+
           <span class="mypage-sidebar__count">
             {{ recipeCount }}
           </span>
@@ -76,17 +79,15 @@
           class="mypage-sidebar__link"
         >
           <span>찜한 레시피</span>
+
           <span class="mypage-sidebar__count">
             {{ savedRecipeCount }}
           </span>
         </RouterLink>
-
       </div>
-
 
       <!-- 활동 -->
       <div class="mypage-sidebar__section">
-
         <p class="mypage-sidebar__section-title">
           활동
         </p>
@@ -96,6 +97,7 @@
           class="mypage-sidebar__link"
         >
           <span>내 후기 관리</span>
+
           <span class="mypage-sidebar__count">
             {{ reviewCount }}
           </span>
@@ -106,218 +108,201 @@
           class="mypage-sidebar__link"
         >
           <span>내 댓글 관리</span>
+
           <span class="mypage-sidebar__count">
             {{ replyCount }}
           </span>
         </RouterLink>
-
       </div>
 
     </nav>
-
   </aside>
 </template>
 
-
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-const recipeCount = ref(5)
-const savedRecipeCount = ref(10)
-const reviewCount = ref(5)
-const replyCount = ref(10)
+/*
+ * 회원 정보
+ */
+const profileNickname = ref('')
+const profileImage = ref('')
+
+/*
+ * 마이페이지 카운트
+ */
+const recipeCount = ref(0)
+const savedRecipeCount = ref(0)
+const reviewCount = ref(0)
+const replyCount = ref(0)
+
+/*
+ * 프로필 조회
+ * 로그인 사용자 정보는 JWT로 백엔드에서 확인
+ */
+const loadProfile = async () => {
+  try {
+    const res = await axios.get(
+      'http://localhost:8080/mypage/profile'
+    )
+
+    profileNickname.value = res.data.nickname || ''
+    profileImage.value = res.data.profile_image_url || ''
+
+  } catch (error) {
+    console.error('프로필 조회 실패:', error)
+  }
+}
+
+/*
+ * 마이페이지 카운트 조회
+ * 로그인 사용자 정보는 JWT로 백엔드에서 확인
+ */
+const loadCounts = async () => {
+  try {
+    const res = await axios.get(
+      'http://localhost:8080/mypage/main_count'
+    )
+
+    console.log('마이페이지 카운트:', res.data)
+
+    recipeCount.value =
+      res.data.MY_RECIPE_CNT ?? 0
+
+    savedRecipeCount.value =
+      res.data.LIKE_RECIPE_CNT ?? 0
+
+    reviewCount.value =
+      res.data.MY_REVIEW_CNT ?? 0
+
+    replyCount.value =
+      res.data.MY_REPLY_CNT ?? 0
+
+  } catch (error) {
+    console.error('마이페이지 카운트 조회 실패:', error)
+  }
+}
+
+/*
+ * 페이지 진입 시
+ */
+onMounted(() => {
+  loadProfile()
+  loadCounts()
+})
 </script>
-
 
 <style scoped>
 .mypage-sidebar {
-  width: 220px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--border);
-  padding: var(--space-5) var(--space-3);
-  align-self: stretch;
+  width: 240px;
 }
 
-
-/* =========================
-   회원 정보
-   ========================= */
-
+/* 회원 정보 */
 .mypage-sidebar__profile {
-  display: flex;
-  flex-direction: column;
-
-  gap: var(--space-4);
-
   padding: var(--space-4);
-
-  background: var(--surface-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
 }
 
-
-/* 사진 + 이름 */
 .mypage-sidebar__profile-top {
   display: flex;
   align-items: center;
-
   gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-
-/* 프로필 사진 */
+/* 프로필 이미지 */
 .mypage-sidebar__profile-image {
-  width: 56px;
-  height: 56px;
-
-  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  background: var(--surface-sunken);
-  border-radius: 50%;
+  flex-shrink: 0;
 
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
+  border-radius: 50%;
+  overflow: hidden;
+
+  background: var(--accent-subtle);
 }
 
+/* 실제 프로필 이미지 */
+.mypage-sidebar__profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-/* 이름 */
+/* 이미지가 없을 때 닉네임 첫 글자 */
+.mypage-sidebar__profile-image span {
+  color: var(--accent);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+
+/* 닉네임 */
 .mypage-sidebar__name {
   margin: 0;
-  color: var(--text-primary);
   font-weight: var(--weight-bold);
 }
 
-
-/* =========================
-   메뉴
-   ========================= */
-
+/* 메뉴 */
 .mypage-sidebar__nav {
-  display: flex;
-  flex-direction: column;
-
   margin-top: var(--space-5);
 }
-
-.mypage-sidebar__link--main {
-  margin-bottom: var(--space-4);
-}
-
-
-/* =========================
-   메뉴 카테고리
-   ========================= */
-
-.mypage-sidebar__section {
-  display: flex;
-  flex-direction: column;
-
-  margin-bottom: var(--space-4);
-}
-
-.mypage-sidebar__section-title {
-  margin: 0 0 var(--space-1);
-
-  padding: 0 var(--space-3);
-
-  color: var(--text-secondary);
-
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
-}
-
-
-/* =========================
-   메뉴 링크
-   ========================= */
 
 .mypage-sidebar__link {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3);
 
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-2);
+
+  color: var(--text-primary);
+  text-decoration: none;
 
   border-radius: var(--radius-sm);
-
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-
-  transition:
-    background var(--dur-fast) var(--ease),
-    color var(--dur-fast) var(--ease);
 }
 
 .mypage-sidebar__link:hover {
-  background: var(--surface-sunken);
-  color: var(--text-primary);
+  background: var(--surface-muted);
 }
 
 .mypage-sidebar__link.router-link-active {
-  background: var(--accent-subtle);
-  color: var(--accent-text);
-
-  font-weight: var(--weight-medium);
+  color: var(--accent);
+  font-weight: var(--weight-bold);
 }
 
+.mypage-sidebar__link--main {
+  margin-bottom: var(--space-4);
+  font-weight: var(--weight-bold);
+}
 
-/* =========================
-   글 개수
-   ========================= */
+/* 메뉴 섹션 */
+.mypage-sidebar__section {
+  margin-bottom: var(--space-5);
+}
 
-.mypage-sidebar__count {
+.mypage-sidebar__section-title {
+  margin: 0 0 var(--space-2);
+  padding: 0 var(--space-2);
+
   color: var(--text-secondary);
   font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
 }
 
+/* 카운트 */
+.mypage-sidebar__count {
+  min-width: 24px;
+  text-align: center;
 
-/* =========================
-   모바일
-   ========================= */
-
-@media (max-width: 768px) {
-
-  .mypage-sidebar {
-    width: 100%;
-    padding: var(--space-3);
-  }
-
-  .mypage-sidebar__profile {
-    width: 100%;
-  }
-
-  .mypage-sidebar__nav {
-    flex-direction: row;
-    gap: var(--space-2);
-
-    overflow-x: auto;
-    white-space: nowrap;
-
-    scrollbar-width: none;
-  }
-
-  .mypage-sidebar__nav::-webkit-scrollbar {
-    display: none;
-  }
-
-  .mypage-sidebar__section {
-    flex-direction: row;
-    align-items: center;
-
-    margin-bottom: 0;
-  }
-
-  .mypage-sidebar__section-title {
-    display: none;
-  }
-
-  .mypage-sidebar__link--main {
-    margin-bottom: 0;
-  }
+  color: var(--accent);
+  font-size: var(--text-sm);
 }
 </style>

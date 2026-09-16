@@ -6,28 +6,29 @@
       <div class="my-reply-card__check">
         <input
           type="checkbox"
-          id="reply-1"
+          :id="`reply-${reply.id}`"
+          :checked="selected"
+          @change="$emit('toggle', reply.id)"
         />
       </div>
 
       <!-- 댓글 내용 -->
       <div class="my-reply-card__content">
 
-        <!-- 원본 글 -->
+        <!-- 원본 글 제목 -->
         <p class="my-reply-card__original">
-            원본 글
+          {{ reply.rev_subject }}
         </p>
 
         <!-- 댓글 + 날짜 -->
         <div class="my-reply-card__text-row">
 
           <p>
-            이 레시피 정말 맛있게 잘 만들어 먹었습니다.
-            다음에도 다시 만들어 보고 싶어요.
+            {{ reply.content }}
           </p>
 
           <span class="my-reply-card__date">
-            2026-09-14
+            {{ formatDate(reply.created_at) }}
           </span>
 
         </div>
@@ -38,6 +39,29 @@
   </article>
 </template>
 
+<script setup lang="ts">
+defineProps<{
+  reply: {
+    id: number
+    review_board_id: number
+    rev_subject: string
+    content: string
+    created_at: string
+  }
+  selected: boolean
+}>()
+
+defineEmits<{
+  toggle: [replyId: number]
+}>()
+
+const formatDate = (date: string) => {
+  if (!date) return ''
+
+  return new Date(date).toLocaleDateString('ko-KR')
+}
+</script>
+
 <style scoped>
 .my-reply-card .card__body {
   display: grid;
@@ -45,7 +69,6 @@
   gap: var(--space-4);
 }
 
-/* 체크박스 */
 .my-reply-card__check {
   display: flex;
   align-items: flex-start;
@@ -59,19 +82,16 @@
   cursor: pointer;
 }
 
-/* 원본 글 제목*/
 .my-reply-card__original {
   margin: 0 0 var(--space-3);
   font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
-/* 댓글 내용 */
 .my-reply-card__content {
   min-width: 0;
 }
 
-/* 댓글 + 날짜 */
 .my-reply-card__text-row {
   display: flex;
   align-items: flex-end;
@@ -79,7 +99,10 @@
   gap: var(--space-4);
 }
 
-/* 날짜 */
+.my-reply-card__text-row p {
+  margin: 0;
+}
+
 .my-reply-card__date {
   flex-shrink: 0;
   color: var(--text-secondary);
