@@ -24,19 +24,21 @@ const hasSearched = ref(false)
 // 매칭을 한 번이라도 실행했는지
 
 async function initFridgeTab() {
-  console.log('initFridgeTab 실행됨!')  // 임시 추가
   const userIdValue = props.userId.value ?? props.userId
-  console.log('userIdValue:', userIdValue)  // 임시 추가
   await fridgeStore.loadMyFridge(userIdValue)
-  console.log('myIngredients:', fridgeStore.myIngredients)  // 임시 추가
-  fridge.value = fridgeStore.myIngredients
+
+  // ingredient_id 기준으로 중복 제거
+  const uniqueMap = new Map()
+  fridgeStore.myIngredients
     .filter((r) => r.ingredient)
-    .map((r) => ({
-      id: r.ingredient_id,
-      name: r.ingredient.ingredient_name,
-      checked: true,
-    }))
-  console.log('fridge.value:', fridge.value)  // 임시 추가
+    .forEach((r) => {
+      uniqueMap.set(r.ingredient_id, {
+        id: r.ingredient_id,
+        name: r.ingredient.ingredient_name,
+        checked: true,
+      })
+    })
+  fridge.value = Array.from(uniqueMap.values())
 }
 
 const allFridgeSelected = computed(
