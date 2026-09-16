@@ -11,13 +11,11 @@
       </div>
 
       <div class="my-page-main__recipe-list">
-
         <MyRecipeCard
           v-for="recipe in myRecipes"
           :key="recipe.rcp_seq"
           :recipe="recipe"
         />
-
       </div>
     </section>
 
