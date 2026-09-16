@@ -296,6 +296,11 @@ async function handleSubmit() {
     alert('대표 이미지를 꼭 등록해주세요.')
     return
   }
+
+   if (manualList.value.length === 0) {
+    alert('조리순서를 최소 1단계 이상 추가해주세요.')
+    return
+  }
   
   const hasEmptyStepImage = manualList.value.some(step => !step.imageFile && !step.existingImg)
   if (hasEmptyStepImage) {
