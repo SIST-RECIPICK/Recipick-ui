@@ -146,7 +146,7 @@ const routes = [
   path: '/mypage',
   component: () => import('@/components/layout/MyPageLayout.vue'),
   meta: { requiresAuth: true },
-  redirect: '/mypage/myrecipe',
+  redirect: '/mypage/main',
   children: [
     {
       path: 'main',

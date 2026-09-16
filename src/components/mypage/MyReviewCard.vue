@@ -2,9 +2,19 @@
   <article class="card my-review-card">
     <div class="card__body">
 
-      <!-- 왼쪽 : 사진 -->
+      <!-- 왼쪽 : 후기 사진 -->
       <div class="my-review-card__image">
-        사진
+        <img
+          v-if="review.image_url"
+          :src="review.image_url"
+          alt="후기 이미지"
+        />
+        <img
+          v-else-if="review.att_file_no_main"
+          :src="review.att_file_no_main"
+          :alt="review.rcp_nm"
+        />
+        <span v-else>사진 없음</span>
       </div>
 
       <!-- 오른쪽 -->
@@ -12,21 +22,20 @@
 
         <!-- 리뷰 제목 + 삭제 버튼 -->
         <div class="my-review-card__title-row">
+          <h3>{{ review.subject }}</h3>
 
-          <h3>
-            정말 맛있게 먹었습니다
-          </h3>
-
-          <button type="button" class="btn btn--primary">
+          <button
+            type="button"
+            class="btn btn--primary"
+            @click="$emit('delete', review.id)"
+          >
             삭제
           </button>
-
         </div>
 
         <!-- 후기 내용 -->
         <p class="my-review-card__text">
-          레시피가 간단하고 맛있어서 좋았습니다.
-          재료도 쉽게 구할 수 있었고 다음에도 다시 만들어 먹을 것 같습니다.
+          {{ review.content }}
         </p>
 
         <!-- 하단 정보 -->
@@ -34,23 +43,17 @@
 
           <!-- 레시피 정보 -->
           <div class="my-review-card__recipe">
-
-            <h3>
-              레시피 제목입니다
-            </h3>
+            <h3>{{ review.rcp_nm }}</h3>
 
             <p class="my-review-card__recipe-author">
-              레시피 작성자
+              {{ review.chef_nickname || '작성자 정보 없음' }}
             </p>
-
           </div>
 
           <!-- 후기 작성일 -->
           <div class="my-review-card__date">
-
             <span>후기작성일</span>
-            <span>2026-09-14</span>
-
+            <span>{{ formatDate(review.created_at) }}</span>
           </div>
 
         </div>
@@ -60,6 +63,23 @@
     </div>
   </article>
 </template>
+
+<script setup>
+defineProps({
+  review: {
+    type: Object,
+    required: true,
+  },
+})
+
+defineEmits(['delete'])
+
+const formatDate = (date) => {
+  if (!date) return ''
+
+  return String(date).slice(0, 10)
+}
+</script>
 
 <style scoped>
 .my-review-card {
@@ -85,6 +105,14 @@
   border-radius: var(--radius-md);
 
   color: var(--text-secondary);
+  overflow: hidden;
+}
+
+.my-review-card__image img {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
 }
 
 /* 오른쪽 리뷰 영역 */
