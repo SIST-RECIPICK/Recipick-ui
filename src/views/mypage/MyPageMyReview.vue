@@ -1,4 +1,9 @@
+<script setup lang="ts">
+
+</script>
+
 <template>
+
   <div class="my-review">
 
     <h1>
