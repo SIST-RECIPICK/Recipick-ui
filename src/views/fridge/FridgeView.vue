@@ -361,7 +361,13 @@ watch(sort, () => {
 }
 
 /* 체크리스트 */
-.checklist { display: flex; flex-direction: column; }
+.checklist {
+ display: flex; flex-direction: column;
+  max-height: 280px;    
+  overflow-y: auto;        
+  padding-right: var(--space-2);  
+} 
+ 
 .checklist__row {
   display: flex;
   align-items: center;
