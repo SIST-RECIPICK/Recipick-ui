@@ -44,11 +44,17 @@
       </h2>
 
       <div class="review-detail__writer">
-        <img
-          :src="board.writer_profile_image || '/default-profile.png'"
-          :alt="board.writer_nickname"
-          class="review-detail__avatar"
-        />
+        <div class="review-detail__icon">
+          <img
+            v-if="board.writer_profile_image"
+            :src="board.writer_profile_image"
+            :alt="board.writer_nickname"
+          />
+
+          <span v-else>
+            {{ board.writer_nickname?.charAt(0) }}
+          </span>
+        </div>
 
         <div class="review-detail__writer-info">
           <span>
@@ -152,11 +158,17 @@
         v-if="auth.isLoggedIn"
         class="reply-form"
       >
-        <img
-          :src="auth.user?.profileImageUrl || '/default-profile.png'"
-          class="reply-form__avatar"
-          alt="내 프로필"
-        />
+        <div class="reply-form__icon">
+          <img
+            v-if="auth.user?.profileImageUrl"
+            :src="auth.user.profileImageUrl"
+            alt="내 프로필"
+          />
+
+          <span v-else>
+            {{ auth.user?.nickname?.charAt(0) }}
+          </span>
+        </div>
 
         <div class="reply-form__input-box">
           <textarea
@@ -192,11 +204,17 @@
           :key="reply.id"
           class="reply-item"
         >
-          <img
-            :src="reply.writer_profile_image || '/default-profile.png'"
-            :alt="reply.writer_nickname"
-            class="reply-item__avatar"
-          />
+          <div class="reply-item__icon">
+            <img
+              v-if="reply.writer_profile_image"
+              :src="reply.writer_profile_image"
+              :alt="reply.writer_nickname"
+            />
+
+            <span v-else>
+              {{ reply.writer_nickname?.charAt(0) }}
+            </span>
+          </div>
 
           <div class="reply-item__body">
             <div class="reply-item__header">
@@ -485,23 +503,43 @@ const formatDate = (date) => {
   margin-left: auto;
 }
 
-.review-detail__avatar,
-.reply-form__avatar,
-.reply-item__avatar {
+.review-detail__icon,
+.reply-form__icon,
+.reply-item__icon {
   flex-shrink: 0;
-  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
   border-radius: 50%;
+  background: var(--accent-subtle);
 }
 
-.review-detail__avatar,
-.reply-form__avatar {
+.review-detail__icon,
+.reply-form__icon {
   width: 40px;
   height: 40px;
 }
 
-.reply-item__avatar {
+.reply-item__icon {
   width: 36px;
   height: 36px;
+}
+
+.review-detail__icon img,
+.reply-form__icon img,
+.reply-item__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.review-detail__icon span,
+.reply-form__icon span,
+.reply-item__icon span {
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
 }
 
 .review-detail__writer-info {
