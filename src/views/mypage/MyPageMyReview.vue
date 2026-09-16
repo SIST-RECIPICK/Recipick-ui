@@ -72,8 +72,7 @@ const loadReviews = async (pageinfo = 1) => {
       endpage: res.data.pages[3],
     }
   } catch (error) {
-    console.error(error)
-    alert('리뷰 목록을 불러오지 못했습니다.')
+      console.error('리뷰 목록 조회 실패:', error)
   }
 }
 
@@ -83,9 +82,9 @@ const deleteReview = async (reviewId) => {
   }
 
   try {
-    await axios.delete('http://localhost:8080/mypage/reviews', {
-      data: [reviewId],
-    })
+    await axios.delete(
+      `http://localhost:8080/mypage/reviews/${reviewId}`
+    )
 
     alert('리뷰가 삭제되었습니다.')
     await loadReviews(page.value.curpage)
