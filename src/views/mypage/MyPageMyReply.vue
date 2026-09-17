@@ -1,12 +1,10 @@
 <template>
   <div class="my-reply">
-
     <h1>나의 댓글</h1>
 
     <!-- 전체 선택 / 선택 삭제 -->
     <div class="my-reply__actions">
       <button
-        type="button"
         class="btn btn--outline"
         @click="toggleAll"
       >
@@ -14,7 +12,6 @@
       </button>
 
       <button
-        type="button"
         class="btn btn--primary"
         @click="deleteSelected"
       >
@@ -49,7 +46,6 @@
       :totalpage="page.totalpage"
       @change="loadReplies"
     />
-
   </div>
 </template>
 
@@ -60,24 +56,37 @@ import axios from 'axios'
 import MyReplyCard from '@/components/mypage/MyReplyCard.vue'
 import Pagination from '@/components/common/Pagination.vue'
 
-const replies = ref<any[]>([])
+// TypeScript 인터페이스 정의
+interface Reply {
+  id: number
+  [key: string]: any // 기존 backend 응답 구조를 유지할 수 있도록 유연하게 추가 속성 허용
+}
 
+interface PageInfo {
+  curpage: number
+  startpage: number
+  endpage: number
+  totalpage: number
+}
+
+// 상태 변수 (타입 명시)
+const replies = ref<Reply[]>([])
 const selectedReplyIds = ref<number[]>([])
 
-const page = ref({
+const page = ref<PageInfo>({
   curpage: 1,
   startpage: 1,
   endpage: 1,
   totalpage: 1,
 })
 
-//현재 페이지의 댓글이 모두 선택되었는지 확인
+// 현재 페이지의 댓글이 모두 선택되었는지 확인
 const isAllSelected = computed(() =>
   replies.value.length > 0 &&
   selectedReplyIds.value.length === replies.value.length
 )
 
-//댓글 하나 선택 / 해제
+// 댓글 하나 선택 / 해제
 const toggleReply = (replyId: number) => {
   if (selectedReplyIds.value.includes(replyId)) {
     selectedReplyIds.value = selectedReplyIds.value.filter(
@@ -88,7 +97,7 @@ const toggleReply = (replyId: number) => {
   }
 }
 
-//전체 선택 / 전체 해제
+// 전체 선택 / 전체 해제
 const toggleAll = () => {
   if (isAllSelected.value) {
     selectedReplyIds.value = []
@@ -100,10 +109,9 @@ const toggleAll = () => {
   )
 }
 
-//댓글 목록 조회
-const loadReplies = async (pageinfo = 1) => {
-  const targetPage =
-    typeof pageinfo === 'number' ? pageinfo : 1
+// 댓글 목록 조회
+const loadReplies = async (pageinfo: number | unknown = 1) => {
+  const targetPage = typeof pageinfo === 'number' ? pageinfo : 1
 
   try {
     const res = await axios.get(
@@ -131,7 +139,7 @@ const loadReplies = async (pageinfo = 1) => {
   }
 }
 
-//선택한 댓글 삭제
+// 선택한 댓글 삭제
 const deleteSelected = async () => {
   if (selectedReplyIds.value.length === 0) {
     return
