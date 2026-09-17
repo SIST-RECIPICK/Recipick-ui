@@ -16,14 +16,14 @@
       <div class="my-reply-card__content">
 
         <!-- 원본 글 제목 -->
-        <p class="my-reply-card__original">
+        <p class="my-reply-card__original clickable" @click="goToReview">
           {{ reply.rev_subject }}
         </p>
 
         <!-- 댓글 + 날짜 -->
         <div class="my-reply-card__text-row">
 
-          <p>
+          <p class="clickable" @click="goToReview">
             {{ reply.content }}
           </p>
 
@@ -39,23 +39,31 @@
   </article>
 </template>
 
-<script setup lang="ts">
-defineProps<{
+<script setup>
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
   reply: {
-    id: number
-    review_board_id: number
-    rev_subject: string
-    content: string
-    created_at: string
+    type: Object,
+    required: true,
+  },
+  selected: {
+    type: Boolean,
+    required: true,
+  },
+})
+
+defineEmits(['toggle'])
+
+const router = useRouter()
+
+const goToReview = () => {
+  if (props.reply?.review_board_id) {
+    router.push(`/community/reviews/${props.reply.review_board_id}`)
   }
-  selected: boolean
-}>()
+}
 
-defineEmits<{
-  toggle: [replyId: number]
-}>()
-
-const formatDate = (date: string) => {
+const formatDate = (date) => {
   if (!date) return ''
 
   return new Date(date).toLocaleDateString('ko-KR')
@@ -107,5 +115,13 @@ const formatDate = (date: string) => {
   flex-shrink: 0;
   color: var(--text-secondary);
   font-size: var(--text-sm);
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  text-decoration: underline;
 }
 </style>
