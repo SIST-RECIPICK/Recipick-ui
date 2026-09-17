@@ -1,7 +1,3 @@
-<script setup lang="ts">
-
-</script>
-
 <template>
 
   <div class="my-review">
@@ -72,7 +68,7 @@ const loadReviews = async (pageinfo = 1) => {
       endpage: res.data.pages[3],
     }
   } catch (error) {
-      console.error('리뷰 목록 조회 실패:', error)
+    console.error('리뷰 목록 조회 실패:', error)
   }
 }
 
