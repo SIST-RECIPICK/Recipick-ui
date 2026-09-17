@@ -70,6 +70,8 @@ onMounted(async () => {
     return   // 로그인 안 했으면 그냥 빈 상태로 둠
   }
 
+  await loadWeeklyDiet()
+
   // 1. 내 냉장고 재료 조회
   const fridgeRes = await axios.get('http://localhost:8080/refrige/fridgedata', {
     params: { user_id: authStore.user.userId },
@@ -83,7 +85,7 @@ onMounted(async () => {
   if (fridgeIngredients.value.length === 0) {
     return   // 냉장고가 비어있으면 매칭 조회 안 함
   }
-  
+
 
   // 2. 그 재료로 레시피 매칭 조회
   const matchRes = await axios.post('http://localhost:8080/refrige/recommand', {
@@ -93,7 +95,7 @@ onMounted(async () => {
 
   if (matchRes.data.success) {
     fridgeMatches.value = matchRes.data.recipes.slice(0, 3).map((r) => ({
-      id: r.recipe_id, 
+      id: r.recipe_id,
       title: r.recipeName,
       icon: IconBowlChopsticks,
       matchLabel: `재료 ${r.haveIngredients.length}/${r.haveIngredients.length + r.missingIngredients.length} 보유`,
@@ -101,16 +103,47 @@ onMounted(async () => {
   }
 })
 
-// 이번 주 식단표 (mock)
-const weeklyDiet = [
-  { label: '월', breakfast: '계란말이', lunch: '된장찌개', dinner: '제육볶음' },
-  { label: '화', breakfast: '토스트', lunch: '비빔밥', dinner: '닭볶음탕' },
-  { label: '수', breakfast: '요거트', lunch: '김치찌개', dinner: '고등어구이' },
-  { label: '목', breakfast: '누룽지', lunch: '샐러드', dinner: '소불고기' },
-  { label: '금', breakfast: '계란후라이', lunch: '떡볶이', dinner: '삼겹살구이' },
-  { label: '토', breakfast: '시리얼', lunch: '잔치국수', dinner: '치킨' },
-  { label: '일', breakfast: '과일', lunch: '외식', dinner: '집밥' },
-]
+// 이번 주 식단표 (달력 연동)
+const weeklyDiet = ref([])
+const dayLabels = ['일', '월', '화', '수', '목', '금', '토']
+
+async function loadWeeklyDiet() {
+  const today = new Date()
+  const mondayOffset = today.getDay() === 0 ? -6 : 1 - today.getDay() // 이번 주 월요일까지 거리
+  const monday = new Date(today)
+  monday.setDate(today.getDate() + mondayOffset)
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    return d
+  })
+
+  // 이번 주가 걸친 년/월 조합만 모아서 조회 (월 경계를 넘는 주 대비)
+  const monthKeys = [...new Set(weekDays.map((d) => `${d.getFullYear()}-${d.getMonth() + 1}`))]
+  const itemsByDate = {}
+
+  for (const key of monthKeys) {
+    const [year, month] = key.split('-')
+    const res = await axios.get('http://localhost:8080/calendar/list', {
+      params: { year, month: String(month).padStart(2, '0') },
+    })
+    for (const it of res.data) {
+      const dateOnly = String(it.meal_date).slice(0, 10)
+      itemsByDate[`${dateOnly}_${it.meal_type}`] = it.rcp_nm
+    }
+  }
+
+  weeklyDiet.value = weekDays.map((d) => {
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return {
+      label: dayLabels[d.getDay()],
+      breakfast: itemsByDate[`${dateStr}_아침`] || '',
+      lunch: itemsByDate[`${dateStr}_점심`] || '',
+      dinner: itemsByDate[`${dateStr}_저녁`] || '',
+    }
+  })
+}
 
 onMounted(async () => {
   // 조회수(hit) 기준 정렬된 레시피 목록에서 상위 4개만 노출

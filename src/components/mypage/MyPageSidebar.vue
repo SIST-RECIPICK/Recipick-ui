@@ -183,6 +183,9 @@ const loadCounts = async () => {
       res.data.MY_RECIPE_CNT ?? 0
 
     savedRecipeCount.value =
+      res.data.MARK_RECIPE_CNT ?? 0
+
+    likedRecipeCount.value =
       res.data.LIKE_RECIPE_CNT ?? 0
 
     reviewCount.value =
