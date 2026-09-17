@@ -3,9 +3,9 @@
     <div class="card__body">
 
       <!-- 왼쪽 : 후기 사진 (클릭 시 이동) -->
-      <RouterLink
-        :to="`/community/reviews/${review.id}`"
-        class="my-review-card__image"
+      <div
+        class="my-review-card__image clickable"
+        @click="goToReview"
       >
         <img
           v-if="review.image_url"
@@ -18,7 +18,7 @@
           :alt="review.rcp_nm"
         />
         <span v-else>사진 없음</span>
-      </RouterLink>
+      </div>
 
       <!-- 오른쪽 -->
       <div class="my-review-card__content">
@@ -26,12 +26,12 @@
         <!-- 리뷰 제목 (클릭 시 이동) + 삭제 버튼 -->
         <div class="my-review-card__title-row">
           <h3>
-            <RouterLink
-              :to="`/community/reviews/${review.id}`"
-              class="my-review-card__title-link"
+            <span
+              class="my-review-card__title-link clickable"
+              @click="goToReview"
             >
               {{ review.subject }}
-            </RouterLink>
+            </span>
           </h3>
 
           <button
@@ -75,9 +75,9 @@
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 
-defineProps({
+const props = defineProps({
   review: {
     type: Object,
     required: true,
@@ -85,6 +85,14 @@ defineProps({
 })
 
 defineEmits(['delete'])
+
+const router = useRouter()
+
+const goToReview = () => {
+  if (props.review?.id) {
+    router.push(`/community/reviews/${props.review.id}`)
+  }
+}
 
 const formatDate = (date) => {
   if (!date) return ''
@@ -118,8 +126,6 @@ const formatDate = (date) => {
 
   color: var(--text-secondary);
   overflow: hidden;
-  cursor: pointer;
-  text-decoration: none;
 }
 
 .my-review-card__image img {
@@ -154,11 +160,13 @@ const formatDate = (date) => {
 /* 제목 링크 스타일 */
 .my-review-card__title-link {
   color: inherit;
-  text-decoration: none;
+}
+
+.clickable {
   cursor: pointer;
 }
 
-.my-review-card__title-link:hover {
+.clickable:hover {
   text-decoration: underline;
 }
 
