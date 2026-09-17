@@ -66,15 +66,19 @@
       <div class="form-row">
         <label>해시태그 (최대 5개)</label>
         <div class="tag-inputs">
+          <div v-for="(tag, idx) in hashTagInputs"
+            :key="idx" class="tag-input-row">
           <input
-            v-for="(tag, idx) in hashTagInputs"
-            :key="idx"
             v-model="hashTagInputs[idx]"
             type="text"
             placeholder="#태그"
             class="tag-input"
           />
-        </div>
+           <button type="button" class="btn-small btn-danger" @click="removeHashTagInput(idx)">
+            🗑️
+           </button>
+         </div>
+       </div>  
         <button
           type="button"
           class="btn-small"
@@ -195,6 +199,9 @@ const form = reactive({
 })
 
 const hashTagInputs = ref([''])
+function removeHashTagInput(idx) {
+  hashTagInputs.value.splice(idx,1)
+}
 function addHashTagInput() {
   if (hashTagInputs.value.length < 5) hashTagInputs.value.push('')
 }
@@ -227,7 +234,7 @@ function removeManualStep(idx) {
 
 // 재료정보 삭제
 function removeIngredientlStep(idx) {
-  ingredientInputs.value.splice(idx,1)
+  ingredientInputs.value.splice(idx,1) // idx번째 위치에서, 딱 1개만 잘라내
 }
 function onManualImageChange(e, idx) {
   const file = e.target.files[0]
@@ -294,6 +301,11 @@ const submitting = ref(false)
 async function handleSubmit() {
   if (!mainImageFile.value && !mainImagePreview.value) {
     alert('대표 이미지를 꼭 등록해주세요.')
+    return
+  }
+
+   if (manualList.value.length === 0) {
+    alert('조리순서를 최소 1단계 이상 추가해주세요.')
     return
   }
   
@@ -434,6 +446,11 @@ if (validIngredients.length === 0) {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+.tag-input-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 .ingredient-inputs {
   display: flex;

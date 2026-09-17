@@ -11,6 +11,7 @@ export const useFridgeStore = defineStore('fridge', () => {
   const totalCount = ref(0)
   const loading = ref(false)
   const recipeDetail = ref([])
+  const extraIngredients = ref([])
   
 
   // ── getters ──
@@ -26,6 +27,19 @@ export const useFridgeStore = defineStore('fridge', () => {
       params: { keyword }
     })
     ingredients.value = res.data
+  }
+
+  function clearMatches() {
+  recipes.value = []
+  totalCount.value = 0
+}
+
+  // 추가 재료 검색 (새 action, 별도 state에 저장)
+  async function searchExtraIngredients(keyword) {
+    const res = await axios.get('http://localhost:8080/ingredients/list', {
+      params: { keyword }
+    })
+    extraIngredients.value = res.data
   }
 
   async function loadMyFridge(user_id) {
@@ -93,6 +107,6 @@ export const useFridgeStore = defineStore('fridge', () => {
   return {
     ingredients, myFridgeIds, recipes, totalCount, loading,
     myIngredients, myIngredientNames, myFridgeData,
-    searchIngredients, loadMyFridge, saveFridge, loadMatches,loadRecipeDetail,recipeDetail
+    searchIngredients, loadMyFridge, saveFridge, loadMatches,loadRecipeDetail,recipeDetail,searchExtraIngredients,extraIngredients,clearMatches
   }
 })

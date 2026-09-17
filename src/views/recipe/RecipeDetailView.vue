@@ -76,13 +76,32 @@
 
         <!-- 후기 -->
         <section :id="tabs[2].id" ref="reviewsSection" class="detail__section">
-          <h2 class="detail__section-title">후기 ({{ reviews.length }})</h2>
+          <div class="reviewInsertBox">
+            <h2 class="detail__section-title">후기 ({{ reviewList.length }})</h2>
+            <button class="review-write-btn"  @click="goToWrite">
+              ✏️ 리뷰쓰기
+            </button>
+          </div>
           <div class="reviews">
             <RecipeReviewCard
               v-for="review in reviews"
               :key="review.id"
               :review="review"
             />
+          </div>
+          <div class="reviewBox">
+            <button 
+              v-if ="reviewList.length > reviewPage"
+              class="more-btn" 
+              @click="reviewMore()">
+              더보기
+            </button>
+            <button 
+              v-if ="reviewList.length > 4 && reviewList.length <= reviewPage"
+              class="more-btn" 
+              @click="reviewDis()">
+              접기
+            </button>
           </div>
         </section>
       </div>
@@ -128,7 +147,7 @@ import IngredientPanel from '@/components/recipe/IngredientPanel.vue'
 import RecipeReviewCard from '@/components/recipe/RecipeReviewCard.vue'
 import { storeToRefs } from 'pinia'
 import { recipeDetailStore } from '@/stores/recipeDetailStore'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import RecipeCookie from '@/components/recipe/RecipeCookie.vue'
 
 import { getImageUrl } from '@/utils/image'
@@ -211,10 +230,13 @@ const tabs = [
   { id: 'reviews', label: '후기' },
 ]
 
+const router = useRouter()
 const activeTab = ref('steps')
 const stepsSection = ref(null)
 const relatedSection = ref(null)
 const reviewsSection = ref(null)
+
+const reviewPage = ref(4) //후기 페이지 
 
 // 탭 클릭 → 해당 섹션으로 부드럽게 스크롤
 function scrollTo(id) {
@@ -290,14 +312,31 @@ const relationRecipes = computed(() =>
 
 // 리뷰리스트
 const reviews = computed(() =>
-  reviewList.value.map(item => ({
-    id:item.id,
-    title:item.subject,
-    content:item.content,
-    image:item.image_url
-  }))
-)
+  reviewList.value
+    .map((item) => ({
+      id: item.id,
+      title: item.subject,
+      content: item.content,
+      image: item.image_url
+    }))
+    .slice(0, reviewPage.value)
+);
 
+const reviewMore = () =>{
+  reviewPage.value = reviewPage.value +4;
+}
+const reviewDis = () =>{
+  reviewPage.value = 4;
+}
+
+const goToWrite = () => {
+   router.push({
+    path: '/community/reviews/write',
+    query: {
+      rcp_seq: id.value
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -453,7 +492,63 @@ const reviews = computed(() =>
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-5);
 }
+.more-btn {
+  width: 120px;
+  height: 42px;
+  border: 1px solid #ddd;
+  border-radius: 21px;
+  background-color: white;
+  color: #333;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
+.more-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #bbb;
+}
+
+.more-btn:active {
+  transform: scale(0.97);
+}
+.reviewBox
+{
+  display: flex; 
+  justify-content: center; 
+  margin-top: 40px;
+}
+.reviewInsertBox
+{
+  display: flex; 
+  justify-content: space-between;
+}
+.review-write-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.review-write-btn {
+  padding: 5px 16px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background-color: #fff;
+  color: #333;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.review-write-btn:hover {
+  background-color: #f5f5f5;
+  border-color: #bbb;
+}
+
+.review-write-btn:active {
+  transform: scale(0.97);
+}
 /* ----- 우: sticky 사이드바 ----- */
 .detail__aside {
   position: sticky;

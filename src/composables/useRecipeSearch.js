@@ -1,10 +1,9 @@
 // composables/useRecipeSearch.js
 import { ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
+import axios from "axios";
 const API_BASE = "http://localhost:8080";
 
 export function useRecipeSearch(userId) { // 어디서든 임포트 가능하게 설정
-  const authStore = useAuthStore();
   const keyword = ref("");  // 검색창에 입력 텍스트
   const results = ref([]);  // 검색창 결과 배열
   const loading = ref(false); // 로딩상태
@@ -15,22 +14,14 @@ export function useRecipeSearch(userId) { // 어디서든 임포트 가능하게
     loading.value = true; // 바로 로딩
     errorMsg.value = ""; // 에러 초기화
     try {
-        const params = new URLSearchParams({ // 서버에 보낼 조건 정리
-            keyword: keyword.value, // 검색창 입력 텍스트
+        // 서버요청 (Authorization 헤더는 axios 인터셉터가 자동 첨부)
+        const res = await axios.get(`${API_BASE}/recipe/search`, {
+            params: { keyword: keyword.value }, // 검색창 입력 텍스트
         });
 
-        // 서버요청
-        const res=await fetch(`${API_BASE}/recipe/search?${params.toString()}`,{
-            headers: {
-                Authorization: `Bearer ${authStore.accessToken}`,
-            },
-        });
-
-        if(!res.ok) throw new Error(`검색 실패: ${res.status}`); // 실패시 catch이동
-
-        results.value = await res.json(); // json 값으로 변환해서 저장
+        results.value = res.data; // json 값으로 변환해서 저장
     }catch(e){
-        errorMsg.value = e.message;
+        errorMsg.value = `검색 실패: ${e.response?.status ?? e.message}`;
         results.value = [];
     }finally{
         loading.value = false;

@@ -100,6 +100,14 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import Pagination from '@/components/common/Pagination.vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+const rcp_seq = route.query.rcp_seq
+
+//레시피 상세보기에서 넘어올 시
+console.log('선택된 레시피:', rcp_seq)
 
 const emit = defineEmits(['close', 'select'])
 
