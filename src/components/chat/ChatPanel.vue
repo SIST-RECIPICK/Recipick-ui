@@ -168,8 +168,8 @@ onMounted(async () => {
   }
 })
 
-  // 채팅방 선택
-  const selectRoom = async (room) => {
+// 채팅방 선택
+const selectRoom = async (room) => {
   selectedRoom.value = room
 
   await chatstore.chatMessageList(room.id)
@@ -198,6 +198,7 @@ const subscribeRoom = (roomId) => {
       chatstore.chatRoomList()
     }
   )
+
 }
 
 // 닫으면 웹소켓 해제
