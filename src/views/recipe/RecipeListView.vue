@@ -71,7 +71,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute} from 'vue-router'
 import { useCountUp } from '@/composables/useCountUp'
 import axios from 'axios'
 import {
@@ -117,10 +117,11 @@ const recipes = ref([])
 
 const heroText = computed(() => `${countDisplay.value.toLocaleString()}`)
 
-// 해시태그 배지 클릭 시: 검색창에 태그만 채움 (검색 실행은 엔터/아이콘 클릭 시)
+
+// 해시태그 배지 클릭 시: 검색창에 태그 채우고 해당 해시태그 자돟 목록조회
 function searchByTag(tag) {
   keyword.value = tag
- 
+ loadRecipes(1) // 새로운 검색/필터가 실행되면 처음페이지부터 조회
 }
 
 async function loadRecipes(pageinfo = 1) {

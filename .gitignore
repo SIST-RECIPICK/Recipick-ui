@@ -43,3 +43,11 @@ __screenshots__/
 .claude/
 .impeccable/
 PRODUCT.md
+graphify-out/
+CLAUDE.md
+docs/
+
+# Environment files
+.env
+.env.*
+!.env.example

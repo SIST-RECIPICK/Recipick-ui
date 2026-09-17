@@ -10,7 +10,7 @@
           <option v-for="m in 12" :key="m" :value="m">{{ m }}월</option>
         </select>
         <button class="btn btn--outline step__ai" :disabled="generating" @click="handleGenerate">
-          {{ generating ? '추천 중…' : 'AI로 제철 재료 받기' }}
+          {{ generating ? '추천 중…' : (suggested.length ? '다시 추천받기' : 'AI로 제철 재료 받기') }}
         </button>
       </div>
     </div>
@@ -155,6 +155,10 @@ onMounted(async () => {
 
 // 1. AI 재료 추천
 async function handleGenerate() {
+
+  // 한 번 추천을 받으면 refresh를 true로 
+  const isRefresh = suggested.value.length > 0
+
   generating.value = true
   selected.value = []
   preview.value = []
@@ -162,12 +166,19 @@ async function handleGenerate() {
     const response = await axios.get('http://localhost:8080/admin/curation/recommend',{
       params:{
         year:form.year,
-        month:form.month
+        month:form.month,
+        refresh: isRefresh
       }
     })
     suggested.value = response.data
   } catch(error) {
-    console.error('재료 추천 실패', error)
+    const code = error.response?.data?.errorCode
+    if (code === 'AI_FAILED') {
+      alert('추천 생성에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    } else {
+      console.error('재료 추천 실패', error)
+      alert('재료 추천에 실패했습니다.')
+    }
   } finally {
     generating.value = false
   }

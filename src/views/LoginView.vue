@@ -16,7 +16,7 @@
             type="email"
             placeholder="이메일 입력란"
             autocomplete="email"
-            :aria-invalid="!!error"
+            :aria-invalid="!!errorMessage"
           />
         </div>
 
@@ -29,13 +29,13 @@
             type="password"
             placeholder="비밀번호 입력란"
             autocomplete="current-password"
-            :aria-invalid="!!error"
+            :aria-invalid="!!errorMessage"
             @keyup.enter="handleSubmit"
           />
         </div>
 
-        <p v-if="error" class="auth__error">
-          아이디 또는 비밀번호가 올바르지 않습니다.
+        <p v-if="errorMessage" class="auth__error">
+          {{ errorMessage }}
         </p>
 
         <button type="submit" class="btn btn--inverse btn--block auth__submit" :disabled="submitting">
@@ -55,20 +55,17 @@
         <span>or</span>
       </div>
 
-      <!-- 소셜 로그인 -->
-      <button type="button" class="btn btn--outline btn--block auth__social" @click="handleGoogleLogin">
-        <IconBrandGoogleFilled :size="18" />
-        구글 로그인
-      </button>
+      <div ref="googleButtonRef" class="auth__social-container"></div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { IconBrandGoogleFilled } from '@tabler/icons-vue'
+import axios from 'axios'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -78,34 +75,98 @@ const form = reactive({
   password: '',
 })
 
-const error = ref(false)
+const errorMessage = ref('')
 const submitting = ref(false)
+const recoveryToken = ref(null)
+
+const googleButtonRef = ref(null)
 
 async function handleSubmit() {
-  error.value = false
+  errorMessage.value = ''
 
   if (!form.email || !form.password) {
-    error.value = true
+    errorMessage.value = '이메일 또는 비밀번호가 올바르지 않습니다.'
     return
   }
 
   submitting.value = true
   try {
-    // TODO: 로그인 API 호출 (FR-104)
-    // const user = await api.login(form)
-    // auth.setUser(user)
-    auth.setUser({ nickname: form.email.split('@')[0], role: 'USER' })
-    router.push('/')
-  } catch {
-    error.value = true
+    const res = await axios.post(
+      'http://localhost:8080/auth/login',
+      { email: form.email, password: form.password },
+      { withCredentials: true },
+    )
+
+    const { accountStatus, accessToken, userId, nickname, role, recoveryToken: token, message } =
+      res.data
+
+    if (accountStatus === 'ACTIVE') {
+      auth.setUser({ userId, nickname, role, accessToken })
+      router.push('/')
+      return
+    }
+
+    // accountStatus === 'WITHDRAWN' — 토큰 미발급, 복구 절차 안내
+    recoveryToken.value = token
+
+    if (confirm(`${message}\n\n5분 이내에 복구할 수 있습니다. 지금 복구하시겠습니까?`)) {
+      // TODO: 계정 복구 API 명세 확정 후 recoveryToken.value로 복구 요청 연동
+    }
+  } catch (err) {
+    const errorCode = err.response?.data?.errorCode
+
+    switch (errorCode) {
+      case 'INVALID_CREDENTIALS':
+        errorMessage.value = '이메일 또는 비밀번호가 올바르지 않습니다.'
+        break
+      case 'SOCIAL_ACCOUNT_ONLY':
+        errorMessage.value = '구글 로그인을 이용해주세요.'
+        break
+      default:
+        alert('로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+    }
   } finally {
     submitting.value = false
   }
 }
 
-function handleGoogleLogin() {
-  // TODO: 구글 OAuth 연동 (FR-105)
-}
+onMounted(() => {
+  // 1. 구글 SDK 로드
+  const script = document.createElement('script')
+  script.src = 'https://accounts.google.com/gsi/client'
+  script.async = true
+  document.head.appendChild(script)
+
+  script.onload = () => {
+    // 2. 구글 버튼 세팅
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+        try {
+          // 3. 백엔드로 토큰 전달
+          const res = await axios.post('http://localhost:8080/auth/social/google', 
+            { idToken: response.credential }, 
+            { withCredentials: true }
+          )
+          
+          // 4. 로그인 성공 -> 메인 화면 이동
+          auth.setUser(res.data)
+          router.push('/')
+          
+        } catch (err) {
+          // 5. 실패 -> 거절 알림
+          if (err.response?.data?.errorCode === 'EMAIL_ALREADY_EXISTS') {
+            alert('이미 가입된 이메일입니다. 일반 로그인을 이용해주세요.')
+          } else {
+            alert('구글 로그인에 실패했습니다.')
+          }
+        }
+      }
+    })
+    
+    window.google.accounts.id.renderButton(googleButtonRef.value, { theme: 'outline', size: 'large' })
+  }
+})
 </script>
 
 <style scoped>

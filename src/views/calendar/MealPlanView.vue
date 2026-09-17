@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref,computed, onMounted } from 'vue'
 import { useCalendarItems } from '@/composables/useCalendarItems.js'
 import { useDragDrop } from '@/composables/useDragDrop.js'
 import { useCalendarInfo } from '@/composables/useCalendarInfo.js'
@@ -9,17 +9,17 @@ import RecipeSearchPanel from '@/components/calendar/RecipeSearchPanel.vue'
 import FillRateGauge  from '@/components/calendar/FillRateGauge.vue'
 import MacroGauge from '@/components/calendar/MacroGauge.vue'
 import { useRecipePreviewStore } from '@/stores/recipePreview'
+import { useAuthStore } from '@/stores/auth'
+import { useCalendarAi } from '@/composables/useCalendarAi.js'
 
-
-
+const authStore = useAuthStore()
 const { dragging, pointerPos } = useDragDrop()  // 함수 가져오기  
 
 const router = useRouter() // 라우터 가져오기
 // TODO: 실제 로그인 스토어 연결되면 여기서 userId 가져오기
-const userId = computed(() => 2) // 임시 하드코딩
-
+const userId = computed(() => authStore.user?.userId)
 const {
-  year, month, items, loading, errorMsg,
+  year, month, loading, errorMsg,
   calendarCells, loadCalendar, placeRecipe, prevMonth, nextMonth, WEEKDAYS,deleteItem,
 } = useCalendarItems(userId)
 
@@ -28,9 +28,35 @@ const {
   info, loading: summaryLoading, errorMsg: summaryError, loadSummary,
 } = useCalendarInfo(userId, year, month)
 
-
-
 const previewStore = useRecipePreviewStore()
+
+const {
+  result: aiResult,
+  loading: aiLoading,
+  errorMsg: aiErrorMsg,
+  fillEmptySlots,
+  rollback: rollbackAi,
+  confirm: confirmAi,
+} = useCalendarAi()
+
+const aiCommand = ref('')
+
+async function handleAiFill() {
+  await fillEmptySlots(String(year.value), String(month.value).padStart(2, '0'), aiCommand.value)
+  if (aiResult.value) {
+    aiCommand.value = ''
+    await loadCalendar()
+    await loadSummary()
+  }
+}
+async function handleConfirm() {
+  await confirmAi()
+}
+async function handleRollback() {
+  await rollbackAi()
+  await loadCalendar()
+  await loadSummary()
+}
 function handleSlotClick({ cell, meal }) {
   if (meal.data) {
     // TODO: 조리법 화면으로 라우팅
@@ -128,6 +154,37 @@ onMounted(() => {
       >
         레시피 보기
       </button>
+    </div>
+    <div class="meal-plan__summary-card meal-plan__summary-card--ai">
+      <span class="meal-plan__summary-label">AI로 식단표 짜기</span>
+      <div v-if="!aiResult" class="ai-fill__input-area">
+        <input
+          v-model="aiCommand"
+          type="text"
+          placeholder="예: 저칼로리 위주로 3개 채워줘"
+          class="ai-fill__input"
+        />
+        <button
+          class="ai-fill__submit-btn"
+          :disabled="aiLoading || !aiCommand"
+          @click="handleAiFill"
+        >
+          {{ aiLoading ? '채우는 중...' : '채우기' }}
+        </button>
+      </div>
+      <div v-else class="ai-fill__result">
+        <p class="ai-fill__result-msg">AI가 완성했습니다!</p>
+        <p class="ai-fill__result-count">{{ aiResult.filledCount }}개 슬롯을 채웠어요</p>
+        <div class="ai-fill__actions">
+          <button class="ai-fill__confirm-btn" @click="handleConfirm">
+            확정하기
+          </button>
+          <button class="ai-fill__rollback-btn" @click="handleRollback">
+            롤백하기
+          </button>
+        </div>
+        </div>
+      <p v-if="aiErrorMsg" class="meal-plan__status meal-plan__status--error">{{ aiErrorMsg }}</p>
     </div>
   </section>
     <p v-else-if="summaryLoading" class="meal-plan__status">요약 정보 불러오는 중...</p>
@@ -492,5 +549,101 @@ onMounted(() => {
 
 .recipe-preview-popover__status--error {
   color: var(--danger);
+}
+.meal-plan__summary-card--ai {
+  gap: var(--space-2);
+}
+
+.ai-fill__input-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ai-fill__input {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.ai-fill__input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.ai-fill__input::placeholder {
+  color: var(--text-secondary);
+}
+
+.ai-fill__submit-btn {
+  width: 100%;
+  padding: var(--space-2) 0;
+  background: var(--accent);
+  color: var(--text-on-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+}
+.ai-fill__submit-btn:disabled {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  cursor: not-allowed;
+}
+
+.ai-fill__result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ai-fill__result-msg {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--accent);
+}
+
+.ai-fill__result-count {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.ai-fill__rollback-btn {
+  margin-top: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.ai-fill__rollback-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.ai-fill__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ai-fill__confirm-btn {
+  flex: 1;
+  padding: var(--space-1) var(--space-3);
+  background: var(--accent);
+  color: var(--text-on-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ai-fill__rollback-btn {
+  flex: 1;
+  /* 기존 스타일 유지, flex: 1만 추가 */
 }
 </style>
