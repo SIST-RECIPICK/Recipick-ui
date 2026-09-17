@@ -19,13 +19,31 @@
       </div>
     </section>
 
+    <!-- 좋아요한 레시피 -->
+    <section class="my-page-main__section">
+      <div class="my-page-main__header">
+        <h2>좋아요한 레시피</h2>
+        <RouterLink to="/mypage/likerecipe" class="btn btn--ghost">
+          더보기 &gt;
+        </RouterLink>
+      </div>
+
+      <div class="my-page-main__recipe-list">
+        <RecipeCard
+          v-for="recipe in likedRecipes"
+          :key="recipe.rcp_seq"
+          :recipe="recipe"
+        />
+      </div>
+    </section>
+
     <!-- 찜한 레시피 -->
     <section class="my-page-main__section">
       <div class="my-page-main__header">
         <h2>찜한 레시피</h2>
-          <RouterLink to="/mypage/saverecipe" class="btn btn--ghost">
-            더보기 &gt;
-          </RouterLink>
+        <RouterLink to="/mypage/saverecipe" class="btn btn--ghost">
+          더보기 &gt;
+        </RouterLink>
       </div>
 
       <div class="my-page-main__recipe-list">
@@ -41,48 +59,48 @@
     <div class="my-page-main__activity">
 
       <!-- 내 후기 -->
-  <section class="my-page-main__section">
-    <div class="my-page-main__header">
-      <h2>내 후기</h2>
-        <RouterLink to="/mypage/myreview" class="btn btn--ghost">
-          더보기 &gt;
-        </RouterLink>
-      </div>
-
-      <div class="my-page-main__text-list">
-        <div
-          v-for="review in myReviews"
-          :key="review.id"
-          class="my-page-main__text-item"
-        >
-          <p class="my-page-main__text-title">
-            {{ review.subject }}
-          </p>
+      <section class="my-page-main__section">
+        <div class="my-page-main__header">
+          <h2>내 후기</h2>
+          <RouterLink to="/mypage/myreview" class="btn btn--ghost">
+            더보기 &gt;
+          </RouterLink>
         </div>
-      </div>
-    </section>
 
-    <!-- 내 댓글 -->
-    <section class="my-page-main__section">
-      <div class="my-page-main__header">
-        <h2>내 댓글</h2>
+        <div class="my-page-main__text-list">
+          <div
+            v-for="review in myReviews"
+            :key="review.id"
+            class="my-page-main__text-item"
+          >
+            <p class="my-page-main__text-title">
+              {{ review.subject }}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 내 댓글 -->
+      <section class="my-page-main__section">
+        <div class="my-page-main__header">
+          <h2>내 댓글</h2>
           <RouterLink to="/mypage/myreply" class="btn btn--ghost">
             더보기 &gt;
           </RouterLink>
-      </div>
-
-      <div class="my-page-main__text-list">
-        <div
-          v-for="reply in myReplies"
-          :key="reply.id"
-          class="my-page-main__text-item"
-        >
-          <p class="my-page-main__text-content">
-            {{ reply.content }}
-          </p>
         </div>
-      </div>
-    </section>
+
+        <div class="my-page-main__text-list">
+          <div
+            v-for="reply in myReplies"
+            :key="reply.id"
+            class="my-page-main__text-item"
+          >
+            <p class="my-page-main__text-content">
+              {{ reply.content }}
+            </p>
+          </div>
+        </div>
+      </section>
 
     </div>
 
@@ -91,46 +109,52 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import axios from 'axios'
 
 import MyRecipeCard from '@/components/mypage/MyRecipeCard.vue'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
 
 const myRecipes = ref([])
+const likedRecipes = ref([])
 const bookmarkedRecipes = ref([])
 const myReviews = ref([])
 const myReplies = ref([])
 
 const loadMyRecipes = async () => {
   try {
-    const res = await axios.get(
-      'http://localhost:8080/recipe/mylist',
-      {
-        params: {
-          page: 1
-        }
-      }
-    )
-
+    const res = await axios.get('http://localhost:8080/recipe/mylist', {
+      params: { page: 1 }
+    })
     myRecipes.value = res.data.list.slice(0, 3)
   } catch (error) {
     console.error('내 레시피 조회 실패:', error)
   }
 }
 
+const loadLikedRecipes = async () => {
+  try {
+    const res = await axios.get('http://localhost:8080/recipe/my-list', {
+      params: {
+        page: 1,
+        type: 'like'
+      }
+    })
+    likedRecipes.value = (res.data.myLikeList || []).slice(0, 3)
+  } catch (error) {
+    console.error('좋아요한 레시피 조회 실패:', error)
+  }
+}
+
 const loadBookmarkedRecipes = async () => {
   try {
-    const res = await axios.get(
-      'http://localhost:8080/recipe/my-list',
-      {
-        params: {
-          page: 1,
-          type: 'mark'
-        }
+    const res = await axios.get('http://localhost:8080/recipe/my-list', {
+      params: {
+        page: 1,
+        type: 'mark'
       }
-    )
-
-    bookmarkedRecipes.value = res.data.myMarkList.slice(0, 3)
+    })
+    bookmarkedRecipes.value = (res.data.myMarkList || []).slice(0, 3)
   } catch (error) {
     console.error('찜한 레시피 조회 실패:', error)
   }
@@ -138,15 +162,9 @@ const loadBookmarkedRecipes = async () => {
 
 const loadMyReviews = async () => {
   try {
-    const res = await axios.get(
-      'http://localhost:8080/mypage/reviews',
-      {
-        params: {
-          page: 1
-        }
-      }
-    )
-
+    const res = await axios.get('http://localhost:8080/mypage/reviews', {
+      params: { page: 1 }
+    })
     myReviews.value = res.data.list.slice(0, 5)
   } catch (error) {
     console.error('내 후기 조회 실패:', error)
@@ -155,15 +173,9 @@ const loadMyReviews = async () => {
 
 const loadMyReplies = async () => {
   try {
-    const res = await axios.get(
-      'http://localhost:8080/mypage/replies',
-      {
-        params: {
-          page: 1
-        }
-      }
-    )
-
+    const res = await axios.get('http://localhost:8080/mypage/replies', {
+      params: { page: 1 }
+    })
     myReplies.value = res.data.list.slice(0, 5)
   } catch (error) {
     console.error('내 댓글 조회 실패:', error)
@@ -172,6 +184,7 @@ const loadMyReplies = async () => {
 
 onMounted(() => {
   loadMyRecipes()
+  loadLikedRecipes()
   loadBookmarkedRecipes()
   loadMyReviews()
   loadMyReplies()
