@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
-import { useAuthStore } from './auth'
+import { useAuthStore } from '@/stores/auth'
 
 
 export const recipeDetailStore = defineStore('detail', {
