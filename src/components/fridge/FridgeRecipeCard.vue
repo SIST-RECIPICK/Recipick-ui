@@ -1,5 +1,5 @@
 <template>
-  <RouterLink :to="`/recipes/${recipe.recipeId}`" class="fr-card card card--hoverable">
+  <RouterLink :to="`/recipes/${recipe.recipeId}`" class="fr-card card card--hoverable" draggable="false">
     <!-- 대표 이미지 -->
     <div class="fr-card__thumb">
       <img
@@ -7,6 +7,7 @@
         :src="recipe.image"
         :alt="`${recipe.title} 대표 이미지`"
         loading="lazy"
+        draggable="false"
       />
       <span v-else class="fr-card__placeholder" aria-hidden="true">레시피 대표이미지</span>
     </div>
