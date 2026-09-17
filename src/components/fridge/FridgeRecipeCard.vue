@@ -1,150 +1,189 @@
 <template>
-  <RouterLink :to="`/recipes/${recipe.recipeId}`" class="fr-card card card--hoverable" draggable="false">
-    <!-- 대표 이미지 -->
-    <div class="fr-card__thumb">
-      <img
-        v-if="recipe.image"
-        :src="recipe.image"
-        :alt="`${recipe.title} 대표 이미지`"
-        loading="lazy"
-        draggable="false"
-      />
-      <span v-else class="fr-card__placeholder" aria-hidden="true">레시피 대표이미지</span>
+  <div class="ai-card card">
+    <RouterLink :to="`/recipes/${recipe.recipeId}`" class="ai-card__head">
+      <span class="ai-card__icon">🍜</span>
+      <h3 class="ai-card__title">{{ recipe.title }}</h3>
+      <IconChevronRight :size="18" class="ai-card__arrow" />
+    </RouterLink>
+
+    <div class="ai-card__top">
+      <div class="ai-card__badges">
+        <span class="badge badge--similarity">AI 유사도 {{ recipe.similarity }}%</span>
+        <span class="badge badge--rate">재료 충족률 {{ matchRatePercent }}%</span>
+      </div>
+      <div class="ai-card__image">
+        <img v-if="recipe.image" :src="recipe.image" :alt="recipe.title" loading="lazy" />
+        <span v-else class="ai-card__placeholder">대표 이미지</span>
+      </div>
     </div>
 
-    <!-- 본문 -->
-    <div class="fr-card__body">
-      <h3 class="fr-card__title">{{ recipe.title }}</h3>
-      <p class="fr-card__chef text-secondary">
-        <span class="fr-card__badge">오늘의<br />레시피</span>
-        {{ recipe.chef }}
-      </p>
-
-      <!-- 재료 태그: 보유(진하게) / 미보유(연하게), 최대 6개 -->
-      <ul class="fr-card__tags">
-        <li
-          v-for="(ing, i) in visibleTags"
-          :key="i"
-          class="fr-tag"
-          :class="ing.have ? 'fr-tag--have' : 'fr-tag--miss'"
-        >
-          {{ ing.name }}
-        </li>
-        <li v-if="hiddenCount > 0" class="fr-tag fr-tag--more">
-          +{{ hiddenCount }}
-        </li>
-      </ul>
+    <div class="ai-card__ingredients">
+      <div class="ing-box ing-box--have">
+        <p class="ing-box__title">가지고 있는 재료</p>
+        <ul class="ing-box__list">
+          <li v-for="ing in haveIngredients" :key="ing.name" class="ing-chip ing-chip--have">
+            {{ ing.name }}
+          </li>
+        </ul>
+      </div>
+      <div class="ing-box ing-box--miss">
+        <p class="ing-box__title">부족한 재료</p>
+        <ul class="ing-box__list">
+          <li v-for="ing in missIngredients" :key="ing.name" class="ing-chip ing-chip--miss">
+            {{ ing.name }}
+          </li>
+        </ul>
+      </div>
     </div>
 
-    <!-- 매칭 도넛 (서버가 계산한 matchCount/totalCount 사용) -->
-    <MatchDonut :have="recipe.matchCount" :total="recipe.totalCount" />
-
-    <!-- 화살표 -->
-    <IconChevronRight :size="24" class="fr-card__arrow" />
-  </RouterLink>
+    <div class="ai-card__final">
+      <h4 class="ai-card__final-title">최종 레시피</h4>
+      <div class="ai-card__final-body">
+        <div class="final-ingredients">
+          <p class="final-label">재료</p>
+          <ul>
+            <li v-for="ing in recipe.ingredients" :key="ing.name">
+              {{ ing.name }}<span v-if="!ing.have" class="miss-label"> (부족)</span>
+            </li>
+          </ul>
+        </div>
+        <div class="final-steps">
+          <p class="final-label">조리 방법</p>
+          <RouterLink :to="`/recipes/${recipe.recipeId}`" class="step-link">
+            레시피 상세 화면에서 조리 방법을 확인해주세요.
+          </RouterLink>
+        </div>
+      </div>
+      <div v-if="recipe.tip" class="ai-tip">
+        <strong>AI 추천 TIP</strong>
+        <p>{{ recipe.tip }}</p>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { IconChevronRight } from '@tabler/icons-vue'
-import MatchDonut from '@/components/fridge/MatchDonut.vue'
 
 const props = defineProps({
   recipe: { type: Object, required: true },
-  // FridgeMatchRecipe: { id, title, chef, image, matchCount, totalCount, ingredients: [{ ingredientId, name, have }] }
 })
 
-const MAX_TAGS = 6
+const haveIngredients = computed(() => props.recipe.ingredients.filter((i) => i.have))
+const missIngredients = computed(() => props.recipe.ingredients.filter((i) => !i.have))
 
-// 보유 재료를 앞으로 정렬한 뒤 최대 6개만 노출
-const sortedIngredients = computed(() =>
-  [...props.recipe.ingredients].sort((a, b) => Number(b.have) - Number(a.have))
-)
-const visibleTags = computed(() => sortedIngredients.value.slice(0, MAX_TAGS))
-const hiddenCount = computed(() =>
-  Math.max(0, props.recipe.totalCount - MAX_TAGS)
-)
+const matchRatePercent = computed(() => {
+  if (!props.recipe.totalCount) return 0
+  return Math.round((props.recipe.matchCount / props.recipe.totalCount) * 100)
+})
 </script>
 
 <style scoped>
-.fr-card {
-  display: grid;
-  grid-template-columns: 140px 1fr auto auto;
-  gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-4);
-  color: inherit;
+.ai-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);       /* lg → md */
+  background: var(--surface-card);
+  padding: var(--space-3);                /* space-5 → space-3 */
+  margin-bottom: var(--space-3);          /* space-5 → space-3 */
 }
 
-/* 이미지 */
-.fr-card__thumb {
-  width: 140px;
-  height: 100px;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-.fr-card__thumb img { width: 100%; height: 100%; object-fit: cover; }
-.fr-card__placeholder { color: var(--text-muted); font-size: var(--text-sm); }
-
-/* 본문 */
-.fr-card__body { min-width: 0; }
-.fr-card__title {
-  font-weight: var(--weight-bold);
-  margin-bottom: var(--space-1);
-}
-.fr-card__chef {
+.ai-card__head {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-sm);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-2);          /* space-4 → space-2 */
+  color: inherit;
 }
-.fr-card__badge {
-  font-size: 10px;
-  line-height: 1.1;
-  text-align: center;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-  color: var(--text-muted);
-}
+.ai-card__icon { font-size: 1.1rem; }      /* 1.4rem → 1.1rem */
+.ai-card__title { font-size: var(--text-sm); font-weight: var(--weight-bold); flex: 1; }  /* lg → sm */
+.ai-card__arrow { color: var(--text-muted); }
 
-/* 재료 태그 */
-.fr-card__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
+.ai-card__top {
+  display: grid;
+  grid-template-columns: 1fr 140px;       /* 240px → 140px */
+  gap: var(--space-2);                     /* space-4 → space-2 */
+  align-items: start;
+  margin-bottom: var(--space-2);          /* space-4 → space-2 */
 }
-.fr-tag {
-  font-size: var(--text-xs);
-  padding: 2px var(--space-2);
+.ai-card__badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.badge {
+  padding: 1px var(--space-2);            /* 살짝 줄임 */
+  border-radius: var(--radius-pill);
+  font-weight: var(--weight-bold);
+  font-size: 10px;                          /* xs보다 더 작게 */
+}
+.badge--similarity { background: var(--accent-subtle); color: var(--accent-text); }
+.badge--rate { background: var(--surface-sunken); color: var(--text-secondary); }
+
+.ai-card__image {
+  width: 140px; height: 90px;              /* 240x140 → 140x90 */
   border-radius: var(--radius-sm);
-}
-.fr-tag--have {
-  background: var(--accent-subtle);
-  color: var(--accent-text);
-}
-.fr-tag--miss {
+  overflow: hidden;
   background: var(--surface-sunken);
-  color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
 }
-.fr-tag--more {
-  background: transparent;
-  color: var(--text-muted);
+.ai-card__image img { width: 100%; height: 100%; object-fit: cover; }
+.ai-card__placeholder { color: var(--text-muted); font-size: 10px; }
+
+.ai-card__ingredients {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);                     /* space-3 → space-2 */
+  margin-bottom: var(--space-2);          /* space-4 → space-2 */
+}
+.ing-box {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);                 /* space-3 → space-2 */
+  background: var(--surface-sunken);
+}
+.ing-box__title {
+  font-weight: var(--weight-bold);
+  font-size: 10px;                          /* xs → 10px */
+  color: var(--text-secondary);
+  margin-bottom: 4px;                       /* space-2 → 4px */
+}
+.ing-box__list { display: flex; flex-wrap: wrap; gap: 4px; }
+.ing-chip {
+  font-size: 10px;                          /* xs → 10px */
+  padding: 1px var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--surface-card);
   border: 1px solid var(--border);
 }
+.ing-chip--have { color: var(--accent-text); border-color: var(--accent); }
+.ing-chip--miss { color: var(--text-muted); }
 
-.fr-card__arrow { color: var(--text-muted); }
+.ai-card__final {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-2);            /* space-4 → space-2 */
+}
+.ai-card__final-title { font-weight: var(--weight-bold); margin-bottom: var(--space-2); font-size: 11px; }
+.ai-card__final-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);                     /* space-4 → space-2 */
+  margin-bottom: var(--space-2);          /* space-4 → space-2 */
+}
+.final-label { font-weight: var(--weight-bold); font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
+.final-ingredients ul { padding-left: var(--space-3); font-size: 11px; }   /* text-sm → 11px */
+.miss-label { color: var(--text-muted); }
+.step-link { color: var(--accent); font-size: 11px; text-decoration: underline; }
+
+.ai-tip {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);  /* 줄임 */
+  font-size: 11px;                           /* text-sm → 11px */
+  color: var(--text-secondary);
+  line-height: var(--leading-normal);
+}
+.ai-tip strong { color: var(--text-primary); display: block; margin-bottom: 2px; font-size: 11px; }
 
 @media (max-width: 640px) {
-  .fr-card {
-    grid-template-columns: 96px 1fr auto;
-  }
-  .fr-card__thumb { width: 96px; height: 72px; }
-  .fr-card__arrow { display: none; }
+  .ai-card__top { grid-template-columns: 1fr; }
+  .ai-card__image { width: 100%; height: 120px; }
+  .ai-card__final-body { grid-template-columns: 1fr; }
 }
 </style>
