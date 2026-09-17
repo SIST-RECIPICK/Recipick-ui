@@ -99,7 +99,7 @@
 
 <script setup>
 
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { chatStore } from '@/stores/ChatStore'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/auth'
@@ -125,6 +125,7 @@ const chatRooms = computed(() =>
   }))
 )
 
+const subscription = ref(null)
 // 현재 선택된 채팅방
 const selectedRoom = ref(null)
 //const selectedRoom = ref(chatRooms?.value.find(room => room.id === props.room_id))
@@ -167,27 +168,47 @@ onMounted(async () => {
   }
 })
 
-// 채팅방 선택
-const selectRoom = async (room) => {
+  // 채팅방 선택
+  const selectRoom = async (room) => {
   selectedRoom.value = room
-  // 선택한 방의 기존 메시지 가져오기
+
   await chatstore.chatMessageList(room.id)
-  // 선택한 방 실시간 구독
+
   subscribeRoom(room.id)
 }
 
 const subscribeRoom = (roomId) => {
 
-  props.client.subscribe(
-    `/sub/chat/room/${roomId}`,
+  // 기존 구독 제거
+  if (subscription.value) {
+    subscription.value.unsubscribe()
+    subscription.value = null
+  }
 
-    async (message) => {
+  console.log('구독:', roomId)
+
+  subscription.value = props.client.subscribe(
+    `/sub/chat/room/${roomId}`,
+    (message) => {
+
       const data = JSON.parse(message.body)
+
       console.log('받은 메시지:', data)
-      chatstore.messageList.push(data)//전송한 메세지 표시
+      chatstore.messageList.push(data) // 전송한 메세지 표시
+      chatstore.chatRoomList()
     }
   )
 }
+
+// 닫으면 웹소켓 해제
+onBeforeUnmount(() => {
+
+  if (subscription.value) {
+    subscription.value.unsubscribe()
+    subscription.value = null
+  }
+
+})
 
 const messageInput = ref('')
 
@@ -207,7 +228,8 @@ const sendMessage = async() => {
     destination: '/pub/chat-send',
     body: JSON.stringify(data)
   })
-  
+  await chatstore.chatRoomList()
+
   messageInput.value = ''
   
 }
