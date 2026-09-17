@@ -49,31 +49,18 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
 import MyReplyCard from '@/components/mypage/MyReplyCard.vue'
 import Pagination from '@/components/common/Pagination.vue'
 
-// TypeScript 인터페이스 정의
-interface Reply {
-  id: number
-  [key: string]: any // 기존 backend 응답 구조를 유지할 수 있도록 유연하게 추가 속성 허용
-}
+// 상태 변수
+const replies = ref([])
+const selectedReplyIds = ref([])
 
-interface PageInfo {
-  curpage: number
-  startpage: number
-  endpage: number
-  totalpage: number
-}
-
-// 상태 변수 (타입 명시)
-const replies = ref<Reply[]>([])
-const selectedReplyIds = ref<number[]>([])
-
-const page = ref<PageInfo>({
+const page = ref({
   curpage: 1,
   startpage: 1,
   endpage: 1,
@@ -87,7 +74,7 @@ const isAllSelected = computed(() =>
 )
 
 // 댓글 하나 선택 / 해제
-const toggleReply = (replyId: number) => {
+const toggleReply = (replyId) => {
   if (selectedReplyIds.value.includes(replyId)) {
     selectedReplyIds.value = selectedReplyIds.value.filter(
       id => id !== replyId
@@ -110,7 +97,7 @@ const toggleAll = () => {
 }
 
 // 댓글 목록 조회
-const loadReplies = async (pageinfo: number | unknown = 1) => {
+const loadReplies = async (pageinfo = 1) => {
   const targetPage = typeof pageinfo === 'number' ? pageinfo : 1
 
   try {
