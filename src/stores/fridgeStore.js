@@ -70,17 +70,19 @@ export const useFridgeStore = defineStore('fridge', () => {
           const total = haveList.length + missList.length
 
           return {
-            id: r.id,
-            title: r.recipeName,
-            recipeId: r.recipe_id,
-            chef: r.foodType || '',
-            image: r.recipeImage,
-            matchCount: haveList.length,
-            totalCount: total,
-            ingredients: [
-              ...haveList.map((name) => ({ name, have: true })),
-              ...missList.map((name) => ({ name, have: false }))
-            ]
+          id: r.id,
+          recipeId: r.recipe_id,
+          title: r.recipeName,
+          similarity: r.similarity ? Math.round(r.similarity * 100) : 0,
+          tip: r.tip || '',
+          chef: r.foodType || '',
+          image: r.recipeImage,
+          matchCount: haveList.length,
+          totalCount: total,
+          ingredients: [
+            ...haveList.map((name) => ({ name, have: true })),
+            ...missList.map((name) => ({ name, have: false }))
+          ]     
           }
         })
         totalCount.value = recipes.value.length
