@@ -159,6 +159,11 @@ const routes = [
         name: 'mypage-my-recipe',
         component: () => import('@/views/mypage/MyPageMyRecipe.vue'),
       },
+       {
+        path: 'likerecipe',
+        name: 'mypage-like-recipe',
+        component: () => import('@/views/mypage/MyPageLikeRecipe.vue'),
+      },
       {
         path: 'saverecipe',
         name: 'mypage-save-recipe',

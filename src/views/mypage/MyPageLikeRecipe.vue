@@ -1,9 +1,9 @@
 <template>
-    <h1>저장한 레시피</h1>
+    <h1>좋아요 레시피</h1>
 
     <div class="related">
     <RecipeCard
-        v-for="r in myMarkLists"
+        v-for="r in myLikeLists"
         :key="r.id"
         :recipe="r"
         class="related__item"
@@ -26,20 +26,20 @@ import { myListStore } from '@/stores/myListStore';
 import Pagination from '@/components/common/Pagination.vue';
 
 const store = myListStore()
-const { myMarkList } = storeToRefs(store) // 북마크 리스트
+const { myLikeList } = storeToRefs(store) // 좋아요 리스트
 const { endPage,startPage,curpage,totalpage } = storeToRefs(store)
 
 onMounted(() => {
-  store.myListData(1,'mark')
+  store.myListData(1,'like')
 })
 
-const pageChange = (page) =>{store.myListData(page,'mark')}
+const pageChange = (page) =>{store.myListData(page,'like')}
 
-const myMarkLists = computed(() =>
-  (myMarkList.value || []).map(item => ({
-    nickname: item.nickname,
-    like_count: item.count,
-    user_id: item.user_id,
+const myLikeLists = computed(() =>
+  (myLikeList.value || []).map(item => ({
+    nickname:item.nickname,
+    like_count:item.count,
+    user_id:item.user_id,
     rcp_seq: item.rcp_seq,
     info_eng: item.info_eng,
     rcp_nm: item.rcp_nm,
