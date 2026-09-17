@@ -27,6 +27,11 @@ const routes = [
     component: () => import('@/views/SignupView.vue'),
   },
   {
+    path: '/auth/social-link',
+    name: 'SocialLink',
+    component: () => import('@/views/SocialLinkView.vue'),
+  },
+  {
     path: '/fridge',
     name: 'fridge',
     meta: { requiresAuth: true },
