@@ -96,7 +96,7 @@ function onFridgeCardPointerDown(event, recipe) {
       // 이 시점에 실제 드래그 시작 
       event.preventDefault()
       const dragRecipe = {
-        rcp_seq: recipe.rcpSeq,
+        rcp_seq: recipe.recipeId,
         rcp_nm: recipe.title,
         att_file_no_main: recipe.image,
       }
