@@ -58,9 +58,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
 
 const router = useRouter()
+const auth = useAuthStore()
 
 const email = ref('')
 const idToken = ref('')
@@ -91,18 +93,20 @@ const handleLink = async () => {
   errorMessage.value = ''
 
   try {
-    const response = await axios.post('/api/v1/auth/social/google/link', {
-      idToken: idToken.value,
-      password: password.value
-    })
+    const response = await axios.post(
+      'http://localhost:8080/auth/social/google/link',
+      {
+        idToken: idToken.value,
+        password: password.value
+      },
+      { withCredentials: true }
+    )
 
-    const { accessToken, refreshToken, userId, nickname, role } = response.data
-
-    localStorage.setItem('accessToken', accessToken)
-    localStorage.setItem('refreshToken', refreshToken)
+    auth.setUser(response.data)
 
     alert('계정 연동이 성공적으로 완료되었습니다.')
     router.replace('/')
+    
   } catch (error) {
     if (error.response && error.response.data) {
       errorMessage.value = error.response.data.message || '비밀번호가 일치하지 않습니다.'
