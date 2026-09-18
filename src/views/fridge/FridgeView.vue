@@ -394,7 +394,8 @@ watch(sort, () => {
 }
 .results__list {
   display: grid;
-  grid-template-columns: 1fr 1fr;   /* 2열 */
+  grid-template-columns: 1fr 1fr;
+  grid-auto-rows: 1fr;   /* 같은 행의 카드들을 동일한 높이로 맞춤 */
   gap: var(--space-4);
 }
 

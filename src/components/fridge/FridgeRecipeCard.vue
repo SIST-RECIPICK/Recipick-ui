@@ -37,7 +37,7 @@
     </div>
 
     <div class="ai-card__final">
-      <h4 class="ai-card__final-title">최종 레시피</h4>
+      <!-- <h4 class="ai-card__final-title">최종 레시피</h4>
       <div class="ai-card__final-body">
         <div class="final-ingredients">
           <p class="final-label">재료</p>
@@ -53,7 +53,7 @@
             레시피 상세 화면에서 조리 방법을 확인해주세요.
           </RouterLink>
         </div>
-      </div>
+      </div> -->
       <div v-if="recipe.tip" class="ai-tip">
         <strong>AI 추천 TIP</strong>
         <p>{{ recipe.tip }}</p>
@@ -82,10 +82,13 @@ const matchRatePercent = computed(() => {
 <style scoped>
 .ai-card {
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);       /* lg → md */
+  border-radius: var(--radius-md);
   background: var(--surface-card);
-  padding: var(--space-3);                /* space-5 → space-3 */
-  margin-bottom: var(--space-3);          /* space-5 → space-3 */
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  height: 100%;              /* 추가 — grid가 준 전체 높이를 채움 */
+  display: flex;             /* 추가 — 세로 배치를 위한 flex 컨테이너로 */
+  flex-direction: column;    /* 추가 — 자식 요소들을 세로로 쌓음 */
 }
 
 .ai-card__head {
@@ -157,7 +160,8 @@ const matchRatePercent = computed(() => {
 
 .ai-card__final {
   border-top: 1px solid var(--border);
-  padding-top: var(--space-2);            /* space-4 → space-2 */
+  padding-top: var(--space-2);
+  margin-top: auto;   /* 이 줄 추가 — 이 블록을 카드 맨 아래로 밀착 */
 }
 .ai-card__final-title { font-weight: var(--weight-bold); margin-bottom: var(--space-2); font-size: 11px; }
 .ai-card__final-body {
