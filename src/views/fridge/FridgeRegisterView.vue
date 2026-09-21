@@ -218,6 +218,11 @@ async function handleSave() {
       ingredient_id: id,
     }))
     await fridgeStore.saveFridge(volist)
+
+     sessionStorage.removeItem('fridge_selected')
+
+     fridgeStore.clearMatches()
+
     router.push('/fridge')
   } finally {
     saving.value = false
