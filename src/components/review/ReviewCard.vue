@@ -27,12 +27,12 @@
       <!-- 하단: 원본 레시피 -->
       <div class="review-card__recipe">
         <img
-          :src="review.att_file_no_main"
-          :alt="review.rcp_nm"
+          :src="review.att_file_no_main || 'https://res.cloudinary.com/ekfbpizi/image/upload/v1789966269/null.png'"
+          :alt="review.rcp_nm || '삭제된 레시피입니다'"
           class="review-card__recipe-image"
         />
         <p>
-          {{ review.rcp_nm }}
+          {{ review.rcp_nm || '삭제된 레시피입니다' }}
         </p>
       </div>
     </div>
