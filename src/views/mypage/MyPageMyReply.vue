@@ -1,12 +1,10 @@
 <template>
   <div class="my-reply">
-
     <h1>나의 댓글</h1>
 
     <!-- 전체 선택 / 선택 삭제 -->
     <div class="my-reply__actions">
       <button
-        type="button"
         class="btn btn--outline"
         @click="toggleAll"
       >
@@ -14,7 +12,6 @@
       </button>
 
       <button
-        type="button"
         class="btn btn--primary"
         @click="deleteSelected"
       >
@@ -49,20 +46,19 @@
       :totalpage="page.totalpage"
       @change="loadReplies"
     />
-
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
 import MyReplyCard from '@/components/mypage/MyReplyCard.vue'
 import Pagination from '@/components/common/Pagination.vue'
 
-const replies = ref<any[]>([])
-
-const selectedReplyIds = ref<number[]>([])
+// 상태 변수
+const replies = ref([])
+const selectedReplyIds = ref([])
 
 const page = ref({
   curpage: 1,
@@ -71,14 +67,14 @@ const page = ref({
   totalpage: 1,
 })
 
-//현재 페이지의 댓글이 모두 선택되었는지 확인
+// 현재 페이지의 댓글이 모두 선택되었는지 확인
 const isAllSelected = computed(() =>
   replies.value.length > 0 &&
   selectedReplyIds.value.length === replies.value.length
 )
 
-//댓글 하나 선택 / 해제
-const toggleReply = (replyId: number) => {
+// 댓글 하나 선택 / 해제
+const toggleReply = (replyId) => {
   if (selectedReplyIds.value.includes(replyId)) {
     selectedReplyIds.value = selectedReplyIds.value.filter(
       id => id !== replyId
@@ -88,7 +84,7 @@ const toggleReply = (replyId: number) => {
   }
 }
 
-//전체 선택 / 전체 해제
+// 전체 선택 / 전체 해제
 const toggleAll = () => {
   if (isAllSelected.value) {
     selectedReplyIds.value = []
@@ -100,10 +96,9 @@ const toggleAll = () => {
   )
 }
 
-//댓글 목록 조회
+// 댓글 목록 조회
 const loadReplies = async (pageinfo = 1) => {
-  const targetPage =
-    typeof pageinfo === 'number' ? pageinfo : 1
+  const targetPage = typeof pageinfo === 'number' ? pageinfo : 1
 
   try {
     const res = await axios.get(
@@ -131,7 +126,7 @@ const loadReplies = async (pageinfo = 1) => {
   }
 }
 
-//선택한 댓글 삭제
+// 선택한 댓글 삭제
 const deleteSelected = async () => {
   if (selectedReplyIds.value.length === 0) {
     return

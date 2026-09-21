@@ -2,8 +2,11 @@
   <article class="card my-review-card">
     <div class="card__body">
 
-      <!-- 왼쪽 : 후기 사진 -->
-      <div class="my-review-card__image">
+      <!-- 왼쪽 : 후기 사진 (클릭 시 이동) -->
+      <div
+        class="my-review-card__image clickable"
+        @click="goToReview"
+      >
         <img
           v-if="review.image_url"
           :src="review.image_url"
@@ -20,9 +23,16 @@
       <!-- 오른쪽 -->
       <div class="my-review-card__content">
 
-        <!-- 리뷰 제목 + 삭제 버튼 -->
+        <!-- 리뷰 제목 (클릭 시 이동) + 삭제 버튼 -->
         <div class="my-review-card__title-row">
-          <h3>{{ review.subject }}</h3>
+          <h3>
+            <span
+              class="my-review-card__title-link clickable"
+              @click="goToReview"
+            >
+              {{ review.subject }}
+            </span>
+          </h3>
 
           <button
             type="button"
@@ -65,7 +75,9 @@
 </template>
 
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router'
+
+const props = defineProps({
   review: {
     type: Object,
     required: true,
@@ -73,6 +85,14 @@ defineProps({
 })
 
 defineEmits(['delete'])
+
+const router = useRouter()
+
+const goToReview = () => {
+  if (props.review?.id) {
+    router.push(`/community/reviews/${props.review.id}`)
+  }
+}
 
 const formatDate = (date) => {
   if (!date) return ''
@@ -113,6 +133,12 @@ const formatDate = (date) => {
   height: 100%;
   min-height: 220px;
   object-fit: cover;
+  transition: transform 0.2s ease;
+}
+
+/* 이미지 호버 시 살짝 확대 효과 */
+.my-review-card__image:hover img {
+  transform: scale(1.03);
 }
 
 /* 오른쪽 리뷰 영역 */
@@ -129,6 +155,19 @@ const formatDate = (date) => {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+/* 제목 링크 스타일 */
+.my-review-card__title-link {
+  color: inherit;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  text-decoration: underline;
 }
 
 /* 후기 내용 */

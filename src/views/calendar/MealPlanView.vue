@@ -36,6 +36,7 @@ const {
   errorMsg: aiErrorMsg,
   fillEmptySlots,
   rollback: rollbackAi,
+  confirm: confirmAi,
 } = useCalendarAi()
 
 const aiCommand = ref('')
@@ -48,7 +49,9 @@ async function handleAiFill() {
     await loadSummary()
   }
 }
-
+async function handleConfirm() {
+  await confirmAi()
+}
 async function handleRollback() {
   await rollbackAi()
   await loadCalendar()
@@ -172,10 +175,15 @@ onMounted(() => {
       <div v-else class="ai-fill__result">
         <p class="ai-fill__result-msg">AI가 완성했습니다!</p>
         <p class="ai-fill__result-count">{{ aiResult.filledCount }}개 슬롯을 채웠어요</p>
-        <button class="ai-fill__rollback-btn" @click="handleRollback">
-          롤백하기
-        </button>
-      </div>
+        <div class="ai-fill__actions">
+          <button class="ai-fill__confirm-btn" @click="handleConfirm">
+            확정하기
+          </button>
+          <button class="ai-fill__rollback-btn" @click="handleRollback">
+            롤백하기
+          </button>
+        </div>
+        </div>
       <p v-if="aiErrorMsg" class="meal-plan__status meal-plan__status--error">{{ aiErrorMsg }}</p>
     </div>
   </section>
@@ -617,5 +625,25 @@ onMounted(() => {
 .ai-fill__rollback-btn:hover {
   border-color: var(--danger);
   color: var(--danger);
+}
+.ai-fill__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.ai-fill__confirm-btn {
+  flex: 1;
+  padding: var(--space-1) var(--space-3);
+  background: var(--accent);
+  color: var(--text-on-inverse);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.ai-fill__rollback-btn {
+  flex: 1;
+  /* 기존 스타일 유지, flex: 1만 추가 */
 }
 </style>

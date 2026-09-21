@@ -1,5 +1,5 @@
 <template>
-  <article class="review-card">
+  <article class="review-card" @click="goToDetail">
     <img
       class="review-card__thumb"
       :src="review.image"
@@ -14,10 +14,17 @@
 </template>
 
 <script setup>
-defineProps({
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
+const props =defineProps({
   review: { type: Object, required: true },
   // { id, title, content, image }
 })
+
+const goToDetail = () => {
+  router.push(`/community/reviews/${props.review.id}`)
+}
 </script>
 
 <style scoped>
@@ -50,5 +57,8 @@ defineProps({
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.review-card:hover{
+  cursor: pointer;
 }
 </style>

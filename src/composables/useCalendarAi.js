@@ -44,6 +44,18 @@ export function useCalendarAi() {
       loading.value = false;
     }
   }
-
-  return { result, loading, errorMsg, fillEmptySlots, rollback };
+  async function confirm() {
+    loading.value = true;
+    errorMsg.value="";
+    try{
+      await axios.post(`${API_BASE}/calendar/ai-fill/confirm`);
+      result.value=null;
+      // 확정 성공시 프롬프트 입력창으로 
+    }catch(e){
+      errorMsg.value = `확정 실패: ${e.response?.status ?? e.message}`;
+    }finally{
+      loading.value=false;
+    }
+  }
+  return { result, loading, errorMsg, fillEmptySlots, rollback,confirm };
 }

@@ -75,6 +75,17 @@
         </RouterLink>
 
         <RouterLink
+          to="/mypage/likerecipe"
+          class="mypage-sidebar__link"
+        >
+          <span>좋아요 레시피</span>
+
+          <span class="mypage-sidebar__count">
+            {{ likedRecipeCount }}
+          </span>
+        </RouterLink>
+
+        <RouterLink
           to="/mypage/saverecipe"
           class="mypage-sidebar__link"
         >
@@ -134,6 +145,7 @@ const profileImage = ref('')
  */
 const recipeCount = ref(0)
 const savedRecipeCount = ref(0)
+const likedRecipeCount = ref(0)
 const reviewCount = ref(0)
 const replyCount = ref(0)
 
@@ -171,6 +183,9 @@ const loadCounts = async () => {
       res.data.MY_RECIPE_CNT ?? 0
 
     savedRecipeCount.value =
+      res.data.MARK_RECIPE_CNT ?? 0
+
+    likedRecipeCount.value =
       res.data.LIKE_RECIPE_CNT ?? 0
 
     reviewCount.value =

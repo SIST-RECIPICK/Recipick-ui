@@ -55,20 +55,16 @@
         <span>or</span>
       </div>
 
-      <!-- 소셜 로그인 -->
-      <button type="button" class="btn btn--outline btn--block auth__social" @click="handleGoogleLogin">
-        <IconBrandGoogleFilled :size="18" />
-        구글 로그인
-      </button>
+      <div ref="googleButtonRef" class="auth__social-container"></div>
+
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { IconBrandGoogleFilled } from '@tabler/icons-vue'
 import axios from 'axios'
 
 const router = useRouter()
@@ -82,6 +78,8 @@ const form = reactive({
 const errorMessage = ref('')
 const submitting = ref(false)
 const recoveryToken = ref(null)
+
+const googleButtonRef = ref(null)
 
 async function handleSubmit() {
   errorMessage.value = ''
@@ -132,9 +130,70 @@ async function handleSubmit() {
   }
 }
 
-function handleGoogleLogin() {
-  // TODO: 구글 OAuth 연동 (FR-105)
+function parseEmailFromToken(token) {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload).email
+  } catch (e) {
+    console.error('토큰 파싱 실패:', e)
+    return ''
+  }
 }
+
+onMounted(() => {
+  // 1. 구글 SDK 로드
+  const script = document.createElement('script')
+  script.src = 'https://accounts.google.com/gsi/client'
+  script.async = true
+  document.head.appendChild(script)
+
+  script.onload = () => {
+    // 2. 구글 버튼 세팅
+    window.google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: async (response) => {
+        try {
+          // 백엔드로 토큰 전달
+          const res = await axios.post(
+            'http://localhost:8080/auth/social/google', 
+            { idToken: response.credential }, 
+            { withCredentials: true }
+          )
+          
+          // 로그인 성공 -> 메인 화면 이동
+          auth.setUser(res.data)
+          router.push('/')
+          
+        } catch (err) {
+          // EMAIL_ALREADY_EXISTS 예외 발생 시 연동 페이지로 이동
+          if (err.response?.data?.errorCode === 'EMAIL_ALREADY_EXISTS') {
+            const email = err.response.data.email || parseEmailFromToken(response.credential)
+
+            router.push({
+              name: 'SocialLink',
+              state: {
+                idToken: response.credential,
+                email: email
+              }
+            })
+
+          } else {
+            alert('구글 로그인에 실패했습니다.')
+          }
+        }
+      }
+    })
+    
+    window.google.accounts.id.renderButton(googleButtonRef.value, { theme: 'outline', size: 'large' })
+  }
+})
 </script>
 
 <style scoped>

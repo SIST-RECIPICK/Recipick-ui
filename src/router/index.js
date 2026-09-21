@@ -27,6 +27,11 @@ const routes = [
     component: () => import('@/views/SignupView.vue'),
   },
   {
+    path: '/auth/social-link',
+    name: 'SocialLink',
+    component: () => import('@/views/SocialLinkView.vue'),
+  },
+  {
     path: '/fridge',
     name: 'fridge',
     meta: { requiresAuth: true },
@@ -131,12 +136,6 @@ const routes = [
     component: () => import('@/views/community/CurationDetailView.vue'),
   },
   {
-    // 개발 참조용 스타일가이드
-    path: '/styleguide',
-    name: 'styleguide',
-    component: () => import('@/views/StyleGuideView.vue'),
-  },
-  {
     // 식단표
     path: '/meal-plan',
     name: 'MealPlan',
@@ -158,6 +157,11 @@ const routes = [
         path: 'myrecipe',
         name: 'mypage-my-recipe',
         component: () => import('@/views/mypage/MyPageMyRecipe.vue'),
+      },
+       {
+        path: 'likerecipe',
+        name: 'mypage-like-recipe',
+        component: () => import('@/views/mypage/MyPageLikeRecipe.vue'),
       },
       {
         path: 'saverecipe',
