@@ -4,7 +4,7 @@ import { useRecipeSearch } from '@/composables/useRecipeSearch.js'
 import { useDragDrop } from '@/composables/useDragDrop.js' // 드롭파일 임포트
 import { useRecipePreviewStore } from '@/stores/recipePreview'
 import { useFridgeStore } from '@/stores/fridgeStore'
-import FridgeRecipeCard from '@/components/fridge/FridgeRecipeCard.vue'
+import FridgeRecipeMiniCard from '@/components/fridge/FridgeRecipeMiniCard.vue'
 
 const props = defineProps({
   userId: { type: [Number, Object], required: true },
@@ -262,9 +262,10 @@ function onFridgeCardPointerDown(event, recipe) {
           <div
             v-for="r in fridgeStore.recipes"
             :key="r.id"
+            class="recipe-panel__fridge-card"
             @pointerdown="onFridgeCardPointerDown($event, r)"
           >
-          <FridgeRecipeCard :recipe="r"/>
+          <FridgeRecipeMiniCard :recipe="r"/>
         </div>
       </div>
     </div>
@@ -373,43 +374,19 @@ function onFridgeCardPointerDown(event, recipe) {
   max-height: 480px;
   overflow-y: auto;
 }
-.recipe-panel__list :deep(.fr-card) {
-  /* 기존 4컬럼(썸네일/본문/도넛/화살표) 가로 배치를 세로로 변경 */
-  display: flex;
-  flex-direction: row;
-  gap: var(--space-2);
-  padding: var(--space-3);
+.recipe-panel__fridge-card {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface-card);
+  cursor: grab;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
+.recipe-panel__fridge-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+}
+.recipe-panel__fridge-card:active { cursor: grabbing; }
 
-.recipe-panel__list :deep(.fr-card__thumb) {
-  /* 썸네일을 카드 폭에 맞게 줄임 */
-  width: 58px;
-  height: 58px;
-  flex-shrink: 0;
-  border-radius: 8px;
-}
-.recipe-panel__list :deep(.fr-card__tags) {
-  gap: 4px;
-}
-.recipe-panel__list :deep(.fr-card__chef) {
-  display: none;
-}
-.recipe-panel__list :deep(.fr-tag) {
-  font-size: 10px;
-  padding: 1px 6px;
-}
-.recipe-panel__list :deep(.fr-card__body) {
-  flex: 1;
-  min-width: 0;
-}
-.recipe-panel__list :deep(.fr-card__title) {
-  font-size: var(--text-sm);
-}
-
-.recipe-panel__list :deep(.fr-card__arrow) {
-  /* 화살표는 좁은 카드에서 불필요하니 숨김 */
-  display: none;
-}
 .recipe-panel__empty {
   padding: 36px 12px;
   text-align: center;
