@@ -136,12 +136,6 @@ const routes = [
     component: () => import('@/views/community/CurationDetailView.vue'),
   },
   {
-    // 개발 참조용 스타일가이드
-    path: '/styleguide',
-    name: 'styleguide',
-    component: () => import('@/views/StyleGuideView.vue'),
-  },
-  {
     // 식단표
     path: '/meal-plan',
     name: 'MealPlan',

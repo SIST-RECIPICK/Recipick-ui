@@ -112,4 +112,6 @@ onMounted(() => {
   margin-top: var(--space-5);
   text-align: center;
 }
+
 </style>
+
