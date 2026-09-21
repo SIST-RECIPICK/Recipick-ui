@@ -153,6 +153,7 @@ const units = [
   { key: 'spoon', label: '숟가락' },
   { key: 'cup', label: '컵' },
 ]
+const countUnits = ['대', '개', '쪽', '장', '알']
 
 function inc() { servings.value += 1 }
 function dec() { if (servings.value > 1) servings.value -= 1 }
@@ -163,6 +164,7 @@ function dec() { if (servings.value > 1) servings.value -= 1 }
 const scaledIngredients = computed(() =>
   props.ingredients.map((item) => {
     const grams = item.amount * (servings.value / props.baseServings)
+    const isCountUnit = countUnits.includes(item.unit)
     let display
     if (unit.value === 'spoon') 
       display = ((grams / 15) >= 1 && item.category_name === '조미료') ? `${(grams / 15).toFixed(1)}스푼` : 
@@ -174,8 +176,10 @@ const scaledIngredients = computed(() =>
                        grams ? grams.toFixed(2) + item.unit : item.unit
     // 약간 , 조금 등등은 문자만 표시
     else 
-      display = `${grams >= 1 ? Math.round(grams) + item.unit : 
-                       grams? grams.toFixed(2) + item.unit : item.unit}`
+  display = isCountUnit
+    ? `${parseFloat(grams.toFixed(2))}${item.unit}`
+    : `${grams >= 1 ? Math.round(grams) + item.unit : 
+                     grams? grams.toFixed(2) + item.unit : item.unit}`
     return { name: item.name, display,shop: item.shopVO }
   })
 )

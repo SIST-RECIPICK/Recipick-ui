@@ -107,7 +107,7 @@
         <div v-for="(ing, idx) in ingredientInputs" :key="idx" class="ingredient-inputs">
            <!--  ing => v-for="(ing, idx) in ingredientInputs" -->        
           <input v-model="ing.name" type="text" placeholder="예: 김치 또는 양파"  class="ingredient-input"/>
-          <input v-model="ing.amount" type="text" placeholder="예: 200 또는 1"  class="ingredient-input"/>
+          <input v-model="ing.amount" type="text" placeholder="예: 200 또는 0.5 (1/2 대신 소수로 입력)"  class="ingredient-input"/>
           <input v-model="ing.unit" type="text" placeholder="예: g 또는 개" class="ingredient-input"/>  
           <button type="button" class="btn-small btn-danger" @click="removeIngredientlStep(idx)">
            🗑️
