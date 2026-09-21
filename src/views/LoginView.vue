@@ -130,6 +130,23 @@ async function handleSubmit() {
   }
 }
 
+function parseEmailFromToken(token) {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload).email
+  } catch (e) {
+    console.error('토큰 파싱 실패:', e)
+    return ''
+  }
+}
+
 onMounted(() => {
   // 1. 구글 SDK 로드
   const script = document.createElement('script')
@@ -143,20 +160,30 @@ onMounted(() => {
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       callback: async (response) => {
         try {
-          // 3. 백엔드로 토큰 전달
-          const res = await axios.post('http://localhost:8080/auth/social/google', 
+          // 백엔드로 토큰 전달
+          const res = await axios.post(
+            'http://localhost:8080/auth/social/google', 
             { idToken: response.credential }, 
             { withCredentials: true }
           )
           
-          // 4. 로그인 성공 -> 메인 화면 이동
+          // 로그인 성공 -> 메인 화면 이동
           auth.setUser(res.data)
           router.push('/')
           
         } catch (err) {
-          // 5. 실패 -> 거절 알림
+          // EMAIL_ALREADY_EXISTS 예외 발생 시 연동 페이지로 이동
           if (err.response?.data?.errorCode === 'EMAIL_ALREADY_EXISTS') {
-            alert('이미 가입된 이메일입니다. 일반 로그인을 이용해주세요.')
+            const email = err.response.data.email || parseEmailFromToken(response.credential)
+
+            router.push({
+              name: 'SocialLink',
+              state: {
+                idToken: response.credential,
+                email: email
+              }
+            })
+
           } else {
             alert('구글 로그인에 실패했습니다.')
           }

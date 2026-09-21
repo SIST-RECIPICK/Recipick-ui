@@ -102,10 +102,10 @@
     </section>
 
     <section
+      v-if="hasLocalAccount"
       class="card account-setting__section account-setting__password"
     >
       <div class="card__body">
-        
         <div class="section-head">
           <h2 class="section-title">비밀번호</h2>
 
@@ -198,6 +198,7 @@ const nicknameMessage = ref('')
 const nicknameError = ref(false)
 const nicknameChecked = ref(false)
 
+const hasLocalAccount = ref(false)
 const currentPassword = ref('')
 const newPassword = ref('')
 const newPasswordConfirm = ref('')
@@ -208,7 +209,8 @@ const PASSWORD_PATTERN =
 const loadProfile = async () => {
   try {
     const res = await axios.get(
-      'http://localhost:8080/mypage/profile'
+      'http://localhost:8080/mypage/profile',
+      { withCredentials: true }
     )
 
     currentNickname.value = res.data.nickname || ''
@@ -289,9 +291,10 @@ const checkNickname = async () => {
     const res = await axios.get(
       'http://localhost:8080/auth/nickname/check',
       {
-        params: {
+        params: { 
           nickname: value
-        }
+        },
+        withCredentials: true
       }
     )
 
@@ -351,7 +354,8 @@ const saveProfile = async () => {
   try {
     await axios.put(
       'http://localhost:8080/mypage/profile',
-      formData
+      formData,
+      { withCredentials: true }
     )
 
     alert('프로필 정보가 저장되었습니다.')
@@ -376,6 +380,18 @@ const saveProfile = async () => {
   }
 }
 
+const checkLocalAccount = async () => {
+  try {
+    const res = await axios.get('http://localhost:8080/mypage/has-local-account', {
+      withCredentials: true
+    })
+    hasLocalAccount.value = res.data // 백엔드에서 true/false 반환
+  } catch (error) {
+    console.error('로컬 계정 여부 확인 실패:', error)
+    hasLocalAccount.value = false
+  }
+}
+
 const savePassword = async () => {
   if (!currentPassword.value) {
     alert('현재 비밀번호를 입력해주세요.')
@@ -394,7 +410,7 @@ const savePassword = async () => {
 
   if (!PASSWORD_PATTERN.test(newPassword.value)) {
     alert(
-      '비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.'
+      '비밀번호는 문자, 숫자, 특수기호를 모두 포함해 8~20자로 입력해주세요.'
     )
     return
   }
@@ -411,7 +427,8 @@ const savePassword = async () => {
         currentPassword: currentPassword.value,
         newPassword: newPassword.value,
         newPasswordConfirm: newPasswordConfirm.value
-      }
+      },
+      { withCredentials: true }
     )
 
     alert('비밀번호가 변경되었습니다.')
@@ -435,10 +452,15 @@ const handleWithdraw = () => {
 
 onMounted(() => {
   loadProfile()
+  checkLocalAccount()
 })
 </script>
 
 <style scoped>
+.input {
+  background-color: var(--border);
+}
+
 .account-setting {
   padding-block: var(--space-6);
 }
