@@ -7,10 +7,10 @@
       class="referenced-recipe card"
     >
       <div class="referenced-recipe__info">
-        <img
-          :src="board.att_file_no_main"
-          :alt="board.rcp_nm"
+        <img 
           class="referenced-recipe__thumb"
+          :src="board.att_file_no_main || 'https://res.cloudinary.com/ekfbpizi/image/upload/v1789966269/null.png'" 
+          :alt="board.rcp_nm || '삭제된 레시피입니다'" 
         />
 
         <div>
@@ -19,7 +19,7 @@
           </span>
 
           <h3>
-            {{ board.rcp_nm }}
+            {{ board.rcp_nm || '삭제된 레시피입니다' }}
           </h3>
 
           <p class="text-secondary">
@@ -32,6 +32,7 @@
         type="button"
         class="btn btn--outline"
         @click="goToRecipeDetail(board.rcp_seq)"
+        v-if="board?.rcp_seq && board?.rcp_nm"
       >
         레시피 보러가기 >
       </button>

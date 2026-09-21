@@ -229,11 +229,13 @@ const updateReview = async () => {
   if (isSubmitting.value) return
 
   const boardData = {
-    id: reviewId,
-    subject: subject.value.trim(),
-    content: content.value.trim(),
-    rcp_seq: selectedRecipe.value.rcp_seq
-  }
+  id: reviewId,
+  subject: subject.value.trim(),
+  content: content.value.trim(),
+  rcp_seq: selectedRecipe.value.rcp_seq,
+  image_url: board.value?.image_url || null,
+  image_size: board.value?.image_size || null
+}
 
   const formData = new FormData()
 
